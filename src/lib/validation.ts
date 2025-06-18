@@ -17,10 +17,10 @@ export class ValidationError<T> extends AnyError {
 /**
  * Validates data against a schema and returns a Result
  */
-export function validate<T extends z.ZodType>(
-  schema: T,
+export function validate<T>(
+  schema: z.ZodType<T>,
   data: unknown,
-): Result<z.infer<T>, ValidationError<z.infer<T>>> {
+): Result<T, ValidationError<T>> {
   const result = schema.safeParse(data);
 
   if (!result.success) {

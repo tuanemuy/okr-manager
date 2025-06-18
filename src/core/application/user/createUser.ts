@@ -1,6 +1,5 @@
 import type { User } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
-import { validate } from "@/lib/validation";
 import { type Result, err, ok } from "neverthrow";
 import { z } from "zod/v4";
 import type { Context } from "../context";
@@ -16,14 +15,14 @@ export async function createUser(
   context: Context,
   input: CreateUserInput,
 ): Promise<Result<User, ApplicationError>> {
-  const parseResult = validate(createUserInputSchema, input);
-  if (parseResult.isErr()) {
+  const parseResult = createUserInputSchema.safeParse(input);
+  if (!parseResult.success) {
     return err(new ApplicationError("Invalid user input", parseResult.error));
   }
 
-  const params = parseResult.value;
+  const params = parseResult.data;
 
-  const existingUser = await context.userRepository.findByEmail(params.email);
+  const existingUser = await context.userRepository.getByEmail(params.email);
   if (existingUser.isErr()) {
     return err(
       new ApplicationError("Failed to check existing user", existingUser.error),

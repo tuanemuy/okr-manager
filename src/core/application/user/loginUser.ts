@@ -22,7 +22,7 @@ export async function loginUser(
 
   const params = parseResult.value;
 
-  const userResult = await context.userRepository.findByEmail(params.email);
+  const userResult = await context.userRepository.getByEmail(params.email);
   if (userResult.isErr()) {
     return err(new ApplicationError("Failed to find user", userResult.error));
   }
@@ -47,7 +47,11 @@ export async function loginUser(
     return err(new ApplicationError("Invalid email or password"));
   }
 
-  const sessionResult = await context.sessionManager.create(user.id);
+  const sessionResult = await context.sessionManager.create({
+    userId: user.id,
+    email: user.email,
+    displayName: user.displayName,
+  });
   if (sessionResult.isErr()) {
     return err(
       new ApplicationError("Failed to create session", sessionResult.error),
