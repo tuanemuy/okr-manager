@@ -8,12 +8,14 @@ import { DrizzleSqliteTeamMemberRepository } from "@/core/adapters/drizzleSqlite
 import { DrizzleSqliteTeamRepository } from "@/core/adapters/drizzleSqlite/teamRepository";
 import { DrizzleSqliteUserRepository } from "@/core/adapters/drizzleSqlite/userRepository";
 import { IronSessionManager } from "@/core/adapters/ironSession/sessionManager";
+import { NextAuthService } from "@/core/adapters/nextAuth/authService";
 import type { Context } from "@/core/application/context";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 export const envSchema = z.object({
   DATABASE_FILE_NAME: z.string(),
   SESSION_SECRET: z.string(),
+  AUTH_SECRET: z.string().min(32),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -32,6 +34,7 @@ export const context: Context = {
   userRepository: new DrizzleSqliteUserRepository(db),
   passwordHasher: new BcryptPasswordHasher(),
   sessionManager: new IronSessionManager(),
+  authService: new NextAuthService(),
   teamRepository: new DrizzleSqliteTeamRepository(db),
   teamMemberRepository: new DrizzleSqliteTeamMemberRepository(db),
   invitationRepository: new DrizzleSqliteInvitationRepository(db),

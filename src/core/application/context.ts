@@ -1,3 +1,4 @@
+import type { AuthService } from "@/core/domain/auth/ports/authService";
 import type { KeyResultRepository } from "@/core/domain/okr/ports/keyResultRepository";
 import type { OkrRepository } from "@/core/domain/okr/ports/okrRepository";
 import type { ReviewRepository } from "@/core/domain/okr/ports/reviewRepository";
@@ -12,6 +13,7 @@ export interface Context {
   userRepository: UserRepository;
   passwordHasher: PasswordHasher;
   sessionManager: SessionManager;
+  authService: AuthService;
   teamRepository: TeamRepository;
   teamMemberRepository: TeamMemberRepository;
   invitationRepository: InvitationRepository;
