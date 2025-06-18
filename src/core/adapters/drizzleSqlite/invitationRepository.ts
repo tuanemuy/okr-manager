@@ -6,6 +6,7 @@ import type {
   InvitationStatus,
   InvitationWithTeam,
   ListInvitationQuery,
+  TeamId,
 } from "@/core/domain/team/types";
 import {
   invitationSchema,
@@ -43,7 +44,7 @@ export class DrizzleSqliteInvitationRepository implements InvitationRepository {
     }
   }
 
-  async findById(
+  async getById(
     id: InvitationId,
   ): Promise<Result<InvitationWithTeam | null, RepositoryError>> {
     try {
@@ -230,6 +231,34 @@ export class DrizzleSqliteInvitationRepository implements InvitationRepository {
       return err(
         new RepositoryError("Failed to list invitations by email", error),
       );
+    }
+  }
+
+  async getByTeamAndEmail(
+    teamId: TeamId,
+    email: string,
+  ): Promise<Result<Invitation | null, RepositoryError>> {
+    try {
+      const result = await this.db
+        .select()
+        .from(invitations)
+        .where(
+          and(
+            eq(invitations.teamId, teamId),
+            eq(invitations.invitedEmail, email),
+          ),
+        )
+        .limit(1);
+
+      if (result.length === 0) {
+        return ok(null);
+      }
+
+      return validate(invitationSchema, result[0]).mapErr((error) => {
+        return new RepositoryError("Invalid invitation data", error);
+      });
+    } catch (error) {
+      return err(new RepositoryError("Failed to find invitation", error));
     }
   }
 }

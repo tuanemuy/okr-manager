@@ -38,7 +38,7 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
     }
   }
 
-  async findById(
+  async getById(
     id: OkrId,
   ): Promise<Result<OkrWithKeyResults | null, RepositoryError>> {
     try {
@@ -135,10 +135,12 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
         return {
           ...okr,
           keyResults: allKeyResults.filter((kr) => kr.okrId === okr.id),
-          owner: owner ? {
-            displayName: owner.displayName,
-            email: owner.email,
-          } : undefined,
+          owner: owner
+            ? {
+                displayName: owner.displayName,
+                email: owner.email,
+              }
+            : undefined,
         };
       });
 
@@ -237,10 +239,12 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
         return {
           ...okr,
           keyResults: allKeyResults.filter((kr) => kr.okrId === okr.id),
-          owner: owner ? {
-            displayName: owner.displayName,
-            email: owner.email,
-          } : undefined,
+          owner: owner
+            ? {
+                displayName: owner.displayName,
+                email: owner.email,
+              }
+            : undefined,
         };
       });
 
@@ -297,10 +301,12 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
         return {
           ...okr,
           keyResults: allKeyResults.filter((kr) => kr.okrId === okr.id),
-          owner: owner ? {
-            displayName: owner.displayName,
-            email: owner.email,
-          } : undefined,
+          owner: owner
+            ? {
+                displayName: owner.displayName,
+                email: owner.email,
+              }
+            : undefined,
         };
       });
 

@@ -36,7 +36,7 @@ export class DrizzleSqliteUserRepository implements UserRepository {
     }
   }
 
-  async findById(id: UserId): Promise<Result<User | null, RepositoryError>> {
+  async getById(id: UserId): Promise<Result<User | null, RepositoryError>> {
     try {
       const result = await this.db.select().from(users).where(eq(users.id, id));
 
@@ -52,7 +52,7 @@ export class DrizzleSqliteUserRepository implements UserRepository {
     }
   }
 
-  async findByEmail(
+  async getByEmail(
     email: string,
   ): Promise<Result<User | null, RepositoryError>> {
     try {

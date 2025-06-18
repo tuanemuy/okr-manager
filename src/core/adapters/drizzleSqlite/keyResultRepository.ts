@@ -40,7 +40,7 @@ export class DrizzleSqliteKeyResultRepository implements KeyResultRepository {
     }
   }
 
-  async findById(
+  async getById(
     id: KeyResultId,
   ): Promise<Result<KeyResult | null, RepositoryError>> {
     try {
@@ -157,6 +157,32 @@ export class DrizzleSqliteKeyResultRepository implements KeyResultRepository {
     } catch (error) {
       return err(
         new RepositoryError("Failed to list key results by OKR", error),
+      );
+    }
+  }
+
+  async updateProgress(
+    id: KeyResultId,
+    currentValue: number,
+  ): Promise<Result<KeyResult, RepositoryError>> {
+    try {
+      const result = await this.db
+        .update(keyResults)
+        .set({ currentValue })
+        .where(eq(keyResults.id, id))
+        .returning();
+
+      const keyResult = result[0];
+      if (!keyResult) {
+        return err(new RepositoryError("Key result not found"));
+      }
+
+      return validate(keyResultSchema, keyResult).mapErr((error) => {
+        return new RepositoryError("Invalid key result data", error);
+      });
+    } catch (error) {
+      return err(
+        new RepositoryError("Failed to update key result progress", error),
       );
     }
   }

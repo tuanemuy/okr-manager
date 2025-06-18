@@ -45,7 +45,7 @@ export class DrizzleSqliteTeamMemberRepository implements TeamMemberRepository {
     }
   }
 
-  async findByTeamAndUser(
+  async getByTeamAndUser(
     teamId: TeamId,
     userId: UserId,
   ): Promise<Result<TeamMember | null, RepositoryError>> {
