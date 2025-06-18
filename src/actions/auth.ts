@@ -2,8 +2,8 @@
 
 import { createUser } from "@/core/application/user/createUser";
 import { loginUser } from "@/core/application/user/loginUser";
-import { context } from "./context";
 import { redirect } from "next/navigation";
+import { context } from "./context";
 
 export async function signupAction(formData: FormData) {
   const email = formData.get("email") as string;
@@ -37,7 +37,7 @@ export async function loginAction(formData: FormData) {
   }
 
   const user = result.value;
-  
+
   const sessionResult = await context.sessionManager.create({
     userId: user.id,
     email: user.email,
@@ -53,10 +53,10 @@ export async function loginAction(formData: FormData) {
 
 export async function logoutAction() {
   const result = await context.sessionManager.destroy();
-  
+
   if (result.isErr()) {
     console.error("Logout error:", result.error);
   }
-  
+
   redirect("/auth/login");
 }

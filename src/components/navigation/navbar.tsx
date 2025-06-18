@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { getSession, logout } from "@/actions/session";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -7,8 +7,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getSession, logout } from "@/actions/session";
-import { User, LogOut, Settings } from "lucide-react";
+import { LogOut, Mail, Settings, User } from "lucide-react";
+import Link from "next/link";
 
 export async function Navbar() {
   const session = await getSession();
@@ -38,6 +38,12 @@ export async function Navbar() {
               >
                 チーム
               </Link>
+              <Link
+                href="/invitations"
+                className="text-gray-900 hover:text-gray-700 px-3 py-2 text-sm font-medium"
+              >
+                招待
+              </Link>
             </div>
           </div>
 
@@ -48,14 +54,18 @@ export async function Navbar() {
                   <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
                     {session.displayName.charAt(0).toUpperCase()}
                   </div>
-                  <span className="hidden md:inline">{session.displayName}</span>
+                  <span className="hidden md:inline">
+                    {session.displayName}
+                  </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
                     <p className="font-medium">{session.displayName}</p>
-                    <p className="text-xs text-muted-foreground">{session.email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {session.email}
+                    </p>
                   </div>
                 </div>
                 <DropdownMenuSeparator />
@@ -63,6 +73,12 @@ export async function Navbar() {
                   <Link href="/profile" className="flex items-center">
                     <User className="mr-2 h-4 w-4" />
                     プロフィール
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/invitations" className="flex items-center">
+                    <Mail className="mr-2 h-4 w-4" />
+                    招待
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
