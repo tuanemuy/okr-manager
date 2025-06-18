@@ -52,13 +52,18 @@
 
 ## 次のステップ
 
-### 未実装のリポジトリアダプター
-- TeamRepository の Drizzle 実装
-- TeamMemberRepository の Drizzle 実装
-- InvitationRepository の Drizzle 実装
-- OkrRepository の Drizzle 実装
-- KeyResultRepository の Drizzle 実装
-- ReviewRepository の Drizzle 実装
+### 完了したリポジトリアダプター
+- ✅ TeamRepository の Drizzle 実装
+- ✅ TeamMemberRepository の Drizzle 実装  
+- ✅ InvitationRepository の Drizzle 実装
+- ✅ OkrRepository の Drizzle 実装（基本実装）
+- ✅ KeyResultRepository の Drizzle 実装（基本実装）
+- ✅ ReviewRepository の Drizzle 実装（基本実装）
+
+### 修正が必要なリポジトリアダプター
+- OkrRepository: 複合データ返却とリレーション処理を追加
+- KeyResultRepository: listByOkr メソッドを追加
+- ReviewRepository: 複合データ返却とリレーション処理を追加
 
 ### 未実装のアプリケーションサービス
 - チーム管理（作成、編集、削除）
@@ -80,6 +85,19 @@
 
 ## 現在の状況
 
-基本的なアーキテクチャとドメインモデルの実装が完了。
+### 完了した内容
+- ✅ 基本的なアーキテクチャとドメインモデルの実装
+- ✅ 全ドメインの型定義とポートインターフェース
+- ✅ データベース層（Drizzle SQLite Schema）
+- ✅ 全リポジトリアダプターの基本実装
+- ✅ 基本的なアプリケーションサービス（ユーザー作成・ログイン）
+
+### 現在の課題
 型安全性を重視した設計で、ビジネスロジックが明確に分離されている。
-次は残りのリポジトリ実装とアプリケーションサービスの充実が必要。
+一部のリポジトリメソッドでリレーションデータの取得機能に調整が必要だが、
+コアアーキテクチャは完成している。
+
+### 次のフェーズ
+- 残りのアプリケーションサービスの実装
+- フロントエンド実装
+- 認証システムの統合
