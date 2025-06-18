@@ -9,7 +9,7 @@ if (!fileName) {
 }
 
 const filePath = path.join(
-  import.meta.dirname,
+  process.cwd(),
   "src/core/adapters/drizzleSqlite",
   fileName,
 );

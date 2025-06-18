@@ -7,7 +7,11 @@ export * from "./schema";
 export type Database = ReturnType<typeof drizzle<typeof schema>>;
 
 export function getDatabase(fileName: string) {
-  const filePath = path.join(import.meta.dirname, fileName);
+  const filePath = path.join(
+    process.cwd(),
+    "src/core/adapters/drizzleSqlite",
+    fileName,
+  );
 
   return drizzle({
     client: createClient({
