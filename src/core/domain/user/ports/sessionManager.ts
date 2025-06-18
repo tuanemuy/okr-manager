@@ -10,6 +10,6 @@ export interface SessionData {
 
 export interface SessionManager {
   get(): Promise<Result<SessionData | null, ApplicationError>>;
-  create(userId: UserId): Promise<Result<void, ApplicationError>>;
+  create(sessionData: SessionData): Promise<Result<void, ApplicationError>>;
   destroy(): Promise<Result<void, ApplicationError>>;
 }
