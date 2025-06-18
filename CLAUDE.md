@@ -28,6 +28,12 @@ Hexagonal architecture with domain-driven design principles:
     - `src/core/application/context.ts`: Context type for dependency injection
     - `src/core/application/${domain}/${usecase}.ts`: Application services that orchestrate domain logic. Each service is a function that takes a context object.
 
+### External Services
+
+- **Database**: SQLite with Drizzle ORM
+- **Authentication**: Auth.js
+- Other external services can be added as needed
+
 ### Types example
 
 ```typescript
@@ -205,7 +211,7 @@ export async function createPost(
 }
 ```
 
-## Context object example
+### Context object example
 
 ```typescript
 // Context object for specific environment
@@ -235,12 +241,15 @@ export const context = {
 
 ## Frontend Architecture
 
-Next.js 15.2.1 application code using:
+### Libraries
 
+- Next.js 15.2.1
 - App Router
 - React 19
 - Tailwind CSS v4
 - shadcn/ui
+
+### Structure
 
 - UI Components
     - `src/app/components/ui/`: Reusable UI components using shadcn/ui
