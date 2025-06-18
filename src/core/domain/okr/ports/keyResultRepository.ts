@@ -13,7 +13,7 @@ export interface KeyResultRepository {
   create(
     params: CreateKeyResultParams,
   ): Promise<Result<KeyResult, RepositoryError>>;
-  findById(id: KeyResultId): Promise<Result<KeyResult | null, RepositoryError>>;
+  getById(id: KeyResultId): Promise<Result<KeyResult | null, RepositoryError>>;
   update(
     id: KeyResultId,
     params: UpdateKeyResultParams,
@@ -23,4 +23,8 @@ export interface KeyResultRepository {
     query: ListKeyResultQuery,
   ): Promise<Result<{ items: KeyResult[]; count: number }, RepositoryError>>;
   listByOkr(okrId: OkrId): Promise<Result<KeyResult[], RepositoryError>>;
+  updateProgress(
+    id: KeyResultId,
+    currentValue: number,
+  ): Promise<Result<KeyResult, RepositoryError>>;
 }

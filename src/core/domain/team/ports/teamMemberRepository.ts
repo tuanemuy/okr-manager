@@ -15,7 +15,7 @@ export interface TeamMemberRepository {
     userId: UserId,
     role: TeamRole,
   ): Promise<Result<TeamMember, RepositoryError>>;
-  findByTeamAndUser(
+  getByTeamAndUser(
     teamId: TeamId,
     userId: UserId,
   ): Promise<Result<TeamMember | null, RepositoryError>>;

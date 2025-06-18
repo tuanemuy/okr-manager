@@ -10,8 +10,8 @@ import type {
 
 export interface UserRepository {
   create(params: CreateUserParams): Promise<Result<User, RepositoryError>>;
-  findById(id: UserId): Promise<Result<User | null, RepositoryError>>;
-  findByEmail(email: string): Promise<Result<User | null, RepositoryError>>;
+  getById(id: UserId): Promise<Result<User | null, RepositoryError>>;
+  getByEmail(email: string): Promise<Result<User | null, RepositoryError>>;
   update(
     id: UserId,
     params: UpdateUserParams,

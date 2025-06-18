@@ -7,13 +7,14 @@ import type {
   InvitationStatus,
   InvitationWithTeam,
   ListInvitationQuery,
+  TeamId,
 } from "../types";
 
 export interface InvitationRepository {
   create(
     params: CreateInvitationParams,
   ): Promise<Result<Invitation, RepositoryError>>;
-  findById(
+  getById(
     id: InvitationId,
   ): Promise<Result<InvitationWithTeam | null, RepositoryError>>;
   updateStatus(
@@ -29,4 +30,8 @@ export interface InvitationRepository {
   listByEmail(
     email: string,
   ): Promise<Result<InvitationWithTeam[], RepositoryError>>;
+  getByTeamAndEmail(
+    teamId: TeamId,
+    email: string,
+  ): Promise<Result<Invitation | null, RepositoryError>>;
 }

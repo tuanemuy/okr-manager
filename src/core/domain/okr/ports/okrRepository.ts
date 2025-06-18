@@ -14,7 +14,7 @@ import type {
 
 export interface OkrRepository {
   create(params: CreateOkrParams): Promise<Result<Okr, RepositoryError>>;
-  findById(
+  getById(
     id: OkrId,
   ): Promise<Result<OkrWithKeyResults | null, RepositoryError>>;
   update(
