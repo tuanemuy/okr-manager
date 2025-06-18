@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -11,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { Plus, X } from "lucide-react";
 
 export default function NewOkrPage({
@@ -19,7 +19,7 @@ export default function NewOkrPage({
   params: { teamId: string };
 }) {
   // TODO: Implement form handling with server actions
-  
+
   return (
     <div className="container mx-auto py-8 max-w-4xl">
       <div className="mb-6">
@@ -44,7 +44,7 @@ export default function NewOkrPage({
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="type">タイプ *</Label>
                 <Select defaultValue="personal">
@@ -71,20 +71,12 @@ export default function NewOkrPage({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="startDate">開始日 *</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  required
-                />
+                <Input id="startDate" type="date" required />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="endDate">終了日 *</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  required
-                />
+                <Input id="endDate" type="date" required />
               </div>
             </div>
           </CardContent>
@@ -109,7 +101,7 @@ export default function NewOkrPage({
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="kr1-title">タイトル *</Label>
@@ -119,7 +111,7 @@ export default function NewOkrPage({
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="kr1-description">説明</Label>
                   <Textarea
@@ -128,7 +120,7 @@ export default function NewOkrPage({
                     rows={2}
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="kr1-current">現在値</Label>
@@ -139,7 +131,7 @@ export default function NewOkrPage({
                       defaultValue="0"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="kr1-target">目標値 *</Label>
                     <Input
@@ -149,13 +141,10 @@ export default function NewOkrPage({
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="kr1-unit">単位</Label>
-                    <Input
-                      id="kr1-unit"
-                      placeholder="例: 個, %, 人"
-                    />
+                    <Input id="kr1-unit" placeholder="例: 個, %, 人" />
                   </div>
                 </div>
               </div>
@@ -169,7 +158,7 @@ export default function NewOkrPage({
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="kr2-title">タイトル *</Label>
@@ -179,7 +168,7 @@ export default function NewOkrPage({
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="kr2-description">説明</Label>
                   <Textarea
@@ -188,7 +177,7 @@ export default function NewOkrPage({
                     rows={2}
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="kr2-current">現在値</Label>
@@ -199,7 +188,7 @@ export default function NewOkrPage({
                       defaultValue="0"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="kr2-target">目標値 *</Label>
                     <Input
@@ -209,13 +198,10 @@ export default function NewOkrPage({
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="kr2-unit">単位</Label>
-                    <Input
-                      id="kr2-unit"
-                      placeholder="例: 個, %, 人"
-                    />
+                    <Input id="kr2-unit" placeholder="例: 個, %, 人" />
                   </div>
                 </div>
               </div>
@@ -236,9 +222,7 @@ export default function NewOkrPage({
           <Button type="button" variant="outline">
             キャンセル
           </Button>
-          <Button type="submit">
-            OKRを作成
-          </Button>
+          <Button type="submit">OKRを作成</Button>
         </div>
       </form>
     </div>

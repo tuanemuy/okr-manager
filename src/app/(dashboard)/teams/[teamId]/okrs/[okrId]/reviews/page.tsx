@@ -1,7 +1,6 @@
-import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -10,7 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, MessageSquare, Star, Calendar } from "lucide-react";
+import { Calendar, MessageSquare, Plus, Star } from "lucide-react";
+import Link from "next/link";
 
 export default function OkrReviewsPage({
   params,
@@ -23,7 +23,8 @@ export default function OkrReviewsPage({
       id: "1",
       date: "2024-03-01",
       author: "John Doe",
-      content: "順調に進捗しています。新機能のリリースが予定通り進んでいます。テストカバレッジも目標に近づいており、品質面でも良好です。",
+      content:
+        "順調に進捗しています。新機能のリリースが予定通り進んでいます。テストカバレッジも目標に近づいており、品質面でも良好です。",
       score: 4,
       type: "regular",
     },
@@ -31,7 +32,8 @@ export default function OkrReviewsPage({
       id: "2",
       date: "2024-02-15",
       author: "Jane Smith",
-      content: "テストカバレッジの向上が素晴らしいです。品質が確実に向上しており、バグ数も順調に減少しています。",
+      content:
+        "テストカバレッジの向上が素晴らしいです。品質が確実に向上しており、バグ数も順調に減少しています。",
       score: 5,
       type: "regular",
     },
@@ -39,7 +41,8 @@ export default function OkrReviewsPage({
       id: "3",
       date: "2024-02-01",
       author: "Mike Johnson",
-      content: "最初の新機能をリリースしました。ユーザーからの反応も良好で、品質も期待通りです。",
+      content:
+        "最初の新機能をリリースしました。ユーザーからの反応も良好で、品質も期待通りです。",
       score: 4,
       type: "regular",
     },
@@ -47,7 +50,8 @@ export default function OkrReviewsPage({
       id: "4",
       date: "2024-01-15",
       author: "John Doe",
-      content: "プロジェクトを開始しました。チーム全体でコミットし、目標達成に向けて頑張ります。",
+      content:
+        "プロジェクトを開始しました。チーム全体でコミットし、目標達成に向けて頑張ります。",
       score: 3,
       type: "initial",
     },
@@ -81,7 +85,9 @@ export default function OkrReviewsPage({
             </p>
           </div>
           <Button asChild>
-            <Link href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}>
+            <Link
+              href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}
+            >
               <Plus className="h-4 w-4 mr-2" />
               新しいレビュー
             </Link>
@@ -95,10 +101,7 @@ export default function OkrReviewsPage({
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4">
-            <Input
-              placeholder="レビューを検索..."
-              className="md:max-w-sm"
-            />
+            <Input placeholder="レビューを検索..." className="md:max-w-sm" />
             <Select defaultValue="all">
               <SelectTrigger className="md:w-[180px]">
                 <SelectValue placeholder="タイプを選択" />
@@ -139,11 +142,11 @@ export default function OkrReviewsPage({
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
-                    {new Date(review.date).toLocaleDateString('ja-JP')}
+                    {new Date(review.date).toLocaleDateString("ja-JP")}
                   </div>
                   {getTypeBadge(review.type)}
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
@@ -167,7 +170,9 @@ export default function OkrReviewsPage({
               <p className="text-sm leading-relaxed">{review.content}</p>
               <div className="flex justify-end mt-4">
                 <Button variant="outline" size="sm" asChild>
-                  <Link href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/${review.id}`}>
+                  <Link
+                    href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/${review.id}`}
+                  >
                     詳細を見る
                   </Link>
                 </Button>
@@ -186,7 +191,9 @@ export default function OkrReviewsPage({
               最初のレビューを作成してOKRの進捗を記録しましょう
             </p>
             <Button asChild>
-              <Link href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}>
+              <Link
+                href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 新しいレビュー
               </Link>

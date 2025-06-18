@@ -1,7 +1,6 @@
-import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -11,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Target, User, Users } from "lucide-react";
+import Link from "next/link";
 
 export default function TeamOkrsPage({
   params,
@@ -112,10 +112,7 @@ export default function TeamOkrsPage({
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4">
-            <Input
-              placeholder="OKRを検索..."
-              className="md:max-w-sm"
-            />
+            <Input placeholder="OKRを検索..." className="md:max-w-sm" />
             <Select defaultValue="all">
               <SelectTrigger className="md:w-[180px]">
                 <SelectValue placeholder="期間を選択" />

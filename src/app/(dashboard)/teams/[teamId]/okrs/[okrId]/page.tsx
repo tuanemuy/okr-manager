@@ -1,18 +1,18 @@
-import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Target, 
-  User, 
-  Calendar, 
-  TrendingUp, 
-  Edit, 
+import {
+  Calendar,
+  Edit,
   MessageSquare,
-  Plus
+  Plus,
+  Target,
+  TrendingUp,
+  User,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function OkrDetailPage({
   params,
@@ -23,7 +23,8 @@ export default function OkrDetailPage({
   const okr = {
     id: params.okrId,
     title: "Q1 プロダクト開発",
-    description: "新機能のリリースと品質向上を通じて、ユーザー満足度を向上させる",
+    description:
+      "新機能のリリースと品質向上を通じて、ユーザー満足度を向上させる",
     type: "team",
     owner: "Engineering Team",
     period: "2024 Q1",
@@ -45,7 +46,7 @@ export default function OkrDetailPage({
       progress: 67,
     },
     {
-      id: "2", 
+      id: "2",
       title: "バグ数を50%削減する",
       description: "品質向上のためのテスト強化とコードレビュー",
       targetValue: 50,
@@ -75,8 +76,9 @@ export default function OkrDetailPage({
     {
       id: "2",
       date: "2024-02-15",
-      author: "Jane Smith", 
-      content: "テストカバレッジの向上が素晴らしいです。品質が確実に向上しています。",
+      author: "Jane Smith",
+      content:
+        "テストカバレッジの向上が素晴らしいです。品質が確実に向上しています。",
       score: 5,
     },
   ];
@@ -106,7 +108,9 @@ export default function OkrDetailPage({
               </Link>
             </Button>
             <Button asChild>
-              <Link href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}>
+              <Link
+                href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}
+              >
                 <MessageSquare className="h-4 w-4 mr-2" />
                 レビュー作成
               </Link>
@@ -131,24 +135,31 @@ export default function OkrDetailPage({
                         {kr.description}
                       </p>
                     </div>
-                    <Badge variant="outline" className={getProgressColor(kr.progress)}>
+                    <Badge
+                      variant="outline"
+                      className={getProgressColor(kr.progress)}
+                    >
                       {kr.progress}%
                     </Badge>
                   </div>
-                  
+
                   <div className="flex items-center justify-between text-sm mb-2">
                     <span>
-                      現在値: {kr.currentValue}{kr.unit} / 目標: {kr.targetValue}{kr.unit}
+                      現在値: {kr.currentValue}
+                      {kr.unit} / 目標: {kr.targetValue}
+                      {kr.unit}
                     </span>
                     <Button size="sm" variant="ghost">
                       <Edit className="h-3 w-3 mr-1" />
                       更新
                     </Button>
                   </div>
-                  
+
                   <Progress value={kr.progress} className="h-2" />
-                  
-                  {index < keyResults.length - 1 && <Separator className="mt-6" />}
+
+                  {index < keyResults.length - 1 && (
+                    <Separator className="mt-6" />
+                  )}
                 </div>
               ))}
             </CardContent>
@@ -159,7 +170,9 @@ export default function OkrDetailPage({
               <CardTitle className="flex items-center justify-between">
                 最近のレビュー
                 <Button size="sm" variant="outline" asChild>
-                  <Link href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews`}>
+                  <Link
+                    href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews`}
+                  >
                     すべて見る
                   </Link>
                 </Button>
@@ -172,23 +185,25 @@ export default function OkrDetailPage({
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{review.author}</span>
                       <span className="text-sm text-muted-foreground">
-                        {new Date(review.date).toLocaleDateString('ja-JP')}
+                        {new Date(review.date).toLocaleDateString("ja-JP")}
                       </span>
                     </div>
-                    <Badge variant="outline">
-                      {review.score}/5
-                    </Badge>
+                    <Badge variant="outline">{review.score}/5</Badge>
                   </div>
                   <p className="text-sm">{review.content}</p>
                 </div>
               ))}
-              
+
               {recentReviews.length === 0 && (
                 <div className="text-center py-8">
                   <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">まだレビューがありません</p>
+                  <p className="text-muted-foreground">
+                    まだレビューがありません
+                  </p>
                   <Button size="sm" className="mt-2" asChild>
-                    <Link href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}>
+                    <Link
+                      href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}
+                    >
                       <Plus className="h-3 w-3 mr-1" />
                       最初のレビューを作成
                     </Link>
@@ -209,25 +224,30 @@ export default function OkrDetailPage({
                 <User className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">所有者: {okr.owner}</span>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
-                  期間: {new Date(okr.startDate).toLocaleDateString('ja-JP')} - {new Date(okr.endDate).toLocaleDateString('ja-JP')}
+                  期間: {new Date(okr.startDate).toLocaleDateString("ja-JP")} -{" "}
+                  {new Date(okr.endDate).toLocaleDateString("ja-JP")}
                 </span>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">作成日: {new Date(okr.createdAt).toLocaleDateString('ja-JP')}</span>
+                <span className="text-sm">
+                  作成日: {new Date(okr.createdAt).toLocaleDateString("ja-JP")}
+                </span>
               </div>
 
               <Separator />
-              
+
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">全体進捗</span>
-                  <span className={`text-sm font-bold ${getProgressColor(okr.progress)}`}>
+                  <span
+                    className={`text-sm font-bold ${getProgressColor(okr.progress)}`}
+                  >
                     {okr.progress}%
                   </span>
                 </div>
@@ -242,14 +262,18 @@ export default function OkrDetailPage({
             </CardHeader>
             <CardContent className="space-y-2">
               <Button className="w-full" variant="outline" asChild>
-                <Link href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}>
+                <Link
+                  href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}
+                >
                   <MessageSquare className="h-4 w-4 mr-2" />
                   レビューを作成
                 </Link>
               </Button>
-              
+
               <Button className="w-full" variant="outline" asChild>
-                <Link href={`/teams/${params.teamId}/okrs/${params.okrId}/edit`}>
+                <Link
+                  href={`/teams/${params.teamId}/okrs/${params.okrId}/edit`}
+                >
                   <Edit className="h-4 w-4 mr-2" />
                   OKRを編集
                 </Link>

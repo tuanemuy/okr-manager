@@ -1,8 +1,14 @@
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -10,13 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { UserPlus, MoreHorizontal, Mail } from "lucide-react";
+import { Mail, MoreHorizontal, UserPlus } from "lucide-react";
 
 export default function TeamMembersPage({
   params,
@@ -33,7 +33,7 @@ export default function TeamMembersPage({
       joinedAt: "2024-01-15",
     },
     {
-      id: "2", 
+      id: "2",
       name: "Jane Smith",
       email: "jane@example.com",
       role: "member",
@@ -41,7 +41,7 @@ export default function TeamMembersPage({
     },
     {
       id: "3",
-      name: "Mike Johnson", 
+      name: "Mike Johnson",
       email: "mike@example.com",
       role: "member",
       joinedAt: "2024-02-15",
@@ -60,9 +60,7 @@ export default function TeamMembersPage({
     <div className="container mx-auto py-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">メンバー管理</h1>
-        <p className="text-muted-foreground mt-2">
-          チームメンバーの一覧と管理
-        </p>
+        <p className="text-muted-foreground mt-2">チームメンバーの一覧と管理</p>
       </div>
 
       <Card className="mb-6">
@@ -89,9 +87,7 @@ export default function TeamMembersPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>
-            メンバー一覧 ({members.length}人)
-          </CardTitle>
+          <CardTitle>メンバー一覧 ({members.length}人)</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -110,14 +106,19 @@ export default function TeamMembersPage({
                   <TableCell>
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
-                        {member.name.split(' ').map(n => n[0]).join('')}
+                        {member.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
                       </div>
                       <span className="font-medium">{member.name}</span>
                     </div>
                   </TableCell>
                   <TableCell>{member.email}</TableCell>
                   <TableCell>{getRoleBadge(member.role)}</TableCell>
-                  <TableCell>{new Date(member.joinedAt).toLocaleDateString('ja-JP')}</TableCell>
+                  <TableCell>
+                    {new Date(member.joinedAt).toLocaleDateString("ja-JP")}
+                  </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -126,9 +127,7 @@ export default function TeamMembersPage({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          役割を変更
-                        </DropdownMenuItem>
+                        <DropdownMenuItem>役割を変更</DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive">
                           メンバーを削除
                         </DropdownMenuItem>

@@ -1,5 +1,5 @@
-import { Navbar } from "@/components/navigation/navbar";
 import { requireAuth } from "@/actions/session";
+import { Navbar } from "@/components/navigation/navbar";
 
 export default async function DashboardLayout({
   children,
