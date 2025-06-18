@@ -28,7 +28,8 @@ export const okrSchema = z.object({
   type: okrTypeSchema,
   teamId: teamIdSchema,
   ownerId: userIdSchema.optional(),
-  quarter: quarterSchema,
+  quarterYear: z.number().int().min(2020).max(2100),
+  quarterQuarter: z.number().int().min(1).max(4),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -40,7 +41,8 @@ export const createOkrParamsSchema = z.object({
   type: okrTypeSchema,
   teamId: teamIdSchema,
   ownerId: userIdSchema.optional(),
-  quarter: quarterSchema,
+  quarterYear: z.number().int().min(2020).max(2100),
+  quarterQuarter: z.number().int().min(1).max(4),
 });
 export type CreateOkrParams = z.infer<typeof createOkrParamsSchema>;
 
@@ -113,7 +115,8 @@ export const okrWithKeyResultsSchema = z.object({
   type: okrTypeSchema,
   teamId: teamIdSchema,
   ownerId: userIdSchema.optional(),
-  quarter: quarterSchema,
+  quarterYear: z.number().int().min(2020).max(2100),
+  quarterQuarter: z.number().int().min(1).max(4),
   createdAt: z.date(),
   updatedAt: z.date(),
   keyResults: z.array(keyResultSchema),
@@ -148,7 +151,8 @@ export const listOkrQuerySchema = z.object({
       teamId: teamIdSchema.optional(),
       ownerId: userIdSchema.optional(),
       type: okrTypeSchema.optional(),
-      quarter: quarterSchema.optional(),
+      year: z.number().int().min(2020).max(2100).optional(),
+      quarter: z.number().int().min(1).max(4).optional(),
       title: z.string().optional(),
     })
     .optional(),
