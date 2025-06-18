@@ -18,7 +18,7 @@ export class ValidationError<T> extends AnyError {
  * Validates data against a schema and returns a Result
  */
 export function validate<T>(
-  schema: z.ZodType<T>,
+  schema: z.ZodSchema<T>,
   data: unknown,
 ): Result<T, ValidationError<T>> {
   const result = schema.safeParse(data);
