@@ -14,10 +14,26 @@ import { v7 as uuidv7 } from "uuid";
 export class MockUserRepository implements UserRepository {
   private users: Map<UserId, User> = new Map();
   private emailIndex: Map<string, UserId> = new Map();
+  private shouldFailCreate = false;
+  private shouldFailGetById = false;
+  private shouldFailGetByEmail = false;
+  private shouldFailUpdate = false;
+  private shouldFailDelete = false;
+  private shouldFailList = false;
+  private createErrorMessage = "Failed to create user";
+  private getByIdErrorMessage = "Failed to get user by ID";
+  private getByEmailErrorMessage = "Failed to get user by email";
+  private updateErrorMessage = "Failed to update user";
+  private deleteErrorMessage = "Failed to delete user";
+  private listErrorMessage = "Failed to list users";
 
   async create(
     params: CreateUserParams,
   ): Promise<Result<User, RepositoryError>> {
+    if (this.shouldFailCreate) {
+      return err(new RepositoryError(this.createErrorMessage));
+    }
+    
     const id = uuidv7() as UserId;
     const user: User = {
       id,
@@ -35,6 +51,9 @@ export class MockUserRepository implements UserRepository {
   }
 
   async getById(id: UserId): Promise<Result<User | null, RepositoryError>> {
+    if (this.shouldFailGetById) {
+      return err(new RepositoryError(this.getByIdErrorMessage));
+    }
     const user = this.users.get(id) || null;
     return ok(user);
   }
@@ -42,6 +61,9 @@ export class MockUserRepository implements UserRepository {
   async getByEmail(
     email: string,
   ): Promise<Result<User | null, RepositoryError>> {
+    if (this.shouldFailGetByEmail) {
+      return err(new RepositoryError(this.getByEmailErrorMessage));
+    }
     const userId = this.emailIndex.get(email);
     if (!userId) {
       return ok(null);
@@ -115,6 +137,12 @@ export class MockUserRepository implements UserRepository {
   clear(): void {
     this.users.clear();
     this.emailIndex.clear();
+    this.shouldFailCreate = false;
+    this.shouldFailGetById = false;
+    this.shouldFailGetByEmail = false;
+    this.shouldFailUpdate = false;
+    this.shouldFailDelete = false;
+    this.shouldFailList = false;
   }
 
   seed(users: User[]): void {
@@ -122,6 +150,48 @@ export class MockUserRepository implements UserRepository {
     for (const user of users) {
       this.users.set(user.id, user);
       this.emailIndex.set(user.email, user.id);
+    }
+  }
+
+  setShouldFailCreate(shouldFail: boolean, errorMessage?: string): void {
+    this.shouldFailCreate = shouldFail;
+    if (errorMessage) {
+      this.createErrorMessage = errorMessage;
+    }
+  }
+
+  setShouldFailGetById(shouldFail: boolean, errorMessage?: string): void {
+    this.shouldFailGetById = shouldFail;
+    if (errorMessage) {
+      this.getByIdErrorMessage = errorMessage;
+    }
+  }
+
+  setShouldFailGetByEmail(shouldFail: boolean, errorMessage?: string): void {
+    this.shouldFailGetByEmail = shouldFail;
+    if (errorMessage) {
+      this.getByEmailErrorMessage = errorMessage;
+    }
+  }
+
+  setShouldFailUpdate(shouldFail: boolean, errorMessage?: string): void {
+    this.shouldFailUpdate = shouldFail;
+    if (errorMessage) {
+      this.updateErrorMessage = errorMessage;
+    }
+  }
+
+  setShouldFailDelete(shouldFail: boolean, errorMessage?: string): void {
+    this.shouldFailDelete = shouldFail;
+    if (errorMessage) {
+      this.deleteErrorMessage = errorMessage;
+    }
+  }
+
+  setShouldFailList(shouldFail: boolean, errorMessage?: string): void {
+    this.shouldFailList = shouldFail;
+    if (errorMessage) {
+      this.listErrorMessage = errorMessage;
     }
   }
 }
