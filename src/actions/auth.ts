@@ -36,10 +36,27 @@ export async function loginAction(formData: FormData) {
     throw new Error(result.error.message);
   }
 
+  const user = result.value;
+  
+  const sessionResult = await context.sessionManager.create({
+    userId: user.id,
+    email: user.email,
+    displayName: user.displayName,
+  });
+
+  if (sessionResult.isErr()) {
+    throw new Error("Failed to create session");
+  }
+
   redirect("/dashboard");
 }
 
 export async function logoutAction() {
-  // TODO: Implement logout with session manager
+  const result = await context.sessionManager.destroy();
+  
+  if (result.isErr()) {
+    console.error("Logout error:", result.error);
+  }
+  
   redirect("/auth/login");
 }
