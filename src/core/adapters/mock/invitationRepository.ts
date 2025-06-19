@@ -14,8 +14,10 @@ import { v7 as uuidv7 } from "uuid";
 
 export class MockInvitationRepository implements InvitationRepository {
   private invitations: Map<InvitationId, Invitation> = new Map();
-  private teamProfiles: Map<TeamId, { name: string; description?: string }> = new Map();
-  private userProfiles: Map<string, { displayName: string; email: string }> = new Map();
+  private teamProfiles: Map<TeamId, { name: string; description?: string }> =
+    new Map();
+  private userProfiles: Map<string, { displayName: string; email: string }> =
+    new Map();
   private shouldFailCreate = false;
   private shouldFailGetById = false;
   private shouldFailUpdateStatus = false;
@@ -29,7 +31,8 @@ export class MockInvitationRepository implements InvitationRepository {
   private deleteErrorMessage = "Failed to delete invitation";
   private listErrorMessage = "Failed to list invitations";
   private listByEmailErrorMessage = "Failed to list invitations by email";
-  private getByTeamAndEmailErrorMessage = "Failed to get invitation by team and email";
+  private getByTeamAndEmailErrorMessage =
+    "Failed to get invitation by team and email";
 
   async create(
     params: CreateInvitationParams,
@@ -47,7 +50,11 @@ export class MockInvitationRepository implements InvitationRepository {
     );
 
     if (existingInvitation) {
-      return err(new RepositoryError("Invitation already exists for this team and email"));
+      return err(
+        new RepositoryError(
+          "Invitation already exists for this team and email",
+        ),
+      );
     }
 
     const id = uuidv7() as InvitationId;
@@ -135,7 +142,9 @@ export class MockInvitationRepository implements InvitationRepository {
 
   async list(
     query: ListInvitationQuery,
-  ): Promise<Result<{ items: InvitationWithTeam[]; count: number }, RepositoryError>> {
+  ): Promise<
+    Result<{ items: InvitationWithTeam[]; count: number }, RepositoryError>
+  > {
     if (this.shouldFailList) {
       return err(new RepositoryError(this.listErrorMessage));
     }
@@ -168,7 +177,9 @@ export class MockInvitationRepository implements InvitationRepository {
           description: undefined,
         };
 
-        const inviterProfile = this.userProfiles.get(invitation.invitedById) || {
+        const inviterProfile = this.userProfiles.get(
+          invitation.invitedById,
+        ) || {
           displayName: `User ${invitation.invitedById}`,
           email: `user${invitation.invitedById}@example.com`,
         };
@@ -212,7 +223,9 @@ export class MockInvitationRepository implements InvitationRepository {
           description: undefined,
         };
 
-        const inviterProfile = this.userProfiles.get(invitation.invitedById) || {
+        const inviterProfile = this.userProfiles.get(
+          invitation.invitedById,
+        ) || {
           displayName: `User ${invitation.invitedById}`,
           email: `user${invitation.invitedById}@example.com`,
         };
@@ -321,7 +334,10 @@ export class MockInvitationRepository implements InvitationRepository {
     }
   }
 
-  setShouldFailGetByTeamAndEmail(shouldFail: boolean, errorMessage?: string): void {
+  setShouldFailGetByTeamAndEmail(
+    shouldFail: boolean,
+    errorMessage?: string,
+  ): void {
     this.shouldFailGetByTeamAndEmail = shouldFail;
     if (errorMessage) {
       this.getByTeamAndEmailErrorMessage = errorMessage;

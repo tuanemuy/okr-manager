@@ -51,7 +51,9 @@ export class MockKeyResultRepository implements KeyResultRepository {
     return ok(keyResult);
   }
 
-  async getById(id: KeyResultId): Promise<Result<KeyResult | null, RepositoryError>> {
+  async getById(
+    id: KeyResultId,
+  ): Promise<Result<KeyResult | null, RepositoryError>> {
     if (this.shouldFailGetById) {
       return err(new RepositoryError(this.getByIdErrorMessage));
     }
@@ -222,7 +224,10 @@ export class MockKeyResultRepository implements KeyResultRepository {
     }
   }
 
-  setShouldFailUpdateProgress(shouldFail: boolean, errorMessage?: string): void {
+  setShouldFailUpdateProgress(
+    shouldFail: boolean,
+    errorMessage?: string,
+  ): void {
     this.shouldFailUpdateProgress = shouldFail;
     if (errorMessage) {
       this.updateProgressErrorMessage = errorMessage;

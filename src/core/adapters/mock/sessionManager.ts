@@ -21,7 +21,9 @@ export class MockSessionManager implements SessionManager {
     return ok(this.currentSession);
   }
 
-  async create(sessionData: SessionData): Promise<Result<void, ApplicationError>> {
+  async create(
+    sessionData: SessionData,
+  ): Promise<Result<void, ApplicationError>> {
     if (this.shouldFailCreate) {
       return err(new ApplicationError(this.createErrorMessage));
     }

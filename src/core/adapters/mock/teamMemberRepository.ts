@@ -17,7 +17,8 @@ interface TeamMemberKey {
 
 export class MockTeamMemberRepository implements TeamMemberRepository {
   private members: Map<string, TeamMember> = new Map();
-  private userProfiles: Map<UserId, { displayName: string; email: string }> = new Map();
+  private userProfiles: Map<UserId, { displayName: string; email: string }> =
+    new Map();
   private shouldFailCreate = false;
   private shouldFailGetByTeamAndUser = false;
   private shouldFailUpdateRole = false;
@@ -120,7 +121,9 @@ export class MockTeamMemberRepository implements TeamMemberRepository {
 
   async list(
     query: ListTeamMemberQuery,
-  ): Promise<Result<{ items: TeamMemberWithUser[]; count: number }, RepositoryError>> {
+  ): Promise<
+    Result<{ items: TeamMemberWithUser[]; count: number }, RepositoryError>
+  > {
     if (this.shouldFailList) {
       return err(new RepositoryError(this.listErrorMessage));
     }
@@ -238,7 +241,10 @@ export class MockTeamMemberRepository implements TeamMemberRepository {
     }
   }
 
-  setShouldFailGetByTeamAndUser(shouldFail: boolean, errorMessage?: string): void {
+  setShouldFailGetByTeamAndUser(
+    shouldFail: boolean,
+    errorMessage?: string,
+  ): void {
     this.shouldFailGetByTeamAndUser = shouldFail;
     if (errorMessage) {
       this.getByTeamAndUserErrorMessage = errorMessage;

@@ -27,7 +27,9 @@ export class MockTeamRepository implements TeamRepository {
   private listErrorMessage = "Failed to list teams";
   private listByUserIdErrorMessage = "Failed to list teams by user ID";
 
-  async create(params: CreateTeamParams): Promise<Result<Team, RepositoryError>> {
+  async create(
+    params: CreateTeamParams,
+  ): Promise<Result<Team, RepositoryError>> {
     if (this.shouldFailCreate) {
       return err(new RepositoryError(this.createErrorMessage));
     }
@@ -42,7 +44,7 @@ export class MockTeamRepository implements TeamRepository {
     };
 
     this.teams.set(id, team);
-    
+
     // Add to user's teams
     const userTeams = this.teamsByUser.get(params.creatorId) || [];
     userTeams.push(id);
@@ -97,7 +99,7 @@ export class MockTeamRepository implements TeamRepository {
 
     // Remove from all user team lists
     for (const [userId, teamIds] of this.teamsByUser.entries()) {
-      const filteredTeamIds = teamIds.filter(teamId => teamId !== id);
+      const filteredTeamIds = teamIds.filter((teamId) => teamId !== id);
       if (filteredTeamIds.length === 0) {
         this.teamsByUser.delete(userId);
       } else {
@@ -121,7 +123,9 @@ export class MockTeamRepository implements TeamRepository {
     let filteredTeams = teams;
     if (query.filter?.name) {
       filteredTeams = filteredTeams.filter((team) =>
-        team.name.toLowerCase().includes(query.filter?.name?.toLowerCase() || ""),
+        team.name
+          .toLowerCase()
+          .includes(query.filter?.name?.toLowerCase() || ""),
       );
     }
     if (query.filter?.userId) {

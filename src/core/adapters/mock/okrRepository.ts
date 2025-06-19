@@ -18,7 +18,8 @@ import { v7 as uuidv7 } from "uuid";
 export class MockOkrRepository implements OkrRepository {
   private okrs: Map<OkrId, Okr> = new Map();
   private keyResults: Map<OkrId, KeyResult[]> = new Map();
-  private userProfiles: Map<UserId, { displayName: string; email: string }> = new Map();
+  private userProfiles: Map<UserId, { displayName: string; email: string }> =
+    new Map();
   private shouldFailCreate = false;
   private shouldFailGetById = false;
   private shouldFailUpdate = false;
@@ -61,7 +62,9 @@ export class MockOkrRepository implements OkrRepository {
     return ok(okr);
   }
 
-  async getById(id: OkrId): Promise<Result<OkrWithKeyResults | null, RepositoryError>> {
+  async getById(
+    id: OkrId,
+  ): Promise<Result<OkrWithKeyResults | null, RepositoryError>> {
     if (this.shouldFailGetById) {
       return err(new RepositoryError(this.getByIdErrorMessage));
     }
@@ -72,7 +75,9 @@ export class MockOkrRepository implements OkrRepository {
     }
 
     const keyResults = this.keyResults.get(id) || [];
-    const ownerProfile = okr.ownerId ? this.userProfiles.get(okr.ownerId) : undefined;
+    const ownerProfile = okr.ownerId
+      ? this.userProfiles.get(okr.ownerId)
+      : undefined;
 
     const okrWithKeyResults: OkrWithKeyResults = {
       ...okr,
@@ -123,7 +128,9 @@ export class MockOkrRepository implements OkrRepository {
 
   async list(
     query: ListOkrQuery,
-  ): Promise<Result<{ items: OkrWithKeyResults[]; count: number }, RepositoryError>> {
+  ): Promise<
+    Result<{ items: OkrWithKeyResults[]; count: number }, RepositoryError>
+  > {
     if (this.shouldFailList) {
       return err(new RepositoryError(this.listErrorMessage));
     }
@@ -133,30 +140,44 @@ export class MockOkrRepository implements OkrRepository {
     // Apply filters
     let filteredOkrs = okrs;
     if (query.filter?.teamId) {
-      filteredOkrs = filteredOkrs.filter((okr) => okr.teamId === query.filter?.teamId);
+      filteredOkrs = filteredOkrs.filter(
+        (okr) => okr.teamId === query.filter?.teamId,
+      );
     }
     if (query.filter?.ownerId) {
-      filteredOkrs = filteredOkrs.filter((okr) => okr.ownerId === query.filter?.ownerId);
+      filteredOkrs = filteredOkrs.filter(
+        (okr) => okr.ownerId === query.filter?.ownerId,
+      );
     }
     if (query.filter?.type) {
-      filteredOkrs = filteredOkrs.filter((okr) => okr.type === query.filter?.type);
+      filteredOkrs = filteredOkrs.filter(
+        (okr) => okr.type === query.filter?.type,
+      );
     }
     if (query.filter?.year) {
-      filteredOkrs = filteredOkrs.filter((okr) => okr.quarterYear === query.filter?.year);
+      filteredOkrs = filteredOkrs.filter(
+        (okr) => okr.quarterYear === query.filter?.year,
+      );
     }
     if (query.filter?.quarter) {
-      filteredOkrs = filteredOkrs.filter((okr) => okr.quarterQuarter === query.filter?.quarter);
+      filteredOkrs = filteredOkrs.filter(
+        (okr) => okr.quarterQuarter === query.filter?.quarter,
+      );
     }
     if (query.filter?.title) {
       filteredOkrs = filteredOkrs.filter((okr) =>
-        okr.title.toLowerCase().includes(query.filter?.title?.toLowerCase() || ""),
+        okr.title
+          .toLowerCase()
+          .includes(query.filter?.title?.toLowerCase() || ""),
       );
     }
 
     // Convert to OkrWithKeyResults
     const okrsWithKeyResults: OkrWithKeyResults[] = filteredOkrs.map((okr) => {
       const keyResults = this.keyResults.get(okr.id) || [];
-      const ownerProfile = okr.ownerId ? this.userProfiles.get(okr.ownerId) : undefined;
+      const ownerProfile = okr.ownerId
+        ? this.userProfiles.get(okr.ownerId)
+        : undefined;
 
       return {
         ...okr,
@@ -189,14 +210,19 @@ export class MockOkrRepository implements OkrRepository {
     const okrs = Array.from(this.okrs.values()).filter((okr) => {
       if (okr.teamId !== teamId) return false;
       if (quarter) {
-        return okr.quarterYear === quarter.year && okr.quarterQuarter === quarter.quarter;
+        return (
+          okr.quarterYear === quarter.year &&
+          okr.quarterQuarter === quarter.quarter
+        );
       }
       return true;
     });
 
     const okrsWithKeyResults: OkrWithKeyResults[] = okrs.map((okr) => {
       const keyResults = this.keyResults.get(okr.id) || [];
-      const ownerProfile = okr.ownerId ? this.userProfiles.get(okr.ownerId) : undefined;
+      const ownerProfile = okr.ownerId
+        ? this.userProfiles.get(okr.ownerId)
+        : undefined;
 
       return {
         ...okr,
@@ -219,14 +245,19 @@ export class MockOkrRepository implements OkrRepository {
     const okrs = Array.from(this.okrs.values()).filter((okr) => {
       if (okr.ownerId !== userId) return false;
       if (quarter) {
-        return okr.quarterYear === quarter.year && okr.quarterQuarter === quarter.quarter;
+        return (
+          okr.quarterYear === quarter.year &&
+          okr.quarterQuarter === quarter.quarter
+        );
       }
       return true;
     });
 
     const okrsWithKeyResults: OkrWithKeyResults[] = okrs.map((okr) => {
       const keyResults = this.keyResults.get(okr.id) || [];
-      const ownerProfile = okr.ownerId ? this.userProfiles.get(okr.ownerId) : undefined;
+      const ownerProfile = okr.ownerId
+        ? this.userProfiles.get(okr.ownerId)
+        : undefined;
 
       return {
         ...okr,

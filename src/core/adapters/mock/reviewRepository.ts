@@ -15,7 +15,8 @@ import { v7 as uuidv7 } from "uuid";
 
 export class MockReviewRepository implements ReviewRepository {
   private reviews: Map<ReviewId, Review> = new Map();
-  private userProfiles: Map<UserId, { displayName: string; email: string }> = new Map();
+  private userProfiles: Map<UserId, { displayName: string; email: string }> =
+    new Map();
   private shouldFailCreate = false;
   private shouldFailFindById = false;
   private shouldFailUpdate = false;
@@ -51,7 +52,9 @@ export class MockReviewRepository implements ReviewRepository {
     return ok(review);
   }
 
-  async findById(id: ReviewId): Promise<Result<ReviewWithReviewer | null, RepositoryError>> {
+  async findById(
+    id: ReviewId,
+  ): Promise<Result<ReviewWithReviewer | null, RepositoryError>> {
     if (this.shouldFailFindById) {
       return err(new RepositoryError(this.findByIdErrorMessage));
     }
@@ -112,7 +115,9 @@ export class MockReviewRepository implements ReviewRepository {
 
   async list(
     query: ListReviewQuery,
-  ): Promise<Result<{ items: ReviewWithReviewer[]; count: number }, RepositoryError>> {
+  ): Promise<
+    Result<{ items: ReviewWithReviewer[]; count: number }, RepositoryError>
+  > {
     if (this.shouldFailList) {
       return err(new RepositoryError(this.listErrorMessage));
     }
@@ -165,7 +170,9 @@ export class MockReviewRepository implements ReviewRepository {
     });
   }
 
-  async listByOkr(okrId: OkrId): Promise<Result<ReviewWithReviewer[], RepositoryError>> {
+  async listByOkr(
+    okrId: OkrId,
+  ): Promise<Result<ReviewWithReviewer[], RepositoryError>> {
     if (this.shouldFailListByOkr) {
       return err(new RepositoryError(this.listByOkrErrorMessage));
     }

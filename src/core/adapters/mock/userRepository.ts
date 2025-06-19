@@ -33,7 +33,7 @@ export class MockUserRepository implements UserRepository {
     if (this.shouldFailCreate) {
       return err(new RepositoryError(this.createErrorMessage));
     }
-    
+
     const id = uuidv7() as UserId;
     const user: User = {
       id,
