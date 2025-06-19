@@ -1,12 +1,8 @@
+import type { SessionData as AuthSessionData } from "@/core/domain/auth/types";
 import type { ApplicationError } from "@/lib/error";
 import type { Result } from "neverthrow";
-import type { UserId } from "../types";
 
-export interface SessionData {
-  userId: UserId;
-  email: string;
-  displayName: string;
-}
+export type SessionData = AuthSessionData;
 
 export interface SessionManager {
   get(): Promise<Result<SessionData | null, ApplicationError>>;
