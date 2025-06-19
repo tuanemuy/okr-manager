@@ -1,47 +1,38 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { MockPasswordHasher } from "@/core/adapters/mock/passwordHasher";
-import { MockSessionManager } from "@/core/adapters/mock/sessionManager";
-import { MockUserRepository } from "@/core/adapters/mock/userRepository";
-import { MockAuthService } from "@/core/adapters/mock/authService";
+import type { MockPasswordHasher } from "@/core/adapters/mock/passwordHasher";
+import type { MockSessionManager } from "@/core/adapters/mock/sessionManager";
+import type { MockUserRepository } from "@/core/adapters/mock/userRepository";
 import { type User, userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
+import { beforeEach, describe, expect, it } from "vitest";
 import type { Context } from "../context";
-import { loginUser, type LoginUserInput } from "./loginUser";
+import { createTestContext } from "../testUtils";
+import { type LoginUserInput, loginUser } from "./loginUser";
 
 describe("loginUser", () => {
   let context: Context;
   let mockUserRepository: MockUserRepository;
   let mockPasswordHasher: MockPasswordHasher;
   let mockSessionManager: MockSessionManager;
-  let mockAuthService: MockAuthService;
   let testUser: User;
   let validInput: LoginUserInput;
 
   beforeEach(async () => {
-    mockUserRepository = new MockUserRepository();
-    mockPasswordHasher = new MockPasswordHasher();
-    mockSessionManager = new MockSessionManager();
-    mockAuthService = new MockAuthService();
-
-    context = {
-      userRepository: mockUserRepository,
-      passwordHasher: mockPasswordHasher,
-      sessionManager: mockSessionManager,
-      authService: mockAuthService,
-      teamRepository: {} as any,
-      teamMemberRepository: {} as any,
-      invitationRepository: {} as any,
-      okrRepository: {} as any,
-      keyResultRepository: {} as any,
-      reviewRepository: {} as any,
-    };
+    context = createTestContext();
+    mockUserRepository = context.userRepository as MockUserRepository;
+    mockPasswordHasher = context.passwordHasher as MockPasswordHasher;
+    mockSessionManager = context.sessionManager as MockSessionManager;
 
     // Set up test user
+    const hashedPasswordResult = await mockPasswordHasher.hash("password123");
+    if (hashedPasswordResult.isErr()) {
+      throw new Error("Failed to hash password in test setup");
+    }
+
     testUser = {
       id: userIdSchema.parse("550e8400-e29b-41d4-a716-446655440000"),
       email: "test@example.com",
       displayName: "Test User",
-      hashedPassword: await mockPasswordHasher.hash("password123"),
+      hashedPassword: hashedPasswordResult.value,
       createdAt: new Date("2024-01-01T00:00:00Z"),
       updatedAt: new Date("2024-01-01T00:00:00Z"),
     };
@@ -52,11 +43,16 @@ describe("loginUser", () => {
     };
 
     // Seed the user repository
-    await mockUserRepository.create({
+    const userResult = await mockUserRepository.create({
       email: testUser.email,
       displayName: testUser.displayName,
       hashedPassword: testUser.hashedPassword,
     });
+
+    // Update user to match what was actually created
+    if (userResult.isOk()) {
+      testUser = userResult.value;
+    }
   });
 
   describe("successful login", () => {
@@ -75,8 +71,8 @@ describe("loginUser", () => {
       const sessionResult = await mockSessionManager.get();
       expect(sessionResult.isOk()).toBe(true);
       if (sessionResult.isOk() && sessionResult.value) {
-        expect(sessionResult.value.email).toBe(testUser.email);
-        expect(sessionResult.value.displayName).toBe(testUser.displayName);
+        expect(sessionResult.value.user.email).toBe(testUser.email);
+        expect(sessionResult.value.user.name).toBe(testUser.displayName);
       }
     });
 
@@ -86,13 +82,13 @@ describe("loginUser", () => {
 
       // Assert
       expect(result.isOk()).toBe(true);
-      
+
       const sessionResult = await mockSessionManager.get();
       expect(sessionResult.isOk()).toBe(true);
       if (sessionResult.isOk() && sessionResult.value) {
-        expect(sessionResult.value.userId).toBe(testUser.id);
-        expect(sessionResult.value.email).toBe(testUser.email);
-        expect(sessionResult.value.displayName).toBe(testUser.displayName);
+        expect(sessionResult.value.user.id).toBe(testUser.id);
+        expect(sessionResult.value.user.email).toBe(testUser.email);
+        expect(sessionResult.value.user.name).toBe(testUser.displayName);
       }
     });
   });
@@ -204,7 +200,10 @@ describe("loginUser", () => {
   describe("repository errors", () => {
     it("should handle user repository fetch errors", async () => {
       // Arrange
-      mockUserRepository.setShouldFailGetByEmail(true, "Database connection failed");
+      mockUserRepository.setShouldFailGetByEmail(
+        true,
+        "Database connection failed",
+      );
 
       // Act
       const result = await loginUser(context, validInput);
@@ -254,10 +253,15 @@ describe("loginUser", () => {
     it("should handle very long passwords", async () => {
       // Arrange
       const longPassword = "a".repeat(1000);
+      const hashedResult = await mockPasswordHasher.hash(longPassword);
+      if (hashedResult.isErr()) {
+        throw new Error("Failed to hash password in test");
+      }
+
       const longPasswordUser = {
         ...testUser,
         email: "longpass@example.com",
-        hashedPassword: await mockPasswordHasher.hash(longPassword),
+        hashedPassword: hashedResult.value,
       };
 
       await mockUserRepository.create({
@@ -281,10 +285,15 @@ describe("loginUser", () => {
     it("should handle special characters in password", async () => {
       // Arrange
       const specialPassword = "p@$$w0rd!@#$%^&*()";
+      const hashedResult = await mockPasswordHasher.hash(specialPassword);
+      if (hashedResult.isErr()) {
+        throw new Error("Failed to hash password in test");
+      }
+
       const specialPasswordUser = {
         ...testUser,
         email: "special@example.com",
-        hashedPassword: await mockPasswordHasher.hash(specialPassword),
+        hashedPassword: hashedResult.value,
       };
 
       await mockUserRepository.create({
@@ -316,9 +325,9 @@ describe("loginUser", () => {
       ]);
 
       // Assert: All should either succeed or fail consistently
-      const successCount = results.filter(r => r.isOk()).length;
-      const failureCount = results.filter(r => r.isErr()).length;
-      
+      const successCount = results.filter((r) => r.isOk()).length;
+      const failureCount = results.filter((r) => r.isErr()).length;
+
       // At least one should succeed (the first one to create session)
       // Others might fail due to session conflicts, which is acceptable
       expect(successCount).toBeGreaterThanOrEqual(1);

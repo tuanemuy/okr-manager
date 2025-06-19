@@ -1,32 +1,19 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { MockAuthService } from "@/core/adapters/mock/authService";
-import { MockInvitationRepository } from "@/core/adapters/mock/invitationRepository";
-import { MockKeyResultRepository } from "@/core/adapters/mock/keyResultRepository";
-import { MockOkrRepository } from "@/core/adapters/mock/okrRepository";
-import { MockPasswordHasher } from "@/core/adapters/mock/passwordHasher";
-import { MockReviewRepository } from "@/core/adapters/mock/reviewRepository";
-import { MockSessionManager } from "@/core/adapters/mock/sessionManager";
-import { MockTeamMemberRepository } from "@/core/adapters/mock/teamMemberRepository";
-import { MockTeamRepository } from "@/core/adapters/mock/teamRepository";
-import { MockUserRepository } from "@/core/adapters/mock/userRepository";
-import { teamIdSchema, type TeamMember } from "@/core/domain/team/types";
+import type { MockKeyResultRepository } from "@/core/adapters/mock/keyResultRepository";
+import type { MockOkrRepository } from "@/core/adapters/mock/okrRepository";
+import type { MockTeamMemberRepository } from "@/core/adapters/mock/teamMemberRepository";
+import { type TeamMember, teamIdSchema } from "@/core/domain/team/types";
 import { userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
+import { beforeEach, describe, expect, it } from "vitest";
 import type { Context } from "../context";
-import { createOkr, type CreateOkrInput } from "./createOkr";
+import { createTestContext } from "../testUtils";
+import { type CreateOkrInput, createOkr } from "./createOkr";
 
 describe("createOkr", () => {
   let context: Context;
-  let mockTeamRepository: MockTeamRepository;
   let mockTeamMemberRepository: MockTeamMemberRepository;
-  let mockInvitationRepository: MockInvitationRepository;
-  let mockUserRepository: MockUserRepository;
   let mockOkrRepository: MockOkrRepository;
   let mockKeyResultRepository: MockKeyResultRepository;
-  let mockReviewRepository: MockReviewRepository;
-  let mockPasswordHasher: MockPasswordHasher;
-  let mockSessionManager: MockSessionManager;
-  let mockAuthService: MockAuthService;
   let adminMember: TeamMember;
   let regularMember: TeamMember;
   let viewer: TeamMember;
@@ -34,34 +21,23 @@ describe("createOkr", () => {
   let validIndividualOkrInput: CreateOkrInput;
 
   beforeEach(() => {
-    mockTeamRepository = new MockTeamRepository();
-    mockTeamMemberRepository = new MockTeamMemberRepository();
-    mockInvitationRepository = new MockInvitationRepository();
-    mockUserRepository = new MockUserRepository();
-    mockOkrRepository = new MockOkrRepository();
-    mockKeyResultRepository = new MockKeyResultRepository();
-    mockReviewRepository = new MockReviewRepository();
-    mockPasswordHasher = new MockPasswordHasher();
-    mockSessionManager = new MockSessionManager();
-    mockAuthService = new MockAuthService();
-
-    context = {
-      teamRepository: mockTeamRepository,
-      teamMemberRepository: mockTeamMemberRepository,
-      invitationRepository: mockInvitationRepository,
-      userRepository: mockUserRepository,
-      okrRepository: mockOkrRepository,
-      keyResultRepository: mockKeyResultRepository,
-      reviewRepository: mockReviewRepository,
-      passwordHasher: mockPasswordHasher,
-      sessionManager: mockSessionManager,
-      authService: mockAuthService,
-    };
+    context = createTestContext();
+    mockTeamMemberRepository =
+      context.teamMemberRepository as MockTeamMemberRepository;
+    mockOkrRepository = context.okrRepository as MockOkrRepository;
+    mockKeyResultRepository =
+      context.keyResultRepository as MockKeyResultRepository;
 
     const teamId = teamIdSchema.parse("550e8400-e29b-41d4-a716-446655440100");
-    const adminUserId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440001");
-    const memberUserId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440002");
-    const viewerUserId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440003");
+    const adminUserId = userIdSchema.parse(
+      "550e8400-e29b-41d4-a716-446655440001",
+    );
+    const memberUserId = userIdSchema.parse(
+      "550e8400-e29b-41d4-a716-446655440002",
+    );
+    const viewerUserId = userIdSchema.parse(
+      "550e8400-e29b-41d4-a716-446655440003",
+    );
 
     // Set up team members
     adminMember = {
@@ -214,7 +190,9 @@ describe("createOkr", () => {
       // Assert
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
-        expect(result.error.message).toBe("Only team admins can create team OKRs");
+        expect(result.error.message).toBe(
+          "Only team admins can create team OKRs",
+        );
       }
     });
 
@@ -231,7 +209,9 @@ describe("createOkr", () => {
       // Assert
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
-        expect(result.error.message).toBe("Only team admins can create team OKRs");
+        expect(result.error.message).toBe(
+          "Only team admins can create team OKRs",
+        );
       }
     });
 
@@ -248,13 +228,17 @@ describe("createOkr", () => {
       // Assert
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
-        expect(result.error.message).toBe("Only team admins and members can create individual OKRs");
+        expect(result.error.message).toBe(
+          "Only team admins and members can create individual OKRs",
+        );
       }
     });
 
     it("should reject OKR creation by non-team member", async () => {
       // Arrange
-      const nonMemberId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440999");
+      const nonMemberId = userIdSchema.parse(
+        "550e8400-e29b-41d4-a716-446655440999",
+      );
       const input = {
         ...validTeamOkrInput,
         ownerId: nonMemberId,
@@ -266,7 +250,9 @@ describe("createOkr", () => {
       // Assert
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
-        expect(result.error.message).toBe("Only team admins can create team OKRs");
+        expect(result.error.message).toBe(
+          "Only team admins can create team OKRs",
+        );
       }
     });
   });
@@ -327,7 +313,7 @@ describe("createOkr", () => {
       // Arrange
       const invalidInput = {
         ...validTeamOkrInput,
-        type: "invalid" as any,
+        type: "invalid" as "team" | "individual",
       };
 
       // Act
@@ -427,7 +413,7 @@ describe("createOkr", () => {
       // Arrange
       mockTeamMemberRepository.setShouldFailGetByTeamAndUser(
         true,
-        "Database connection failed"
+        "Database connection failed",
       );
 
       // Act
@@ -456,7 +442,10 @@ describe("createOkr", () => {
 
     it("should handle key result repository creation failure", async () => {
       // Arrange
-      mockKeyResultRepository.setShouldFailCreate(true, "Failed to create key result");
+      mockKeyResultRepository.setShouldFailCreate(
+        true,
+        "Failed to create key result",
+      );
 
       // Act
       const result = await createOkr(context, validTeamOkrInput);
@@ -553,11 +542,13 @@ describe("createOkr", () => {
       // Arrange
       const input = {
         ...validTeamOkrInput,
-        keyResults: Array(5).fill(null).map((_, index) => ({
-          title: `Key Result ${index + 1}`,
-          targetValue: 100,
-          unit: "units",
-        })),
+        keyResults: Array(5)
+          .fill(null)
+          .map((_, index) => ({
+            title: `Key Result ${index + 1}`,
+            targetValue: 100,
+            unit: "units",
+          })),
       };
 
       // Act
@@ -575,8 +566,14 @@ describe("createOkr", () => {
   describe("business logic validation", () => {
     it("should allow multiple OKRs for same team in different quarters", async () => {
       // Arrange
-      const okr1Input = { ...validTeamOkrInput, quarter: { year: 2024, quarter: 1 } };
-      const okr2Input = { ...validTeamOkrInput, quarter: { year: 2024, quarter: 2 } };
+      const okr1Input = {
+        ...validTeamOkrInput,
+        quarter: { year: 2024, quarter: 1 },
+      };
+      const okr2Input = {
+        ...validTeamOkrInput,
+        quarter: { year: 2024, quarter: 2 },
+      };
 
       // Act
       const result1 = await createOkr(context, okr1Input);
@@ -593,7 +590,10 @@ describe("createOkr", () => {
     it("should allow both team and individual OKRs for same team", async () => {
       // Act
       const teamResult = await createOkr(context, validTeamOkrInput);
-      const individualResult = await createOkr(context, validIndividualOkrInput);
+      const individualResult = await createOkr(
+        context,
+        validIndividualOkrInput,
+      );
 
       // Assert
       expect(teamResult.isOk()).toBe(true);

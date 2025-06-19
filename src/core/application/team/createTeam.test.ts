@@ -1,48 +1,23 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { MockAuthService } from "@/core/adapters/mock/authService";
-import { MockInvitationRepository } from "@/core/adapters/mock/invitationRepository";
-import { MockPasswordHasher } from "@/core/adapters/mock/passwordHasher";
-import { MockSessionManager } from "@/core/adapters/mock/sessionManager";
-import { MockTeamMemberRepository } from "@/core/adapters/mock/teamMemberRepository";
-import { MockTeamRepository } from "@/core/adapters/mock/teamRepository";
-import { MockUserRepository } from "@/core/adapters/mock/userRepository";
+import type { MockTeamMemberRepository } from "@/core/adapters/mock/teamMemberRepository";
+import type { MockTeamRepository } from "@/core/adapters/mock/teamRepository";
 import { userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
+import { beforeEach, describe, expect, it } from "vitest";
 import type { Context } from "../context";
-import { createTeam, type CreateTeamInput } from "./createTeam";
+import { createTestContext } from "../testUtils";
+import { type CreateTeamInput, createTeam } from "./createTeam";
 
 describe("createTeam", () => {
   let context: Context;
   let mockTeamRepository: MockTeamRepository;
   let mockTeamMemberRepository: MockTeamMemberRepository;
-  let mockUserRepository: MockUserRepository;
-  let mockInvitationRepository: MockInvitationRepository;
-  let mockPasswordHasher: MockPasswordHasher;
-  let mockSessionManager: MockSessionManager;
-  let mockAuthService: MockAuthService;
   let validInput: CreateTeamInput;
 
   beforeEach(() => {
-    mockTeamRepository = new MockTeamRepository();
-    mockTeamMemberRepository = new MockTeamMemberRepository();
-    mockUserRepository = new MockUserRepository();
-    mockInvitationRepository = new MockInvitationRepository();
-    mockPasswordHasher = new MockPasswordHasher();
-    mockSessionManager = new MockSessionManager();
-    mockAuthService = new MockAuthService();
-
-    context = {
-      teamRepository: mockTeamRepository,
-      teamMemberRepository: mockTeamMemberRepository,
-      invitationRepository: mockInvitationRepository,
-      userRepository: mockUserRepository,
-      passwordHasher: mockPasswordHasher,
-      sessionManager: mockSessionManager,
-      authService: mockAuthService,
-      okrRepository: {} as any,
-      keyResultRepository: {} as any,
-      reviewRepository: {} as any,
-    };
+    context = createTestContext();
+    mockTeamRepository = context.teamRepository as MockTeamRepository;
+    mockTeamMemberRepository =
+      context.teamMemberRepository as MockTeamMemberRepository;
 
     validInput = {
       name: "Development Team",
@@ -75,7 +50,7 @@ describe("createTeam", () => {
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
         const team = result.value;
-        
+
         // Verify team member was created
         const memberResult = await mockTeamMemberRepository.getByTeamAndUser(
           team.id,
@@ -166,6 +141,7 @@ describe("createTeam", () => {
       // Arrange
       const invalidInput = {
         ...validInput,
+        // biome-ignore lint/suspicious/noExplicitAny: Testing invalid input
         ownerId: "invalid-uuid" as any,
       };
 
@@ -183,6 +159,7 @@ describe("createTeam", () => {
       // Arrange
       const invalidInput = {
         description: "Missing name and owner",
+        // biome-ignore lint/suspicious/noExplicitAny: Testing invalid input
       } as any;
 
       // Act
@@ -199,7 +176,10 @@ describe("createTeam", () => {
   describe("repository errors", () => {
     it("should handle team repository creation failure", async () => {
       // Arrange
-      mockTeamRepository.setShouldFailCreate(true, "Database connection failed");
+      mockTeamRepository.setShouldFailCreate(
+        true,
+        "Database connection failed",
+      );
 
       // Act
       const result = await createTeam(context, validInput);
@@ -213,7 +193,10 @@ describe("createTeam", () => {
 
     it("should handle team member repository creation failure", async () => {
       // Arrange
-      mockTeamMemberRepository.setShouldFailCreate(true, "Failed to add member");
+      mockTeamMemberRepository.setShouldFailCreate(
+        true,
+        "Failed to add member",
+      );
 
       // Act
       const result = await createTeam(context, validInput);
@@ -221,7 +204,9 @@ describe("createTeam", () => {
       // Assert
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
-        expect(result.error.message).toBe("Failed to add team creator as admin");
+        expect(result.error.message).toBe(
+          "Failed to add team creator as admin",
+        );
       }
     });
   });
@@ -248,9 +233,13 @@ describe("createTeam", () => {
 
     it("should allow multiple owners to create teams with same name", async () => {
       // Arrange
-      const owner1Id = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440001");
-      const owner2Id = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440002");
-      
+      const owner1Id = userIdSchema.parse(
+        "550e8400-e29b-41d4-a716-446655440001",
+      );
+      const owner2Id = userIdSchema.parse(
+        "550e8400-e29b-41d4-a716-446655440002",
+      );
+
       const team1Input = { ...validInput, ownerId: owner1Id };
       const team2Input = { ...validInput, ownerId: owner2Id };
 
@@ -351,21 +340,21 @@ describe("createTeam", () => {
 
       // Act
       const results = await Promise.all(
-        concurrentInputs.map(input => createTeam(context, input))
+        concurrentInputs.map((input) => createTeam(context, input)),
       );
 
       // Assert
-      results.forEach((result, index) => {
+      for (const [index, result] of results.entries()) {
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
           expect(result.value.name).toBe(concurrentInputs[index].name);
         }
-      });
+      }
 
       // Ensure all teams have unique IDs
       const teamIds = results
-        .filter(r => r.isOk())
-        .map(r => r.isOk() ? r.value.id : null);
+        .filter((r) => r.isOk())
+        .map((r) => (r.isOk() ? r.value.id : null));
       const uniqueIds = new Set(teamIds);
       expect(uniqueIds.size).toBe(teamIds.length);
     });

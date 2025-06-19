@@ -1,11 +1,6 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { MockAuthService } from "@/core/adapters/mock/authService";
-import { MockInvitationRepository } from "@/core/adapters/mock/invitationRepository";
-import { MockPasswordHasher } from "@/core/adapters/mock/passwordHasher";
-import { MockSessionManager } from "@/core/adapters/mock/sessionManager";
-import { MockTeamMemberRepository } from "@/core/adapters/mock/teamMemberRepository";
-import { MockTeamRepository } from "@/core/adapters/mock/teamRepository";
-import { MockUserRepository } from "@/core/adapters/mock/userRepository";
+import type { MockInvitationRepository } from "@/core/adapters/mock/invitationRepository";
+import type { MockTeamMemberRepository } from "@/core/adapters/mock/teamMemberRepository";
+import type { MockUserRepository } from "@/core/adapters/mock/userRepository";
 import {
   type Invitation,
   invitationIdSchema,
@@ -13,44 +8,31 @@ import {
 } from "@/core/domain/team/types";
 import { type User, userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
+import { beforeEach, describe, expect, it } from "vitest";
 import type { Context } from "../context";
-import { acceptInvitation, type AcceptInvitationInput } from "./acceptInvitation";
+import { createTestContext } from "../testUtils";
+import {
+  type AcceptInvitationInput,
+  acceptInvitation,
+} from "./acceptInvitation";
 
 describe("acceptInvitation", () => {
   let context: Context;
-  let mockTeamRepository: MockTeamRepository;
   let mockTeamMemberRepository: MockTeamMemberRepository;
   let mockInvitationRepository: MockInvitationRepository;
   let mockUserRepository: MockUserRepository;
-  let mockPasswordHasher: MockPasswordHasher;
-  let mockSessionManager: MockSessionManager;
-  let mockAuthService: MockAuthService;
   let invitedUser: User;
   let inviterUser: User;
   let pendingInvitation: Invitation;
   let validInput: AcceptInvitationInput;
 
   beforeEach(async () => {
-    mockTeamRepository = new MockTeamRepository();
-    mockTeamMemberRepository = new MockTeamMemberRepository();
-    mockInvitationRepository = new MockInvitationRepository();
-    mockUserRepository = new MockUserRepository();
-    mockPasswordHasher = new MockPasswordHasher();
-    mockSessionManager = new MockSessionManager();
-    mockAuthService = new MockAuthService();
-
-    context = {
-      teamRepository: mockTeamRepository,
-      teamMemberRepository: mockTeamMemberRepository,
-      invitationRepository: mockInvitationRepository,
-      userRepository: mockUserRepository,
-      passwordHasher: mockPasswordHasher,
-      sessionManager: mockSessionManager,
-      authService: mockAuthService,
-      okrRepository: {} as any,
-      keyResultRepository: {} as any,
-      reviewRepository: {} as any,
-    };
+    context = createTestContext();
+    mockTeamMemberRepository =
+      context.teamMemberRepository as MockTeamMemberRepository;
+    mockInvitationRepository =
+      context.invitationRepository as MockInvitationRepository;
+    mockUserRepository = context.userRepository as MockUserRepository;
 
     // Set up test users
     invitedUser = {
@@ -84,16 +66,29 @@ describe("acceptInvitation", () => {
     };
 
     // Seed repositories
-    await mockUserRepository.create({
+    const invitedUserResult = await mockUserRepository.create({
       email: invitedUser.email,
       displayName: invitedUser.displayName,
       hashedPassword: invitedUser.hashedPassword,
     });
-    await mockUserRepository.create({
+    const inviterUserResult = await mockUserRepository.create({
       email: inviterUser.email,
       displayName: inviterUser.displayName,
       hashedPassword: inviterUser.hashedPassword,
     });
+
+    // Update user IDs to match what was actually created
+    if (invitedUserResult.isOk()) {
+      invitedUser = invitedUserResult.value;
+    }
+    if (inviterUserResult.isOk()) {
+      inviterUser = inviterUserResult.value;
+      // Update the invitation to use the correct inviter ID
+      pendingInvitation = {
+        ...pendingInvitation,
+        invitedById: inviterUser.id,
+      };
+    }
 
     mockInvitationRepository.seed([pendingInvitation]);
     mockInvitationRepository.setUserProfile(inviterUser.id, {
@@ -154,7 +149,9 @@ describe("acceptInvitation", () => {
       expect(result.isOk()).toBe(true);
 
       // Verify invitation status was updated
-      const invitationResult = await mockInvitationRepository.getById(pendingInvitation.id);
+      const invitationResult = await mockInvitationRepository.getById(
+        pendingInvitation.id,
+      );
       expect(invitationResult.isOk()).toBe(true);
       if (invitationResult.isOk() && invitationResult.value) {
         expect(invitationResult.value.status).toBe("accepted");
@@ -167,7 +164,9 @@ describe("acceptInvitation", () => {
       // Arrange
       const input = {
         ...validInput,
-        invitationId: invitationIdSchema.parse("550e8400-e29b-41d4-a716-446655440999"),
+        invitationId: invitationIdSchema.parse(
+          "550e8400-e29b-41d4-a716-446655440999",
+        ),
       };
 
       // Act
@@ -243,7 +242,9 @@ describe("acceptInvitation", () => {
       // Assert
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
-        expect(result.error.message).toBe("User email does not match invitation");
+        expect(result.error.message).toBe(
+          "User email does not match invitation",
+        );
       }
     });
 
@@ -260,7 +261,9 @@ describe("acceptInvitation", () => {
       // Assert
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
-        expect(result.error.message).toBe("User email does not match invitation");
+        expect(result.error.message).toBe(
+          "User email does not match invitation",
+        );
       }
     });
   });
@@ -271,7 +274,7 @@ describe("acceptInvitation", () => {
       await mockTeamMemberRepository.create(
         pendingInvitation.teamId,
         invitedUser.id,
-        "viewer"
+        "viewer",
       );
 
       // Act
@@ -290,6 +293,7 @@ describe("acceptInvitation", () => {
       // Arrange
       const invalidInput = {
         ...validInput,
+        // biome-ignore lint/suspicious/noExplicitAny: Testing invalid input
         invitationId: "invalid-uuid" as any,
       };
 
@@ -307,6 +311,7 @@ describe("acceptInvitation", () => {
       // Arrange
       const invalidInput = {
         ...validInput,
+        // biome-ignore lint/suspicious/noExplicitAny: Testing invalid input
         userId: "invalid-uuid" as any,
       };
 
@@ -325,6 +330,7 @@ describe("acceptInvitation", () => {
       const invalidInput = {
         invitationId: validInput.invitationId,
         // Missing userId
+        // biome-ignore lint/suspicious/noExplicitAny: Testing invalid input
       } as any;
 
       // Act
@@ -341,7 +347,10 @@ describe("acceptInvitation", () => {
   describe("repository errors", () => {
     it("should handle invitation repository get failure", async () => {
       // Arrange
-      mockInvitationRepository.setShouldFailGetById(true, "Database connection failed");
+      mockInvitationRepository.setShouldFailGetById(
+        true,
+        "Database connection failed",
+      );
 
       // Act
       const result = await acceptInvitation(context, validInput);
@@ -369,7 +378,10 @@ describe("acceptInvitation", () => {
 
     it("should handle team member repository creation failure", async () => {
       // Arrange
-      mockTeamMemberRepository.setShouldFailCreate(true, "Failed to create member");
+      mockTeamMemberRepository.setShouldFailCreate(
+        true,
+        "Failed to create member",
+      );
 
       // Act
       const result = await acceptInvitation(context, validInput);
@@ -383,7 +395,10 @@ describe("acceptInvitation", () => {
 
     it("should handle invitation status update failure", async () => {
       // Arrange
-      mockInvitationRepository.setShouldFailUpdateStatus(true, "Failed to update status");
+      mockInvitationRepository.setShouldFailUpdateStatus(
+        true,
+        "Failed to update status",
+      );
 
       // Act
       const result = await acceptInvitation(context, validInput);
@@ -430,7 +445,9 @@ describe("acceptInvitation", () => {
       // Should fail because email case doesn't match
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
-        expect(result.error.message).toBe("User email does not match invitation");
+        expect(result.error.message).toBe(
+          "User email does not match invitation",
+        );
       }
     });
 
@@ -462,20 +479,20 @@ describe("acceptInvitation", () => {
       ]);
 
       // Assert
-      const successCount = results.filter(r => r.isOk()).length;
-      const failureCount = results.filter(r => r.isErr()).length;
-      
+      const successCount = results.filter((r) => r.isOk()).length;
+      const failureCount = results.filter((r) => r.isErr()).length;
+
       // Only one should succeed
       expect(successCount).toBe(1);
       expect(failureCount).toBe(2);
-      
+
       // Check that failures are due to duplicate membership
-      const failures = results.filter(r => r.isErr());
-      failures.forEach(failure => {
+      const failures = results.filter((r) => r.isErr());
+      for (const failure of failures) {
         if (failure.isErr()) {
           expect(failure.error.message).toBe("User is already a team member");
         }
-      });
+      }
     });
   });
 });

@@ -1,16 +1,14 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { MockAuthService } from "@/core/adapters/mock/authService";
-import { MockInvitationRepository } from "@/core/adapters/mock/invitationRepository";
-import { MockPasswordHasher } from "@/core/adapters/mock/passwordHasher";
-import { MockSessionManager } from "@/core/adapters/mock/sessionManager";
-import { MockTeamMemberRepository } from "@/core/adapters/mock/teamMemberRepository";
-import { MockTeamRepository } from "@/core/adapters/mock/teamRepository";
-import { MockUserRepository } from "@/core/adapters/mock/userRepository";
-import { teamIdSchema, type TeamMember } from "@/core/domain/team/types";
+import type { MockInvitationRepository } from "@/core/adapters/mock/invitationRepository";
+import type { MockTeamMemberRepository } from "@/core/adapters/mock/teamMemberRepository";
+import type { MockTeamRepository } from "@/core/adapters/mock/teamRepository";
+import type { MockUserRepository } from "@/core/adapters/mock/userRepository";
+import { type TeamMember, teamIdSchema } from "@/core/domain/team/types";
 import { type User, userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
+import { beforeEach, describe, expect, it } from "vitest";
 import type { Context } from "../context";
-import { inviteToTeam, type InviteToTeamInput } from "./inviteToTeam";
+import { createTestContext } from "../testUtils";
+import { type InviteToTeamInput, inviteToTeam } from "./inviteToTeam";
 
 describe("inviteToTeam", () => {
   let context: Context;
@@ -18,9 +16,6 @@ describe("inviteToTeam", () => {
   let mockTeamMemberRepository: MockTeamMemberRepository;
   let mockInvitationRepository: MockInvitationRepository;
   let mockUserRepository: MockUserRepository;
-  let mockPasswordHasher: MockPasswordHasher;
-  let mockSessionManager: MockSessionManager;
-  let mockAuthService: MockAuthService;
   let adminUser: User;
   let memberUser: User;
   let teamAdmin: TeamMember;
@@ -28,26 +23,13 @@ describe("inviteToTeam", () => {
   let validInput: InviteToTeamInput;
 
   beforeEach(async () => {
-    mockTeamRepository = new MockTeamRepository();
-    mockTeamMemberRepository = new MockTeamMemberRepository();
-    mockInvitationRepository = new MockInvitationRepository();
-    mockUserRepository = new MockUserRepository();
-    mockPasswordHasher = new MockPasswordHasher();
-    mockSessionManager = new MockSessionManager();
-    mockAuthService = new MockAuthService();
-
-    context = {
-      teamRepository: mockTeamRepository,
-      teamMemberRepository: mockTeamMemberRepository,
-      invitationRepository: mockInvitationRepository,
-      userRepository: mockUserRepository,
-      passwordHasher: mockPasswordHasher,
-      sessionManager: mockSessionManager,
-      authService: mockAuthService,
-      okrRepository: {} as any,
-      keyResultRepository: {} as any,
-      reviewRepository: {} as any,
-    };
+    context = createTestContext();
+    mockTeamRepository = context.teamRepository as MockTeamRepository;
+    mockTeamMemberRepository =
+      context.teamMemberRepository as MockTeamMemberRepository;
+    mockInvitationRepository =
+      context.invitationRepository as MockInvitationRepository;
+    mockUserRepository = context.userRepository as MockUserRepository;
 
     // Set up test users
     adminUser = {
@@ -86,16 +68,32 @@ describe("inviteToTeam", () => {
     };
 
     // Seed repositories
-    await mockUserRepository.create({
+    const adminUserResult = await mockUserRepository.create({
       email: adminUser.email,
       displayName: adminUser.displayName,
       hashedPassword: adminUser.hashedPassword,
     });
-    await mockUserRepository.create({
+    const memberUserResult = await mockUserRepository.create({
       email: memberUser.email,
       displayName: memberUser.displayName,
       hashedPassword: memberUser.hashedPassword,
     });
+
+    // Update user IDs to match what was actually created
+    if (adminUserResult.isOk()) {
+      adminUser = adminUserResult.value;
+      teamAdmin = {
+        ...teamAdmin,
+        userId: adminUser.id,
+      };
+    }
+    if (memberUserResult.isOk()) {
+      memberUser = memberUserResult.value;
+      teamMember = {
+        ...teamMember,
+        userId: memberUser.id,
+      };
+    }
 
     mockTeamMemberRepository.seed([teamAdmin, teamMember]);
 
@@ -126,8 +124,12 @@ describe("inviteToTeam", () => {
 
     it("should allow admin to invite with different roles", async () => {
       // Arrange
-      const roles: Array<"admin" | "member" | "viewer"> = ["admin", "member", "viewer"];
-      
+      const roles: Array<"admin" | "member" | "viewer"> = [
+        "admin",
+        "member",
+        "viewer",
+      ];
+
       // Act & Assert
       for (const role of roles) {
         const input = {
@@ -135,7 +137,7 @@ describe("inviteToTeam", () => {
           invitedEmail: `${role}@example.com`,
           role,
         };
-        
+
         const result = await inviteToTeam(context, input);
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
@@ -159,13 +161,17 @@ describe("inviteToTeam", () => {
       // Assert
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
-        expect(result.error.message).toBe("Only team admins can invite members");
+        expect(result.error.message).toBe(
+          "Only team admins can invite members",
+        );
       }
     });
 
     it("should reject invitation from non-team member", async () => {
       // Arrange
-      const nonMemberId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440999");
+      const nonMemberId = userIdSchema.parse(
+        "550e8400-e29b-41d4-a716-446655440999",
+      );
       const input = {
         ...validInput,
         invitedById: nonMemberId,
@@ -177,7 +183,9 @@ describe("inviteToTeam", () => {
       // Assert
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
-        expect(result.error.message).toBe("Only team admins can invite members");
+        expect(result.error.message).toBe(
+          "Only team admins can invite members",
+        );
       }
     });
   });
@@ -216,7 +224,9 @@ describe("inviteToTeam", () => {
       // Assert
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
-        expect(result.error.message).toBe("User already has a pending invitation");
+        expect(result.error.message).toBe(
+          "User already has a pending invitation",
+        );
       }
     });
   });
@@ -243,6 +253,7 @@ describe("inviteToTeam", () => {
       // Arrange
       const invalidInput = {
         ...validInput,
+        // biome-ignore lint/suspicious/noExplicitAny: Testing invalid input
         teamId: "invalid-uuid" as any,
       };
 
@@ -260,6 +271,7 @@ describe("inviteToTeam", () => {
       // Arrange
       const invalidInput = {
         ...validInput,
+        // biome-ignore lint/suspicious/noExplicitAny: Testing invalid input
         invitedById: "invalid-uuid" as any,
       };
 
@@ -277,6 +289,7 @@ describe("inviteToTeam", () => {
       // Arrange
       const invalidInput = {
         ...validInput,
+        // biome-ignore lint/suspicious/noExplicitAny: Testing invalid input
         role: "invalid-role" as any,
       };
 
@@ -295,6 +308,7 @@ describe("inviteToTeam", () => {
       const invalidInput = {
         teamId: validInput.teamId,
         // Missing other required fields
+        // biome-ignore lint/suspicious/noExplicitAny: Testing invalid input
       } as any;
 
       // Act
@@ -313,7 +327,7 @@ describe("inviteToTeam", () => {
       // Arrange
       mockTeamMemberRepository.setShouldFailGetByTeamAndUser(
         true,
-        "Database connection failed"
+        "Database connection failed",
       );
 
       // Act
@@ -342,7 +356,10 @@ describe("inviteToTeam", () => {
 
     it("should handle invitation repository creation failure", async () => {
       // Arrange
-      mockInvitationRepository.setShouldFailCreate(true, "Failed to create invitation");
+      mockInvitationRepository.setShouldFailCreate(
+        true,
+        "Failed to create invitation",
+      );
 
       // Act
       const result = await inviteToTeam(context, validInput);
@@ -420,16 +437,18 @@ describe("inviteToTeam", () => {
 
       // Act
       const results = await Promise.all(
-        concurrentInputs.map(input => inviteToTeam(context, input))
+        concurrentInputs.map((input) => inviteToTeam(context, input)),
       );
 
       // Assert
-      results.forEach((result, index) => {
+      for (const [index, result] of results.entries()) {
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
-          expect(result.value.invitedEmail).toBe(concurrentInputs[index].invitedEmail);
+          expect(result.value.invitedEmail).toBe(
+            concurrentInputs[index].invitedEmail,
+          );
         }
-      });
+      }
     });
 
     it("should handle concurrent invitations for same email (should fail)", async () => {
@@ -442,24 +461,26 @@ describe("inviteToTeam", () => {
 
       // Act
       const results = await Promise.all(
-        sameEmailInputs.map(input => inviteToTeam(context, input))
+        sameEmailInputs.map((input) => inviteToTeam(context, input)),
       );
 
       // Assert
-      const successCount = results.filter(r => r.isOk()).length;
-      const failureCount = results.filter(r => r.isErr()).length;
-      
+      const successCount = results.filter((r) => r.isOk()).length;
+      const failureCount = results.filter((r) => r.isErr()).length;
+
       // Only one should succeed, others should fail with duplicate invitation
       expect(successCount).toBe(1);
       expect(failureCount).toBe(2);
-      
+
       // Check that failures are for the right reason
-      const failures = results.filter(r => r.isErr());
-      failures.forEach(failure => {
+      const failures = results.filter((r) => r.isErr());
+      for (const failure of failures) {
         if (failure.isErr()) {
-          expect(failure.error.message).toBe("User already has a pending invitation");
+          expect(failure.error.message).toBe(
+            "User already has a pending invitation",
+          );
         }
-      });
+      }
     });
   });
 });

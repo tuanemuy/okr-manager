@@ -1,33 +1,20 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { MockAuthService } from "@/core/adapters/mock/authService";
-import { MockInvitationRepository } from "@/core/adapters/mock/invitationRepository";
-import { MockKeyResultRepository } from "@/core/adapters/mock/keyResultRepository";
-import { MockOkrRepository } from "@/core/adapters/mock/okrRepository";
-import { MockPasswordHasher } from "@/core/adapters/mock/passwordHasher";
-import { MockReviewRepository } from "@/core/adapters/mock/reviewRepository";
-import { MockSessionManager } from "@/core/adapters/mock/sessionManager";
-import { MockTeamMemberRepository } from "@/core/adapters/mock/teamMemberRepository";
-import { MockTeamRepository } from "@/core/adapters/mock/teamRepository";
-import { MockUserRepository } from "@/core/adapters/mock/userRepository";
+import type { MockOkrRepository } from "@/core/adapters/mock/okrRepository";
+import type { MockReviewRepository } from "@/core/adapters/mock/reviewRepository";
+import type { MockTeamMemberRepository } from "@/core/adapters/mock/teamMemberRepository";
 import { type Okr, okrIdSchema } from "@/core/domain/okr/types";
-import { teamIdSchema, type TeamMember } from "@/core/domain/team/types";
+import { type TeamMember, teamIdSchema } from "@/core/domain/team/types";
 import { userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
+import { beforeEach, describe, expect, it } from "vitest";
 import type { Context } from "../context";
-import { createReview, type CreateReviewInput } from "./createReview";
+import { createTestContext } from "../testUtils";
+import { type CreateReviewInput, createReview } from "./createReview";
 
 describe("createReview", () => {
   let context: Context;
-  let mockTeamRepository: MockTeamRepository;
   let mockTeamMemberRepository: MockTeamMemberRepository;
-  let mockInvitationRepository: MockInvitationRepository;
-  let mockUserRepository: MockUserRepository;
   let mockOkrRepository: MockOkrRepository;
-  let mockKeyResultRepository: MockKeyResultRepository;
   let mockReviewRepository: MockReviewRepository;
-  let mockPasswordHasher: MockPasswordHasher;
-  let mockSessionManager: MockSessionManager;
-  let mockAuthService: MockAuthService;
   let adminMember: TeamMember;
   let okrOwner: TeamMember;
   let regularMember: TeamMember;
@@ -39,35 +26,25 @@ describe("createReview", () => {
   let validFinalReviewInput: CreateReviewInput;
 
   beforeEach(() => {
-    mockTeamRepository = new MockTeamRepository();
-    mockTeamMemberRepository = new MockTeamMemberRepository();
-    mockInvitationRepository = new MockInvitationRepository();
-    mockUserRepository = new MockUserRepository();
-    mockOkrRepository = new MockOkrRepository();
-    mockKeyResultRepository = new MockKeyResultRepository();
-    mockReviewRepository = new MockReviewRepository();
-    mockPasswordHasher = new MockPasswordHasher();
-    mockSessionManager = new MockSessionManager();
-    mockAuthService = new MockAuthService();
-
-    context = {
-      teamRepository: mockTeamRepository,
-      teamMemberRepository: mockTeamMemberRepository,
-      invitationRepository: mockInvitationRepository,
-      userRepository: mockUserRepository,
-      okrRepository: mockOkrRepository,
-      keyResultRepository: mockKeyResultRepository,
-      reviewRepository: mockReviewRepository,
-      passwordHasher: mockPasswordHasher,
-      sessionManager: mockSessionManager,
-      authService: mockAuthService,
-    };
+    context = createTestContext();
+    mockTeamMemberRepository =
+      context.teamMemberRepository as MockTeamMemberRepository;
+    mockOkrRepository = context.okrRepository as MockOkrRepository;
+    mockReviewRepository = context.reviewRepository as MockReviewRepository;
 
     const teamId = teamIdSchema.parse("550e8400-e29b-41d4-a716-446655440100");
-    const adminUserId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440001");
-    const ownerUserId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440002");
-    const memberUserId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440003");
-    const viewerUserId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440004");
+    const adminUserId = userIdSchema.parse(
+      "550e8400-e29b-41d4-a716-446655440001",
+    );
+    const ownerUserId = userIdSchema.parse(
+      "550e8400-e29b-41d4-a716-446655440002",
+    );
+    const memberUserId = userIdSchema.parse(
+      "550e8400-e29b-41d4-a716-446655440003",
+    );
+    const viewerUserId = userIdSchema.parse(
+      "550e8400-e29b-41d4-a716-446655440004",
+    );
 
     // Set up team members
     adminMember = {
@@ -139,20 +116,27 @@ describe("createReview", () => {
     };
 
     // Seed repositories
-    mockTeamMemberRepository.seed([adminMember, okrOwner, regularMember, viewer]);
+    mockTeamMemberRepository.seed([
+      adminMember,
+      okrOwner,
+      regularMember,
+      viewer,
+    ]);
     mockOkrRepository.seed([teamOkr, individualOkr, okrWithoutOwner]);
 
     validProgressReviewInput = {
       okrId: teamOkr.id,
       type: "progress",
-      content: "Great progress this quarter. Team velocity has improved significantly and we're on track to meet all our key results. The deployment automation has reduced our release time by 40%.",
+      content:
+        "Great progress this quarter. Team velocity has improved significantly and we're on track to meet all our key results. The deployment automation has reduced our release time by 40%.",
       reviewerId: adminUserId,
     };
 
     validFinalReviewInput = {
       okrId: individualOkr.id,
       type: "final",
-      content: "Successfully completed all training objectives. Learned React, TypeScript, and GraphQL. Ready to apply these skills in upcoming projects.",
+      content:
+        "Successfully completed all training objectives. Learned React, TypeScript, and GraphQL. Ready to apply these skills in upcoming projects.",
       reviewerId: ownerUserId,
     };
   });
@@ -168,7 +152,9 @@ describe("createReview", () => {
         expect(result.value.okrId).toBe(validProgressReviewInput.okrId);
         expect(result.value.type).toBe("progress");
         expect(result.value.content).toBe(validProgressReviewInput.content);
-        expect(result.value.reviewerId).toBe(validProgressReviewInput.reviewerId);
+        expect(result.value.reviewerId).toBe(
+          validProgressReviewInput.reviewerId,
+        );
         expect(result.value.id).toBeDefined();
         expect(result.value.createdAt).toBeInstanceOf(Date);
         expect(result.value.updatedAt).toBeInstanceOf(Date);
@@ -208,7 +194,10 @@ describe("createReview", () => {
 
     it("should allow both progress and final review types", async () => {
       // Act
-      const progressResult = await createReview(context, validProgressReviewInput);
+      const progressResult = await createReview(
+        context,
+        validProgressReviewInput,
+      );
       const finalResult = await createReview(context, validFinalReviewInput);
 
       // Assert
@@ -236,7 +225,7 @@ describe("createReview", () => {
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
         expect(result.error.message).toBe(
-          "Permission denied: only OKR owner or team admin can create reviews"
+          "Permission denied: only OKR owner or team admin can create reviews",
         );
       }
     });
@@ -255,14 +244,16 @@ describe("createReview", () => {
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
         expect(result.error.message).toBe(
-          "Permission denied: only OKR owner or team admin can create reviews"
+          "Permission denied: only OKR owner or team admin can create reviews",
         );
       }
     });
 
     it("should reject review creation by non-team member", async () => {
       // Arrange
-      const nonMemberId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440999");
+      const nonMemberId = userIdSchema.parse(
+        "550e8400-e29b-41d4-a716-446655440999",
+      );
       const input = {
         ...validProgressReviewInput,
         reviewerId: nonMemberId,
@@ -292,7 +283,7 @@ describe("createReview", () => {
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
         expect(result.error.message).toBe(
-          "Permission denied: only OKR owner or team admin can create reviews"
+          "Permission denied: only OKR owner or team admin can create reviews",
         );
       }
     });
@@ -337,7 +328,7 @@ describe("createReview", () => {
       // Arrange
       const invalidInput = {
         ...validProgressReviewInput,
-        type: "invalid" as any,
+        type: "invalid" as "progress" | "final",
       };
 
       // Act
@@ -354,6 +345,7 @@ describe("createReview", () => {
       // Arrange
       const invalidInput = {
         ...validProgressReviewInput,
+        // biome-ignore lint/suspicious/noExplicitAny: Testing invalid input
         okrId: "invalid-uuid" as any,
       };
 
@@ -371,6 +363,7 @@ describe("createReview", () => {
       // Arrange
       const invalidInput = {
         ...validProgressReviewInput,
+        // biome-ignore lint/suspicious/noExplicitAny: Testing invalid input
         reviewerId: "invalid-uuid" as any,
       };
 
@@ -390,6 +383,7 @@ describe("createReview", () => {
         okrId: validProgressReviewInput.okrId,
         type: validProgressReviewInput.type,
         // Missing content and reviewerId
+        // biome-ignore lint/suspicious/noExplicitAny: Testing invalid input
       } as any;
 
       // Act
@@ -425,7 +419,10 @@ describe("createReview", () => {
   describe("repository errors", () => {
     it("should handle OKR repository get failure", async () => {
       // Arrange
-      mockOkrRepository.setShouldFailGetById(true, "Database connection failed");
+      mockOkrRepository.setShouldFailGetById(
+        true,
+        "Database connection failed",
+      );
 
       // Act
       const result = await createReview(context, validProgressReviewInput);
@@ -441,7 +438,7 @@ describe("createReview", () => {
       // Arrange
       mockTeamMemberRepository.setShouldFailGetByTeamAndUser(
         true,
-        "Membership check failed"
+        "Membership check failed",
       );
 
       // Act
@@ -503,7 +500,7 @@ describe("createReview", () => {
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
         expect(result.error.message).toBe(
-          "Permission denied: only OKR owner or team admin can create reviews"
+          "Permission denied: only OKR owner or team admin can create reviews",
         );
       }
     });
@@ -529,7 +526,8 @@ describe("createReview", () => {
       // Arrange
       const input = {
         ...validProgressReviewInput,
-        content: "Review with special chars: !@#$%^&*()_+-=[]{}|;':\",./<>?\n\nLine breaks and unicode: 📈 📊 🎯",
+        content:
+          "Review with special chars: !@#$%^&*()_+-=[]{}|;':\",./<>?\n\nLine breaks and unicode: 📈 📊 🎯",
       };
 
       // Act
@@ -587,7 +585,10 @@ describe("createReview", () => {
     it("should allow same reviewer to create multiple reviews", async () => {
       // Arrange
       const review1Input = { ...validProgressReviewInput, okrId: teamOkr.id };
-      const review2Input = { ...validProgressReviewInput, okrId: individualOkr.id };
+      const review2Input = {
+        ...validProgressReviewInput,
+        okrId: individualOkr.id,
+      };
 
       // Act
       const result1 = await createReview(context, review1Input);

@@ -1,41 +1,28 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { MockAuthService } from "@/core/adapters/mock/authService";
-import { MockInvitationRepository } from "@/core/adapters/mock/invitationRepository";
-import { MockKeyResultRepository } from "@/core/adapters/mock/keyResultRepository";
-import { MockOkrRepository } from "@/core/adapters/mock/okrRepository";
-import { MockPasswordHasher } from "@/core/adapters/mock/passwordHasher";
-import { MockReviewRepository } from "@/core/adapters/mock/reviewRepository";
-import { MockSessionManager } from "@/core/adapters/mock/sessionManager";
-import { MockTeamMemberRepository } from "@/core/adapters/mock/teamMemberRepository";
-import { MockTeamRepository } from "@/core/adapters/mock/teamRepository";
-import { MockUserRepository } from "@/core/adapters/mock/userRepository";
+import type { MockKeyResultRepository } from "@/core/adapters/mock/keyResultRepository";
+import type { MockOkrRepository } from "@/core/adapters/mock/okrRepository";
+import type { MockTeamMemberRepository } from "@/core/adapters/mock/teamMemberRepository";
 import {
   type KeyResult,
-  keyResultIdSchema,
   type Okr,
+  keyResultIdSchema,
   okrIdSchema,
 } from "@/core/domain/okr/types";
-import { teamIdSchema, type TeamMember } from "@/core/domain/team/types";
+import { type TeamMember, teamIdSchema } from "@/core/domain/team/types";
 import { userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
+import { beforeEach, describe, expect, it } from "vitest";
 import type { Context } from "../context";
+import { createTestContext } from "../testUtils";
 import {
-  updateKeyResultProgress,
   type UpdateKeyResultProgressInput,
+  updateKeyResultProgress,
 } from "./updateKeyResultProgress";
 
 describe("updateKeyResultProgress", () => {
   let context: Context;
-  let mockTeamRepository: MockTeamRepository;
   let mockTeamMemberRepository: MockTeamMemberRepository;
-  let mockInvitationRepository: MockInvitationRepository;
-  let mockUserRepository: MockUserRepository;
   let mockOkrRepository: MockOkrRepository;
   let mockKeyResultRepository: MockKeyResultRepository;
-  let mockReviewRepository: MockReviewRepository;
-  let mockPasswordHasher: MockPasswordHasher;
-  let mockSessionManager: MockSessionManager;
-  let mockAuthService: MockAuthService;
   let adminMember: TeamMember;
   let okrOwner: TeamMember;
   let regularMember: TeamMember;
@@ -47,35 +34,26 @@ describe("updateKeyResultProgress", () => {
   let validInput: UpdateKeyResultProgressInput;
 
   beforeEach(() => {
-    mockTeamRepository = new MockTeamRepository();
-    mockTeamMemberRepository = new MockTeamMemberRepository();
-    mockInvitationRepository = new MockInvitationRepository();
-    mockUserRepository = new MockUserRepository();
-    mockOkrRepository = new MockOkrRepository();
-    mockKeyResultRepository = new MockKeyResultRepository();
-    mockReviewRepository = new MockReviewRepository();
-    mockPasswordHasher = new MockPasswordHasher();
-    mockSessionManager = new MockSessionManager();
-    mockAuthService = new MockAuthService();
-
-    context = {
-      teamRepository: mockTeamRepository,
-      teamMemberRepository: mockTeamMemberRepository,
-      invitationRepository: mockInvitationRepository,
-      userRepository: mockUserRepository,
-      okrRepository: mockOkrRepository,
-      keyResultRepository: mockKeyResultRepository,
-      reviewRepository: mockReviewRepository,
-      passwordHasher: mockPasswordHasher,
-      sessionManager: mockSessionManager,
-      authService: mockAuthService,
-    };
+    context = createTestContext();
+    mockTeamMemberRepository =
+      context.teamMemberRepository as MockTeamMemberRepository;
+    mockOkrRepository = context.okrRepository as MockOkrRepository;
+    mockKeyResultRepository =
+      context.keyResultRepository as MockKeyResultRepository;
 
     const teamId = teamIdSchema.parse("550e8400-e29b-41d4-a716-446655440100");
-    const adminUserId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440001");
-    const ownerUserId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440002");
-    const memberUserId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440003");
-    const viewerUserId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440004");
+    const adminUserId = userIdSchema.parse(
+      "550e8400-e29b-41d4-a716-446655440001",
+    );
+    const ownerUserId = userIdSchema.parse(
+      "550e8400-e29b-41d4-a716-446655440002",
+    );
+    const memberUserId = userIdSchema.parse(
+      "550e8400-e29b-41d4-a716-446655440003",
+    );
+    const viewerUserId = userIdSchema.parse(
+      "550e8400-e29b-41d4-a716-446655440004",
+    );
 
     // Set up team members
     adminMember = {
@@ -157,7 +135,12 @@ describe("updateKeyResultProgress", () => {
     };
 
     // Seed repositories
-    mockTeamMemberRepository.seed([adminMember, okrOwner, regularMember, viewer]);
+    mockTeamMemberRepository.seed([
+      adminMember,
+      okrOwner,
+      regularMember,
+      viewer,
+    ]);
     mockOkrRepository.seed([teamOkr, individualOkr]);
     mockKeyResultRepository.seed([keyResult1, keyResult2]);
 
@@ -251,7 +234,7 @@ describe("updateKeyResultProgress", () => {
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
         expect(result.error.message).toBe(
-          "Permission denied: only OKR owner or team admin can update progress"
+          "Permission denied: only OKR owner or team admin can update progress",
         );
       }
     });
@@ -270,14 +253,16 @@ describe("updateKeyResultProgress", () => {
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
         expect(result.error.message).toBe(
-          "Permission denied: only OKR owner or team admin can update progress"
+          "Permission denied: only OKR owner or team admin can update progress",
         );
       }
     });
 
     it("should reject update by non-team member", async () => {
       // Arrange
-      const nonMemberId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440999");
+      const nonMemberId = userIdSchema.parse(
+        "550e8400-e29b-41d4-a716-446655440999",
+      );
       const input = {
         ...validInput,
         userId: nonMemberId,
@@ -308,7 +293,7 @@ describe("updateKeyResultProgress", () => {
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
         expect(result.error.message).toBe(
-          "Permission denied: only OKR owner or team admin can update progress"
+          "Permission denied: only OKR owner or team admin can update progress",
         );
       }
     });
@@ -319,6 +304,7 @@ describe("updateKeyResultProgress", () => {
       // Arrange
       const invalidInput = {
         ...validInput,
+        // biome-ignore lint/suspicious/noExplicitAny: Testing invalid input
         keyResultId: "invalid-uuid" as any,
       };
 
@@ -353,6 +339,7 @@ describe("updateKeyResultProgress", () => {
       // Arrange
       const invalidInput = {
         ...validInput,
+        // biome-ignore lint/suspicious/noExplicitAny: Testing invalid input
         userId: "invalid-uuid" as any,
       };
 
@@ -371,6 +358,7 @@ describe("updateKeyResultProgress", () => {
       const invalidInput = {
         keyResultId: validInput.keyResultId,
         // Missing currentValue and userId
+        // biome-ignore lint/suspicious/noExplicitAny: Testing invalid input
       } as any;
 
       // Act
@@ -389,7 +377,9 @@ describe("updateKeyResultProgress", () => {
       // Arrange
       const input = {
         ...validInput,
-        keyResultId: keyResultIdSchema.parse("550e8400-e29b-41d4-a716-446655440999"),
+        keyResultId: keyResultIdSchema.parse(
+          "550e8400-e29b-41d4-a716-446655440999",
+        ),
       };
 
       // Act
@@ -410,7 +400,10 @@ describe("updateKeyResultProgress", () => {
         id: keyResultIdSchema.parse("550e8400-e29b-41d4-a716-446655440302"),
         okrId: okrIdSchema.parse("550e8400-e29b-41d4-a716-446655440999"), // Non-existent
       };
-      mockKeyResultRepository.seed([...mockKeyResultRepository.getByOkrId(teamOkr.id), orphanKeyResult]);
+      mockKeyResultRepository.seed([
+        ...mockKeyResultRepository.getByOkrId(teamOkr.id),
+        orphanKeyResult,
+      ]);
 
       const input = {
         ...validInput,
@@ -431,7 +424,10 @@ describe("updateKeyResultProgress", () => {
   describe("repository errors", () => {
     it("should handle key result repository get failure", async () => {
       // Arrange
-      mockKeyResultRepository.setShouldFailGetById(true, "Database connection failed");
+      mockKeyResultRepository.setShouldFailGetById(
+        true,
+        "Database connection failed",
+      );
 
       // Act
       const result = await updateKeyResultProgress(context, validInput);
@@ -461,7 +457,7 @@ describe("updateKeyResultProgress", () => {
       // Arrange
       mockTeamMemberRepository.setShouldFailGetByTeamAndUser(
         true,
-        "Membership check failed"
+        "Membership check failed",
       );
 
       // Act
@@ -476,7 +472,10 @@ describe("updateKeyResultProgress", () => {
 
     it("should handle key result update progress failure", async () => {
       // Arrange
-      mockKeyResultRepository.setShouldFailUpdateProgress(true, "Update failed");
+      mockKeyResultRepository.setShouldFailUpdateProgress(
+        true,
+        "Update failed",
+      );
 
       // Act
       const result = await updateKeyResultProgress(context, validInput);
@@ -539,7 +538,11 @@ describe("updateKeyResultProgress", () => {
       };
 
       mockOkrRepository.seed([teamOkr, individualOkr, teamOkrWithoutOwner]);
-      mockKeyResultRepository.seed([keyResult1, keyResult2, keyResultWithoutOwner]);
+      mockKeyResultRepository.seed([
+        keyResult1,
+        keyResult2,
+        keyResultWithoutOwner,
+      ]);
 
       const input = {
         keyResultId: keyResultWithoutOwner.id,
@@ -555,7 +558,7 @@ describe("updateKeyResultProgress", () => {
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
         expect(result.error.message).toBe(
-          "Permission denied: only OKR owner or team admin can update progress"
+          "Permission denied: only OKR owner or team admin can update progress",
         );
       }
     });
@@ -587,7 +590,9 @@ describe("updateKeyResultProgress", () => {
       // Assert
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.updatedAt.getTime()).toBeGreaterThan(originalUpdateTime.getTime());
+        expect(result.value.updatedAt.getTime()).toBeGreaterThan(
+          originalUpdateTime.getTime(),
+        );
       }
     });
   });

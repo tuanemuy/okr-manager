@@ -1,37 +1,29 @@
+import type { MockAuthService } from "@/core/adapters/mock/authService";
+import { AuthenticationError } from "@/core/domain/auth/types";
 import { err, ok } from "neverthrow";
 import { beforeEach, describe, expect, it } from "vitest";
-import { MockAuthService } from "@/core/adapters/mock/authService";
-import { MockPasswordHasher } from "@/core/adapters/mock/passwordHasher";
-import { MockUserRepository } from "@/core/adapters/mock/userRepository";
-import { AuthenticationError } from "@/core/domain/auth/types";
 import type { Context } from "../context";
+import { createTestContext } from "../testUtils";
 import { signOut } from "./signOut";
 
 describe("signOut", () => {
   let context: Context;
   let mockAuthService: MockAuthService;
-  let mockUserRepository: MockUserRepository;
-  let mockPasswordHasher: MockPasswordHasher;
 
   beforeEach(() => {
-    mockAuthService = new MockAuthService();
-    mockUserRepository = new MockUserRepository();
-    mockPasswordHasher = new MockPasswordHasher();
-
-    context = {
-      authService: mockAuthService,
-      userRepository: mockUserRepository,
-      passwordHasher: mockPasswordHasher,
-    };
+    context = createTestContext();
+    mockAuthService = context.authService as MockAuthService;
   });
 
   it("should successfully sign out a logged-in user", async () => {
     // Arrange: Set up a logged-in user session
     mockAuthService.setCurrentSession({
-      id: "session-123",
-      userId: "user-123",
-      email: "user@example.com",
-      name: "Test User",
+      user: {
+        id: "user-123",
+        email: "user@example.com",
+        name: "Test User",
+      },
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     });
 
     // Act
@@ -39,7 +31,7 @@ describe("signOut", () => {
 
     // Assert
     expect(result.isOk()).toBe(true);
-    
+
     // Verify session is cleared
     const sessionResult = await mockAuthService.getSession();
     expect(sessionResult.isErr()).toBe(true);
@@ -62,7 +54,7 @@ describe("signOut", () => {
   it("should handle authentication service errors gracefully", async () => {
     // Arrange: Mock a service error
     const errorMessage = "Authentication service unavailable";
-    mockAuthService.signOut = async () => 
+    mockAuthService.signOut = async () =>
       err(new AuthenticationError(errorMessage));
 
     // Act
@@ -94,10 +86,12 @@ describe("signOut", () => {
   it("should handle concurrent sign out requests", async () => {
     // Arrange: Set up a logged-in user
     mockAuthService.setCurrentSession({
-      id: "session-456",
-      userId: "user-456",
-      email: "concurrent@example.com",
-      name: "Concurrent User",
+      user: {
+        id: "user-456",
+        email: "concurrent@example.com",
+        name: "Concurrent User",
+      },
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     });
 
     // Act: Make multiple concurrent sign out requests
@@ -108,9 +102,9 @@ describe("signOut", () => {
     ]);
 
     // Assert: All requests should succeed
-    results.forEach(result => {
+    for (const result of results) {
       expect(result.isOk()).toBe(true);
-    });
+    }
 
     // Verify session is cleared
     const sessionResult = await mockAuthService.getSession();
@@ -120,11 +114,12 @@ describe("signOut", () => {
   it("should clear all session data on successful sign out", async () => {
     // Arrange: Set up a session with additional data
     const sessionData = {
-      id: "session-789",
-      userId: "user-789",
-      email: "detailed@example.com",
-      name: "Detailed User",
-      // Additional session data that should be cleared
+      user: {
+        id: "user-789",
+        email: "detailed@example.com",
+        name: "Detailed User",
+      },
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     };
     mockAuthService.setCurrentSession(sessionData);
 
@@ -133,7 +128,7 @@ describe("signOut", () => {
 
     // Assert
     expect(result.isOk()).toBe(true);
-    
+
     // Verify all session data is cleared
     const clearedSession = await mockAuthService.getSession();
     expect(clearedSession.isErr()).toBe(true);
