@@ -1,3 +1,4 @@
+import { getOkrsAction } from "@/actions/okr";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,13 +13,14 @@ import {
 import { Plus, Target, User, Users } from "lucide-react";
 import Link from "next/link";
 
-export default function TeamOkrsPage({
+export default async function TeamOkrsPage({
   params,
 }: {
   params: { teamId: string };
 }) {
-  // TODO: Fetch OKRs using server actions
-  const okrs = [
+  const okrs = await getOkrsAction(params.teamId);
+
+  const mockOkrs = [
     {
       id: "1",
       title: "Q1 プロダクト開発",
@@ -147,13 +149,15 @@ export default function TeamOkrsPage({
                     <Target className="h-5 w-5 text-primary" />
                     <h3 className="text-xl font-semibold">{okr.title}</h3>
                     {getTypeBadge(okr.type)}
-                    {getStatusBadge(okr.status)}
+                    <Badge variant="default">進行中</Badge>
                   </div>
-                  <p className="text-muted-foreground">{okr.description}</p>
+                  <p className="text-muted-foreground">
+                    {okr.description || "説明がありません"}
+                  </p>
                   <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                    <span>所有者: {okr.owner}</span>
-                    <span>期間: {okr.period}</span>
-                    <span>Key Results: {okr.keyResultsCount}個</span>
+                    <span>
+                      期間: {okr.quarterYear} Q{okr.quarterQuarter}
+                    </span>
                   </div>
                 </div>
                 <Button variant="outline" size="sm" asChild>
@@ -166,12 +170,12 @@ export default function TeamOkrsPage({
             <CardContent>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">進捗</span>
-                <span className="text-sm font-medium">{okr.progress}%</span>
+                <span className="text-sm font-medium">-</span>
               </div>
               <div className="w-full bg-secondary rounded-full h-2 mt-2">
                 <div
-                  className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(okr.progress)}`}
-                  style={{ width: `${okr.progress}%` }}
+                  className="h-2 rounded-full transition-all duration-300 bg-gray-400"
+                  style={{ width: "0%" }}
                 />
               </div>
             </CardContent>

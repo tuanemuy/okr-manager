@@ -1,3 +1,4 @@
+import { createOkrAction } from "@/actions/okr";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,8 +19,6 @@ export default function NewOkrPage({
 }: {
   params: { teamId: string };
 }) {
-  // TODO: Implement form handling with server actions
-
   return (
     <div className="container mx-auto py-8 max-w-4xl">
       <div className="mb-6">
@@ -29,7 +28,10 @@ export default function NewOkrPage({
         </p>
       </div>
 
-      <form className="space-y-8">
+      <form
+        action={createOkrAction.bind(null, params.teamId)}
+        className="space-y-8"
+      >
         <Card>
           <CardHeader>
             <CardTitle>基本情報</CardTitle>
@@ -40,6 +42,7 @@ export default function NewOkrPage({
                 <Label htmlFor="title">タイトル *</Label>
                 <Input
                   id="title"
+                  name="title"
                   placeholder="例: Q1 プロダクト開発"
                   required
                 />
@@ -47,7 +50,7 @@ export default function NewOkrPage({
 
               <div className="space-y-2">
                 <Label htmlFor="type">タイプ *</Label>
-                <Select defaultValue="personal">
+                <Select name="type" defaultValue="personal">
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -63,6 +66,7 @@ export default function NewOkrPage({
               <Label htmlFor="description">説明</Label>
               <Textarea
                 id="description"
+                name="description"
                 placeholder="このOKRの目的や背景を説明してください"
                 rows={3}
               />
@@ -70,13 +74,29 @@ export default function NewOkrPage({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startDate">開始日 *</Label>
-                <Input id="startDate" type="date" required />
+                <Label htmlFor="year">年 *</Label>
+                <Input
+                  id="year"
+                  name="year"
+                  type="number"
+                  defaultValue={new Date().getFullYear()}
+                  required
+                />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="endDate">終了日 *</Label>
-                <Input id="endDate" type="date" required />
+                <Label htmlFor="quarter">四半期 *</Label>
+                <Select name="quarter" defaultValue="1">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Q1</SelectItem>
+                    <SelectItem value="2">Q2</SelectItem>
+                    <SelectItem value="3">Q3</SelectItem>
+                    <SelectItem value="4">Q4</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardContent>

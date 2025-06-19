@@ -1,3 +1,4 @@
+import { getOkrReviewsAction } from "@/actions/okr";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,13 +13,14 @@ import {
 import { Calendar, MessageSquare, Plus, Star } from "lucide-react";
 import Link from "next/link";
 
-export default function OkrReviewsPage({
+export default async function OkrReviewsPage({
   params,
 }: {
   params: { teamId: string; okrId: string };
 }) {
-  // TODO: Fetch reviews using server actions
-  const reviews = [
+  const reviews = await getOkrReviewsAction(params.okrId);
+
+  const mockReviews = [
     {
       id: "1",
       date: "2024-03-01",
@@ -138,45 +140,20 @@ export default function OkrReviewsPage({
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5 text-primary" />
-                    <span className="font-medium">{review.author}</span>
+                    <span className="font-medium">レビュアー</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
-                    {new Date(review.date).toLocaleDateString("ja-JP")}
+                    {new Date(review.createdAt).toLocaleDateString("ja-JP")}
                   </div>
-                  {getTypeBadge(review.type)}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={`review-${review.id}-star-${i}`}
-                        className={`h-4 w-4 ${
-                          i < review.score
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-300"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <Badge className={getScoreColor(review.score)}>
-                    {review.score}/5
+                  <Badge variant="secondary">
+                    {review.type === "progress" ? "進捗" : "最終"}
                   </Badge>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm leading-relaxed">{review.content}</p>
-              <div className="flex justify-end mt-4">
-                <Button variant="outline" size="sm" asChild>
-                  <Link
-                    href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/${review.id}`}
-                  >
-                    詳細を見る
-                  </Link>
-                </Button>
-              </div>
             </CardContent>
           </Card>
         ))}
