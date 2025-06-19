@@ -7,14 +7,13 @@ import { DrizzleSqliteReviewRepository } from "@/core/adapters/drizzleSqlite/rev
 import { DrizzleSqliteTeamMemberRepository } from "@/core/adapters/drizzleSqlite/teamMemberRepository";
 import { DrizzleSqliteTeamRepository } from "@/core/adapters/drizzleSqlite/teamRepository";
 import { DrizzleSqliteUserRepository } from "@/core/adapters/drizzleSqlite/userRepository";
-import { IronSessionManager } from "@/core/adapters/ironSession/sessionManager";
 import { NextAuthService } from "@/core/adapters/nextAuth/authService";
+import { NextAuthSessionManager } from "@/core/adapters/nextAuth/sessionManager";
 import type { Context } from "@/core/application/context";
 import { z } from "zod/v4";
 
 export const envSchema = z.object({
   DATABASE_FILE_NAME: z.string(),
-  SESSION_SECRET: z.string(),
   AUTH_SECRET: z.string().min(32),
 });
 
@@ -33,7 +32,7 @@ const db = getDatabase(env.data.DATABASE_FILE_NAME);
 export const context: Context = {
   userRepository: new DrizzleSqliteUserRepository(db),
   passwordHasher: new BcryptPasswordHasher(),
-  sessionManager: new IronSessionManager(),
+  sessionManager: new NextAuthSessionManager(),
   authService: new NextAuthService(),
   teamRepository: new DrizzleSqliteTeamRepository(db),
   teamMemberRepository: new DrizzleSqliteTeamMemberRepository(db),
