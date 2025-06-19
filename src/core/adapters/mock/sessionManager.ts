@@ -1,8 +1,6 @@
-import type {
-  SessionData,
-  SessionManager,
-} from "@/core/domain/user/ports/sessionManager";
-import { ApplicationError } from "@/lib/error";
+import type { SessionManager } from "@/core/domain/auth/ports/sessionManager";
+import type { SessionData } from "@/core/domain/auth/types";
+import { SessionError } from "@/core/domain/auth/types";
 import { type Result, err, ok } from "neverthrow";
 
 export class MockSessionManager implements SessionManager {
@@ -14,26 +12,20 @@ export class MockSessionManager implements SessionManager {
   private createErrorMessage = "Failed to create session";
   private destroyErrorMessage = "Failed to destroy session";
 
-  async get(): Promise<Result<SessionData | null, ApplicationError>> {
+  async getSession(): Promise<Result<SessionData | null, SessionError>> {
     if (this.shouldFailGet) {
-      return err(new ApplicationError(this.getErrorMessage));
+      return err(new SessionError(this.getErrorMessage));
     }
     return ok(this.currentSession);
   }
 
-  async create(
-    sessionData: SessionData,
-  ): Promise<Result<void, ApplicationError>> {
-    if (this.shouldFailCreate) {
-      return err(new ApplicationError(this.createErrorMessage));
-    }
-    this.currentSession = sessionData;
-    return ok(undefined);
+  async get(): Promise<Result<SessionData | null, SessionError>> {
+    return this.getSession();
   }
 
-  async destroy(): Promise<Result<void, ApplicationError>> {
+  async destroy(): Promise<Result<void, SessionError>> {
     if (this.shouldFailDestroy) {
-      return err(new ApplicationError(this.destroyErrorMessage));
+      return err(new SessionError(this.destroyErrorMessage));
     }
     this.currentSession = null;
     return ok(undefined);

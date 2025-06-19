@@ -1,4 +1,3 @@
-import { context } from "@/actions/context";
 import {
   acceptInvitationAction,
   rejectInvitationAction,
@@ -12,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { context } from "@/context";
 import { getUserEmailFromSession } from "@/lib/session";
 import { Calendar, Mail, Users } from "lucide-react";
 

@@ -1,7 +1,7 @@
 "use server";
 
+import { context } from "@/context";
 import { redirect } from "next/navigation";
-import { context } from "./context";
 
 export async function getSession() {
   const sessionResult = await context.sessionManager.get();

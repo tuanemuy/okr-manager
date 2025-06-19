@@ -47,19 +47,8 @@ export async function loginUser(
     return err(new ApplicationError("Invalid email or password"));
   }
 
-  const sessionResult = await context.sessionManager.create({
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.displayName,
-    },
-    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
-  });
-  if (sessionResult.isErr()) {
-    return err(
-      new ApplicationError("Failed to create session", sessionResult.error),
-    );
-  }
+  // Session creation is handled by NextAuth automatically
+  // No need to manually create session here
 
   return ok(user);
 }

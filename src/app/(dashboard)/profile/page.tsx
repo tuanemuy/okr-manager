@@ -1,4 +1,3 @@
-import { context } from "@/actions/context";
 import { updatePasswordAction, updateProfileAction } from "@/actions/profile";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { context } from "@/context";
 import { userIdSchema } from "@/core/domain/user/types";
 
 export default async function ProfilePage() {

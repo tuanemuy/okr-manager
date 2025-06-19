@@ -1,5 +1,6 @@
 "use server";
 
+import { context } from "@/context";
 import { acceptInvitation } from "@/core/application/team/acceptInvitation";
 import { createTeam } from "@/core/application/team/createTeam";
 import { inviteToTeam } from "@/core/application/team/inviteToTeam";
@@ -8,7 +9,6 @@ import { userIdSchema } from "@/core/domain/user/types";
 import { getUserIdFromSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { context } from "./context";
 
 export async function createTeamAction(formData: FormData) {
   const name = formData.get("name") as string;

@@ -1,8 +1,8 @@
 "use server";
 
+import { context } from "@/context";
 import { getUserIdFromSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
-import { context } from "./context";
 
 export async function updateProfileAction(formData: FormData) {
   const displayName = formData.get("displayName") as string;

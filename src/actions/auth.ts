@@ -1,9 +1,8 @@
 "use server";
 
-import { signIn, signOut } from "@/auth";
+import { context } from "@/context";
 import { createUser } from "@/core/application/user/createUser";
 import { redirect } from "next/navigation";
-import { context } from "./context";
 
 export async function signupAction(formData: FormData) {
   const email = formData.get("email") as string;
@@ -28,7 +27,13 @@ export async function loginAction(formData: FormData) {
   const password = formData.get("password") as string;
 
   try {
-    await signIn("credentials", {
+    const handlers = context.authService.getHandlers() as {
+      signIn: (
+        provider: string,
+        options: { email: string; password: string; redirectTo: string },
+      ) => Promise<void>;
+    };
+    await handlers.signIn("credentials", {
       email,
       password,
       redirectTo: "/dashboard",
@@ -39,5 +44,8 @@ export async function loginAction(formData: FormData) {
 }
 
 export async function logoutAction() {
-  await signOut({ redirectTo: "/auth/login" });
+  const handlers = context.authService.getHandlers() as {
+    signOut: (options: { redirectTo: string }) => Promise<void>;
+  };
+  await handlers.signOut({ redirectTo: "/auth/login" });
 }

@@ -1,47 +1,48 @@
-import { auth, signOut } from "@/auth";
-import type {
-  SessionData,
-  SessionManager,
-} from "@/core/domain/user/ports/sessionManager";
-import { ApplicationError } from "@/lib/error";
+import type { SessionManager } from "@/core/domain/auth/ports/sessionManager";
+import {
+  type SessionData,
+  SessionError,
+  sessionDataSchema,
+} from "@/core/domain/auth/types";
+import { validate } from "@/lib/validation";
 import { type Result, err, ok } from "neverthrow";
+import type { NextAuthService } from "./authService";
 
 export class NextAuthSessionManager implements SessionManager {
-  async get(): Promise<Result<SessionData | null, ApplicationError>> {
-    try {
-      const session = await auth();
+  constructor(private authService: NextAuthService) {}
 
-      if (!session?.user?.id || !session?.user?.email || !session?.user?.name) {
+  async getSession(): Promise<Result<SessionData | null, SessionError>> {
+    try {
+      const handlers = this.authService.getHandlers();
+      const session = await (
+        handlers as { auth: () => Promise<SessionData | null> }
+      ).auth();
+
+      if (!session) {
         return ok(null);
       }
 
-      return ok({
-        user: {
-          id: session.user.id,
-          email: session.user.email,
-          name: session.user.name,
-        },
-        expires: session.expires,
-      });
+      const validationResult = validate(sessionDataSchema, session);
+
+      return validationResult.mapErr(
+        (error) => new SessionError("Invalid session data", error),
+      );
     } catch (error) {
-      return err(new ApplicationError("Failed to get session", error));
+      return err(new SessionError("Failed to get session", error));
     }
   }
 
-  async create(
-    sessionData: SessionData,
-  ): Promise<Result<void, ApplicationError>> {
-    // Auth.js handles session creation during signIn flow
-    // This method is kept for interface compatibility but does nothing
-    return ok(undefined);
+  async get(): Promise<Result<SessionData | null, SessionError>> {
+    return this.getSession();
   }
 
-  async destroy(): Promise<Result<void, ApplicationError>> {
+  async destroy(): Promise<Result<void, SessionError>> {
     try {
-      await signOut({ redirect: false });
+      const handlers = this.authService.getHandlers();
+      await (handlers as { signOut: () => Promise<void> }).signOut();
       return ok(undefined);
     } catch (error) {
-      return err(new ApplicationError("Failed to destroy session", error));
+      return err(new SessionError("Failed to destroy session", error));
     }
   }
 }

@@ -1,7 +1,22 @@
-import { auth } from "@/auth";
+import { context } from "@/context";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export default auth((req) => {
+interface AuthenticatedRequest extends NextRequest {
+  auth?: {
+    user?: {
+      id: string;
+      email: string;
+      name: string;
+    };
+  } | null;
+}
+
+export default (
+  context.authService.getHandlers() as {
+    auth: (handler: (req: AuthenticatedRequest) => unknown) => unknown;
+  }
+).auth((req: AuthenticatedRequest) => {
   const { pathname } = req.nextUrl;
 
   const publicPaths = ["/auth/login", "/auth/signup", "/api/auth"];

@@ -13,7 +13,17 @@ import type { Result } from "neverthrow";
 import { err, ok } from "neverthrow";
 import { v7 as uuidv7 } from "uuid";
 
-export class MockAuthService implements AuthService {
+interface MockHandlers {
+  auth: () => SessionData | null;
+  signIn: () => Promise<void>;
+  signOut: () => Promise<void>;
+  handlers: {
+    GET: () => Promise<Response>;
+    POST: () => Promise<Response>;
+  };
+}
+
+export class MockAuthService implements AuthService<MockHandlers> {
   private currentSession: SessionData | null = null;
   private validCredentials: Map<string, string> = new Map();
 
@@ -45,6 +55,18 @@ export class MockAuthService implements AuthService {
 
   async getSession(): Promise<Result<SessionData | null, SessionError>> {
     return ok(this.currentSession);
+  }
+
+  getHandlers(): MockHandlers {
+    return {
+      auth: () => this.currentSession,
+      signIn: async () => Promise.resolve(),
+      signOut: async () => Promise.resolve(),
+      handlers: {
+        GET: async () => new Response(),
+        POST: async () => new Response(),
+      },
+    };
   }
 
   // Helper methods for testing

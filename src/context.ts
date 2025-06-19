@@ -29,12 +29,16 @@ if (!env.success) {
 }
 
 const db = getDatabase(env.data.TURSO_DATABASE_URL, env.data.TURSO_AUTH_TOKEN);
+const userRepository = new DrizzleSqliteUserRepository(db);
+const passwordHasher = new BcryptPasswordHasher();
+const authService = new NextAuthService(userRepository, passwordHasher, db);
+const sessionManager = new NextAuthSessionManager(authService);
 
 export const context: Context = {
-  userRepository: new DrizzleSqliteUserRepository(db),
-  passwordHasher: new BcryptPasswordHasher(),
-  sessionManager: new NextAuthSessionManager(),
-  authService: new NextAuthService(),
+  userRepository,
+  passwordHasher,
+  sessionManager,
+  authService,
   teamRepository: new DrizzleSqliteTeamRepository(db),
   teamMemberRepository: new DrizzleSqliteTeamMemberRepository(db),
   invitationRepository: new DrizzleSqliteInvitationRepository(db),
