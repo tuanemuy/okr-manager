@@ -34,9 +34,9 @@ describe("signOut", () => {
 
     // Verify session is cleared
     const sessionResult = await mockAuthService.getSession();
-    expect(sessionResult.isErr()).toBe(true);
-    if (sessionResult.isErr()) {
-      expect(sessionResult.error.message).toBe("No active session");
+    expect(sessionResult.isOk()).toBe(true);
+    if (sessionResult.isOk()) {
+      expect(sessionResult.value).toBeNull();
     }
   });
 
@@ -108,7 +108,10 @@ describe("signOut", () => {
 
     // Verify session is cleared
     const sessionResult = await mockAuthService.getSession();
-    expect(sessionResult.isErr()).toBe(true);
+    expect(sessionResult.isOk()).toBe(true);
+    if (sessionResult.isOk()) {
+      expect(sessionResult.value).toBeNull();
+    }
   });
 
   it("should clear all session data on successful sign out", async () => {
@@ -131,6 +134,9 @@ describe("signOut", () => {
 
     // Verify all session data is cleared
     const clearedSession = await mockAuthService.getSession();
-    expect(clearedSession.isErr()).toBe(true);
+    expect(clearedSession.isOk()).toBe(true);
+    if (clearedSession.isOk()) {
+      expect(clearedSession.value).toBeNull();
+    }
   });
 });

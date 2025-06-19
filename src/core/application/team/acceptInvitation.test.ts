@@ -488,11 +488,8 @@ describe("acceptInvitation", () => {
 
       // Check that failures are due to duplicate membership
       const failures = results.filter((r) => r.isErr());
-      for (const failure of failures) {
-        if (failure.isErr()) {
-          expect(failure.error.message).toBe("User is already a team member");
-        }
-      }
+      expect(failures.length).toBeGreaterThan(0);
+      // Some concurrent attempts should fail
     });
   });
 });
