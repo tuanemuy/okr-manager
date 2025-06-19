@@ -1,6 +1,6 @@
 import type { PasswordHasher } from "@/core/domain/user/ports/passwordHasher";
 import { ApplicationError } from "@/lib/error";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { type Result, err, ok } from "neverthrow";
 
 export class BcryptPasswordHasher implements PasswordHasher {

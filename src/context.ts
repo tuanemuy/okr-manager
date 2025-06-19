@@ -1,4 +1,4 @@
-import { BcryptPasswordHasher } from "@/core/adapters/bcrypt/passwordHasher";
+import { BcryptPasswordHasher } from "@/core/adapters/bcryptjs/passwordHasher";
 import { getDatabase } from "@/core/adapters/drizzleSqlite/client";
 import { DrizzleSqliteInvitationRepository } from "@/core/adapters/drizzleSqlite/invitationRepository";
 import { DrizzleSqliteKeyResultRepository } from "@/core/adapters/drizzleSqlite/keyResultRepository";
