@@ -1,3 +1,5 @@
+import { logoutAction } from "@/actions/auth";
+import { getTeamsAction } from "@/actions/team";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +11,8 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const teams = await getTeamsAction();
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">
@@ -19,12 +22,16 @@ export default function DashboardPage() {
               OKR管理システム
             </h1>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">
-                プロフィール
-              </Button>
-              <Button variant="outline" size="sm">
-                ログアウト
-              </Button>
+              <Link href="/profile">
+                <Button variant="outline" size="sm">
+                  プロフィール
+                </Button>
+              </Link>
+              <form action={logoutAction}>
+                <Button variant="outline" size="sm" type="submit">
+                  ログアウト
+                </Button>
+              </form>
             </div>
           </div>
         </div>
@@ -42,7 +49,7 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">チーム数</span>
-                  <Badge variant="secondary">2</Badge>
+                  <Badge variant="secondary">{teams.length}</Badge>
                 </div>
                 <Link href="/teams">
                   <Button variant="outline" className="w-full">
@@ -101,22 +108,39 @@ export default function DashboardPage() {
             クイックアクション
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button className="h-20 flex flex-col space-y-1">
-              <span className="text-sm font-medium">新しいチーム</span>
-              <span className="text-xs opacity-75">チームを作成</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex flex-col space-y-1">
-              <span className="text-sm font-medium">個人OKR作成</span>
-              <span className="text-xs opacity-75">新しい目標を設定</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex flex-col space-y-1">
-              <span className="text-sm font-medium">進捗更新</span>
-              <span className="text-xs opacity-75">KeyResultを更新</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex flex-col space-y-1">
-              <span className="text-sm font-medium">レビュー作成</span>
-              <span className="text-xs opacity-75">進捗をレビュー</span>
-            </Button>
+            <Link href="/teams" className="block">
+              <Button className="h-20 flex flex-col space-y-1 w-full">
+                <span className="text-sm font-medium">新しいチーム</span>
+                <span className="text-xs opacity-75">チームを作成</span>
+              </Button>
+            </Link>
+            <Link href="/teams" className="block">
+              <Button
+                variant="outline"
+                className="h-20 flex flex-col space-y-1 w-full"
+              >
+                <span className="text-sm font-medium">個人OKR作成</span>
+                <span className="text-xs opacity-75">新しい目標を設定</span>
+              </Button>
+            </Link>
+            <Link href="/teams" className="block">
+              <Button
+                variant="outline"
+                className="h-20 flex flex-col space-y-1 w-full"
+              >
+                <span className="text-sm font-medium">進捗更新</span>
+                <span className="text-xs opacity-75">KeyResultを更新</span>
+              </Button>
+            </Link>
+            <Link href="/teams" className="block">
+              <Button
+                variant="outline"
+                className="h-20 flex flex-col space-y-1 w-full"
+              >
+                <span className="text-sm font-medium">レビュー作成</span>
+                <span className="text-xs opacity-75">進捗をレビュー</span>
+              </Button>
+            </Link>
           </div>
         </div>
       </main>
