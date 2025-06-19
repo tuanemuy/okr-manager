@@ -48,9 +48,12 @@ export async function loginUser(
   }
 
   const sessionResult = await context.sessionManager.create({
-    userId: user.id,
-    email: user.email,
-    displayName: user.displayName,
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.displayName,
+    },
+    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
   });
   if (sessionResult.isErr()) {
     return err(

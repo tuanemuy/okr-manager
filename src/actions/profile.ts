@@ -1,6 +1,6 @@
 "use server";
 
-import { userIdSchema } from "@/core/domain/user/types";
+import { getUserIdFromSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { context } from "./context";
 
@@ -13,8 +13,9 @@ export async function updateProfileAction(formData: FormData) {
   }
 
   const session = sessionResult.value;
+  const userId = getUserIdFromSession(session);
 
-  const result = await context.userRepository.update(session.userId, {
+  const result = await context.userRepository.update(userId, {
     displayName,
   });
 
@@ -22,16 +23,7 @@ export async function updateProfileAction(formData: FormData) {
     throw new Error(result.error.message);
   }
 
-  // Update session with new display name
-  const updateSessionResult = await context.sessionManager.create({
-    userId: session.userId,
-    email: session.email,
-    displayName,
-  });
-
-  if (updateSessionResult.isErr()) {
-    console.error("Failed to update session:", updateSessionResult.error);
-  }
+  // Session is managed by Auth.js, no need to manually update
 
   revalidatePath("/profile");
 }
@@ -51,9 +43,10 @@ export async function updatePasswordAction(formData: FormData) {
   }
 
   const session = sessionResult.value;
+  const userId = getUserIdFromSession(session);
 
   // Get current user to verify current password
-  const userResult = await context.userRepository.getById(session.userId);
+  const userResult = await context.userRepository.getById(userId);
   if (userResult.isErr() || !userResult.value) {
     throw new Error("User not found");
   }
@@ -76,7 +69,7 @@ export async function updatePasswordAction(formData: FormData) {
   }
 
   // Update password
-  const updateResult = await context.userRepository.update(session.userId, {
+  const updateResult = await context.userRepository.update(userId, {
     hashedPassword: hashResult.value,
   });
 

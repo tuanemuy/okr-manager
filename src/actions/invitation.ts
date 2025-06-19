@@ -1,6 +1,7 @@
 "use server";
 
 import { invitationIdSchema } from "@/core/domain/team/types";
+import { getUserEmailFromSession, getUserIdFromSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { context } from "./context";
@@ -24,7 +25,7 @@ export async function acceptInvitationAction(invitationId: string) {
   const invitation = invitationResult.value;
 
   // Verify the invitation is for this user
-  if (invitation.invitedEmail !== session.email) {
+  if (invitation.invitedEmail !== getUserEmailFromSession(session)) {
     throw new Error("This invitation is not for you");
   }
 
@@ -35,7 +36,7 @@ export async function acceptInvitationAction(invitationId: string) {
   // Create team membership
   const memberResult = await context.teamMemberRepository.create(
     invitation.teamId,
-    session.userId,
+    getUserIdFromSession(session),
     invitation.role,
   );
 
@@ -76,7 +77,7 @@ export async function rejectInvitationAction(invitationId: string) {
   const invitation = invitationResult.value;
 
   // Verify the invitation is for this user
-  if (invitation.invitedEmail !== session.email) {
+  if (invitation.invitedEmail !== getUserEmailFromSession(session)) {
     throw new Error("This invitation is not for you");
   }
 

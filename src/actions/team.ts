@@ -5,6 +5,7 @@ import { createTeam } from "@/core/application/team/createTeam";
 import { inviteToTeam } from "@/core/application/team/inviteToTeam";
 import { invitationIdSchema, teamIdSchema } from "@/core/domain/team/types";
 import { userIdSchema } from "@/core/domain/user/types";
+import { getUserIdFromSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { context } from "./context";
@@ -23,7 +24,7 @@ export async function createTeamAction(formData: FormData) {
   const result = await createTeam(context, {
     name,
     description: description || undefined,
-    ownerId: session.userId,
+    ownerId: getUserIdFromSession(session),
   });
 
   if (result.isErr()) {
@@ -47,7 +48,7 @@ export async function inviteToTeamAction(teamId: string, formData: FormData) {
   const result = await inviteToTeam(context, {
     teamId: teamIdSchema.parse(teamId),
     invitedEmail: email,
-    invitedById: session.userId,
+    invitedById: getUserIdFromSession(session),
     role: "member", // Default role for invited users
   });
 
@@ -68,7 +69,7 @@ export async function acceptInvitationAction(invitationId: string) {
 
   const result = await acceptInvitation(context, {
     invitationId: invitationIdSchema.parse(invitationId),
-    userId: session.userId,
+    userId: getUserIdFromSession(session),
   });
 
   if (result.isErr()) {
@@ -87,7 +88,9 @@ export async function getTeamsAction() {
 
   const session = sessionResult.value;
 
-  const result = await context.teamRepository.listByUserId(session.userId);
+  const result = await context.teamRepository.listByUserId(
+    getUserIdFromSession(session),
+  );
 
   if (result.isErr()) {
     throw new Error(result.error.message);
@@ -140,7 +143,7 @@ export async function removeTeamMemberAction(teamId: string, userId: string) {
   // Check if user is admin of the team
   const memberResult = await context.teamMemberRepository.getByTeamAndUser(
     teamIdSchema.parse(teamId),
-    session.userId,
+    getUserIdFromSession(session),
   );
   if (
     memberResult.isErr() ||
@@ -176,7 +179,7 @@ export async function updateTeamMemberRoleAction(
   // Check if user is admin of the team
   const memberResult = await context.teamMemberRepository.getByTeamAndUser(
     teamIdSchema.parse(teamId),
-    session.userId,
+    getUserIdFromSession(session),
   );
   if (
     memberResult.isErr() ||

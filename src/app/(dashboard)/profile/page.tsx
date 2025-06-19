@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { userIdSchema } from "@/core/domain/user/types";
 
 export default async function ProfilePage() {
   const sessionResult = await context.sessionManager.get();
@@ -21,7 +22,8 @@ export default async function ProfilePage() {
 
   const session = sessionResult.value;
 
-  const userResult = await context.userRepository.getById(session.userId);
+  const userId = userIdSchema.parse(session.user.id);
+  const userResult = await context.userRepository.getById(userId);
   if (userResult.isErr() || !userResult.value) {
     return <div>User not found</div>;
   }

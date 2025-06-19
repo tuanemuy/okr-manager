@@ -9,6 +9,7 @@ import {
   okrIdSchema,
 } from "@/core/domain/okr/types";
 import { teamIdSchema } from "@/core/domain/team/types";
+import { getUserIdFromSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { context } from "./context";
@@ -36,7 +37,7 @@ export async function createOkrAction(teamId: string, formData: FormData) {
       quarter: Number(quarter),
     },
     teamId: teamIdSchema.parse(teamId),
-    ownerId: session.userId,
+    ownerId: getUserIdFromSession(session),
     keyResults: [], // Will be added separately
   });
 
@@ -64,7 +65,7 @@ export async function updateKeyResultProgressAction(
   const result = await updateKeyResultProgress(context, {
     keyResultId: keyResultIdSchema.parse(keyResultId),
     currentValue,
-    userId: session.userId,
+    userId: getUserIdFromSession(session),
   });
 
   if (result.isErr()) {
@@ -94,7 +95,7 @@ export async function createReviewAction(okrId: string, formData: FormData) {
     okrId: okrIdSchema.parse(okrId),
     content,
     type: reviewType as "progress" | "final",
-    reviewerId: session.userId,
+    reviewerId: getUserIdFromSession(session),
   });
 
   if (result.isErr()) {
@@ -191,10 +192,10 @@ export async function deleteOkrAction(okrId: string) {
   const okr = okrResult.value;
 
   // Check if user is the creator or team admin
-  if (okr.ownerId !== session.userId) {
+  if (okr.ownerId !== getUserIdFromSession(session)) {
     const memberResult = await context.teamMemberRepository.getByTeamAndUser(
       okr.teamId,
-      session.userId,
+      getUserIdFromSession(session),
     );
     if (
       memberResult.isErr() ||

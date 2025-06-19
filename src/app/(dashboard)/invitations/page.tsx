@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getUserEmailFromSession } from "@/lib/session";
 import { Calendar, Mail, Users } from "lucide-react";
 
 export default async function InvitationsPage() {
@@ -24,7 +25,7 @@ export default async function InvitationsPage() {
   const session = sessionResult.value;
 
   const invitationsResult = await context.invitationRepository.listByEmail(
-    session.email,
+    getUserEmailFromSession(session),
   );
   if (invitationsResult.isErr()) {
     return <div>Error loading invitations</div>;

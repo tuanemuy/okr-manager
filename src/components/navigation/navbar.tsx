@@ -7,6 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { getUserEmailFromSession, getUserNameFromSession } from "@/lib/session";
 import { LogOut, Mail, Settings, User } from "lucide-react";
 import Link from "next/link";
 
@@ -52,19 +53,21 @@ export async function Navbar() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
-                    {session.displayName.charAt(0).toUpperCase()}
+                    {getUserNameFromSession(session).charAt(0).toUpperCase()}
                   </div>
                   <span className="hidden md:inline">
-                    {session.displayName}
+                    {getUserNameFromSession(session)}
                   </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">{session.displayName}</p>
+                    <p className="font-medium">
+                      {getUserNameFromSession(session)}
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      {session.email}
+                      {getUserEmailFromSession(session)}
                     </p>
                   </div>
                 </div>
