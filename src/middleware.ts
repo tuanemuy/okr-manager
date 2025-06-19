@@ -12,22 +12,20 @@ interface AuthenticatedRequest extends NextRequest {
   } | null;
 }
 
-export default (
-  context.authService.getHandlers() as {
-    auth: (handler: (req: AuthenticatedRequest) => unknown) => unknown;
-  }
-).auth((req: AuthenticatedRequest) => {
+const authHandlers = context.authService.getHandlers();
+
+export default authHandlers.auth(async (req: NextRequest) => {
   const { pathname } = req.nextUrl;
 
   const publicPaths = ["/auth/login", "/auth/signup", "/api/auth"];
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
 
-  if (!req.auth && !isPublicPath) {
+  if (!(req as AuthenticatedRequest).auth && !isPublicPath) {
     const loginUrl = new URL("/auth/login", req.nextUrl.origin);
     return NextResponse.redirect(loginUrl);
   }
 
-  if (req.auth && pathname.startsWith("/auth/")) {
+  if ((req as AuthenticatedRequest).auth && pathname.startsWith("/auth/")) {
     const dashboardUrl = new URL("/dashboard", req.nextUrl.origin);
     return NextResponse.redirect(dashboardUrl);
   }

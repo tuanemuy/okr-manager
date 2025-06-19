@@ -1,4 +1,4 @@
-import type { SessionData } from "@/core/domain/user/ports/sessionManager";
+import type { SessionData } from "@/core/domain/auth/types";
 import { type UserId, userIdSchema } from "@/core/domain/user/types";
 
 export function getUserIdFromSession(session: SessionData): UserId {

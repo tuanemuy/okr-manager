@@ -10,6 +10,7 @@ import { DrizzleSqliteUserRepository } from "@/core/adapters/drizzleSqlite/userR
 import { NextAuthService } from "@/core/adapters/nextAuth/authService";
 import { NextAuthSessionManager } from "@/core/adapters/nextAuth/sessionManager";
 import type { Context } from "@/core/application/context";
+import type { NextAuthResult } from "next-auth";
 import { z } from "zod/v4";
 
 export const envSchema = z.object({
@@ -34,7 +35,7 @@ const passwordHasher = new BcryptPasswordHasher();
 const authService = new NextAuthService(userRepository, passwordHasher, db);
 const sessionManager = new NextAuthSessionManager(authService);
 
-export const context: Context = {
+export const context: Context<NextAuthResult> = {
   userRepository,
   passwordHasher,
   sessionManager,

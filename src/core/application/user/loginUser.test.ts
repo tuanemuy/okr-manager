@@ -67,28 +67,20 @@ describe("loginUser", () => {
         expect(result.value.displayName).toBe(testUser.displayName);
       }
 
-      // Verify session was created
-      const sessionResult = await mockSessionManager.get();
-      expect(sessionResult.isOk()).toBe(true);
-      if (sessionResult.isOk() && sessionResult.value) {
-        expect(sessionResult.value.user.email).toBe(testUser.email);
-        expect(sessionResult.value.user.name).toBe(testUser.displayName);
-      }
+      // Note: Session creation is handled by NextAuth automatically
+      // This test just verifies user authentication is successful
     });
 
-    it("should create session with correct user data", async () => {
+    it("should validate user credentials correctly", async () => {
       // Act
       const result = await loginUser(context, validInput);
 
       // Assert
       expect(result.isOk()).toBe(true);
-
-      const sessionResult = await mockSessionManager.get();
-      expect(sessionResult.isOk()).toBe(true);
-      if (sessionResult.isOk() && sessionResult.value) {
-        expect(sessionResult.value.user.id).toBe(testUser.id);
-        expect(sessionResult.value.user.email).toBe(testUser.email);
-        expect(sessionResult.value.user.name).toBe(testUser.displayName);
+      if (result.isOk()) {
+        expect(result.value.id).toBe(testUser.id);
+        expect(result.value.email).toBe(testUser.email);
+        expect(result.value.displayName).toBe(testUser.displayName);
       }
     });
   });
@@ -214,21 +206,7 @@ describe("loginUser", () => {
     });
   });
 
-  describe("session management errors", () => {
-    it("should handle session creation failure", async () => {
-      // Arrange
-      mockSessionManager.setShouldFailCreate(true, "Session store unavailable");
-
-      // Act
-      const result = await loginUser(context, validInput);
-
-      // Assert
-      expect(result.isErr()).toBe(true);
-      if (result.isErr()) {
-        expect(result.error.message).toBe("Failed to create session");
-      }
-    });
-  });
+  // Session management is handled by NextAuth, not in loginUser function
 
   describe("edge cases", () => {
     it("should handle case-sensitive email matching", async () => {

@@ -9,11 +9,11 @@ import type { TeamRepository } from "@/core/domain/team/ports/teamRepository";
 import type { PasswordHasher } from "@/core/domain/user/ports/passwordHasher";
 import type { UserRepository } from "@/core/domain/user/ports/userRepository";
 
-export interface Context {
+export interface Context<TAuthHandlers = unknown> {
   userRepository: UserRepository;
   passwordHasher: PasswordHasher;
   sessionManager: SessionManager;
-  authService: AuthService<unknown>;
+  authService: AuthService<TAuthHandlers>;
   teamRepository: TeamRepository;
   teamMemberRepository: TeamMemberRepository;
   invitationRepository: InvitationRepository;

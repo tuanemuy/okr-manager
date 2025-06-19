@@ -11,16 +11,21 @@ import {
 } from "@/core/domain/auth/types";
 import type { Result } from "neverthrow";
 import { err, ok } from "neverthrow";
+import type { NextRequest } from "next/server";
 import { v7 as uuidv7 } from "uuid";
 
 interface MockHandlers {
-  auth: () => SessionData | null;
-  signIn: () => Promise<void>;
-  signOut: () => Promise<void>;
   handlers: {
-    GET: () => Promise<Response>;
-    POST: () => Promise<Response>;
+    GET: (request: Request) => Promise<Response>;
+    POST: (request: Request) => Promise<Response>;
   };
+  auth: (() => Promise<SessionData | null>) &
+    ((handler: (req: NextRequest) => unknown) => unknown);
+  signIn: (
+    provider: string,
+    options?: { email?: string; password?: string; redirectTo?: string },
+  ) => Promise<void>;
+  signOut: (options?: { redirectTo?: string }) => Promise<void>;
 }
 
 export class MockAuthService implements AuthService<MockHandlers> {
@@ -58,13 +63,22 @@ export class MockAuthService implements AuthService<MockHandlers> {
   }
 
   getHandlers(): MockHandlers {
+    const mockAuth = (() =>
+      Promise.resolve(
+        this.currentSession,
+      )) as (() => Promise<SessionData | null>) &
+      ((handler: (req: NextRequest) => unknown) => unknown);
+
     return {
-      auth: () => this.currentSession,
-      signIn: async () => Promise.resolve(),
-      signOut: async () => Promise.resolve(),
+      auth: mockAuth,
+      signIn: async (
+        provider: string,
+        options?: { email?: string; password?: string; redirectTo?: string },
+      ) => Promise.resolve(),
+      signOut: async (options?: { redirectTo?: string }) => Promise.resolve(),
       handlers: {
-        GET: async () => new Response(),
-        POST: async () => new Response(),
+        GET: async (request: Request) => new Response(),
+        POST: async (request: Request) => new Response(),
       },
     };
   }
