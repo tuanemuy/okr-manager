@@ -31,7 +31,7 @@ Hexagonal architecture with domain-driven design principles:
 
 ### External Services
 
-- **Database**: SQLite with Drizzle ORM
+- **Database**: Turso with Drizzle ORM
 - **Authentication**: Auth.js
 - Other external services can be added as needed
 
@@ -267,7 +267,7 @@ export const context = {
 
 - **Runtime**: Node.js 22.x
 - **Frontend**: Next.js 15 with React 19, Tailwind CSS, shadcn/ui
-- **Database**: SQLite with Drizzle ORM
+- **Database**: Turso with Drizzle ORM
 - **Validation**: Zod 4 schemas with branded types
 - **Error Handling**: neverthrow for Result types
 
