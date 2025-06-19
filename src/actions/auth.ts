@@ -27,12 +27,7 @@ export async function loginAction(formData: FormData) {
   const password = formData.get("password") as string;
 
   try {
-    const handlers = context.authService.getHandlers() as {
-      signIn: (
-        provider: string,
-        options: { email: string; password: string; redirectTo: string },
-      ) => Promise<void>;
-    };
+    const handlers = context.authService.getHandlers();
     await handlers.signIn("credentials", {
       email,
       password,
@@ -44,8 +39,6 @@ export async function loginAction(formData: FormData) {
 }
 
 export async function logoutAction() {
-  const handlers = context.authService.getHandlers() as {
-    signOut: (options: { redirectTo: string }) => Promise<void>;
-  };
+  const handlers = context.authService.getHandlers();
   await handlers.signOut({ redirectTo: "/auth/login" });
 }

@@ -200,3 +200,74 @@ export async function updateTeamMemberRoleAction(
 
   revalidatePath(`/teams/${teamId}/members`);
 }
+
+export async function updateTeamAction(teamId: string, formData: FormData) {
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
+
+  const sessionResult = await context.sessionManager.get();
+  if (sessionResult.isErr() || !sessionResult.value) {
+    throw new Error("Not authenticated");
+  }
+
+  const session = sessionResult.value;
+
+  // Check if user is admin of the team
+  const memberResult = await context.teamMemberRepository.getByTeamAndUser(
+    teamIdSchema.parse(teamId),
+    getUserIdFromSession(session),
+  );
+  if (
+    memberResult.isErr() ||
+    !memberResult.value ||
+    memberResult.value.role !== "admin"
+  ) {
+    throw new Error("Not authorized");
+  }
+
+  const result = await context.teamRepository.update(
+    teamIdSchema.parse(teamId),
+    {
+      name,
+      description: description || undefined,
+    },
+  );
+  if (result.isErr()) {
+    throw new Error(result.error.message);
+  }
+
+  revalidatePath(`/teams/${teamId}`);
+  redirect(`/teams/${teamId}`);
+}
+
+export async function deleteTeamAction(teamId: string) {
+  const sessionResult = await context.sessionManager.get();
+  if (sessionResult.isErr() || !sessionResult.value) {
+    throw new Error("Not authenticated");
+  }
+
+  const session = sessionResult.value;
+
+  // Check if user is admin of the team
+  const memberResult = await context.teamMemberRepository.getByTeamAndUser(
+    teamIdSchema.parse(teamId),
+    getUserIdFromSession(session),
+  );
+  if (
+    memberResult.isErr() ||
+    !memberResult.value ||
+    memberResult.value.role !== "admin"
+  ) {
+    throw new Error("Not authorized");
+  }
+
+  const result = await context.teamRepository.delete(
+    teamIdSchema.parse(teamId),
+  );
+  if (result.isErr()) {
+    throw new Error(result.error.message);
+  }
+
+  revalidatePath("/teams");
+  redirect("/teams");
+}
