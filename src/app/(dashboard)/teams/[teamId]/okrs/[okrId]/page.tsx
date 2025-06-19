@@ -1,3 +1,4 @@
+import { getOkrAction } from "@/actions/okr";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,75 +14,31 @@ import {
   User,
 } from "lucide-react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
-export default function OkrDetailPage({
+export default async function OkrDetailPage({
   params,
 }: {
   params: { teamId: string; okrId: string };
 }) {
-  // TODO: Fetch OKR data using server actions
-  const okr = {
-    id: params.okrId,
-    title: "Q1 プロダクト開発",
-    description:
-      "新機能のリリースと品質向上を通じて、ユーザー満足度を向上させる",
-    type: "team",
-    owner: "Engineering Team",
-    period: "2024 Q1",
-    startDate: "2024-01-01",
-    endDate: "2024-03-31",
-    progress: 75,
-    status: "active",
-    createdAt: "2024-01-01",
-  };
+  const okrData = await getOkrAction(params.okrId);
 
-  const keyResults = [
-    {
-      id: "1",
-      title: "新機能を3つリリースする",
-      description: "ユーザーからの要望が多い機能を優先的に実装",
-      targetValue: 3,
-      currentValue: 2,
-      unit: "個",
-      progress: 67,
-    },
-    {
-      id: "2",
-      title: "バグ数を50%削減する",
-      description: "品質向上のためのテスト強化とコードレビュー",
-      targetValue: 50,
-      currentValue: 35,
-      unit: "%",
-      progress: 70,
-    },
-    {
-      id: "3",
-      title: "テストカバレッジを90%以上にする",
-      description: "自動テストの拡充とテスト品質の向上",
-      targetValue: 90,
-      currentValue: 85,
-      unit: "%",
-      progress: 94,
-    },
-  ];
+  if (!okrData.okr) {
+    notFound();
+  }
 
-  const recentReviews = [
-    {
-      id: "1",
-      date: "2024-03-01",
-      author: "John Doe",
-      content: "順調に進捗しています。新機能のリリースが予定通り進んでいます。",
-      score: 4,
-    },
-    {
-      id: "2",
-      date: "2024-02-15",
-      author: "Jane Smith",
-      content:
-        "テストカバレッジの向上が素晴らしいです。品質が確実に向上しています。",
-      score: 5,
-    },
-  ];
+  const { okr, keyResults } = okrData;
+
+  // Calculate overall progress from key results
+  const overallProgress =
+    keyResults.length > 0
+      ? (keyResults.reduce(
+          (sum, kr) => sum + kr.currentValue / kr.targetValue,
+          0,
+        ) /
+          keyResults.length) *
+        100
+      : 0;
 
   const getProgressColor = (progress: number) => {
     if (progress >= 80) return "text-green-600";
@@ -126,49 +83,58 @@ export default function OkrDetailPage({
               <CardTitle>Key Results</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {keyResults.map((kr, index) => (
-                <div key={kr.id}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <h4 className="font-medium">{kr.title}</h4>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {kr.description}
-                      </p>
+              {keyResults.map((kr, index) => {
+                const progress =
+                  kr.targetValue > 0
+                    ? (kr.currentValue / kr.targetValue) * 100
+                    : 0;
+
+                return (
+                  <div key={kr.id}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <h4 className="font-medium">{kr.title}</h4>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={getProgressColor(progress)}
+                      >
+                        {Math.round(progress)}%
+                      </Badge>
                     </div>
-                    <Badge
-                      variant="outline"
-                      className={getProgressColor(kr.progress)}
-                    >
-                      {kr.progress}%
-                    </Badge>
+
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span>
+                        現在値: {kr.currentValue}
+                        {kr.unit && ` ${kr.unit}`} / 目標: {kr.targetValue}
+                        {kr.unit && ` ${kr.unit}`}
+                      </span>
+                      <Button size="sm" variant="ghost">
+                        <Edit className="h-3 w-3 mr-1" />
+                        更新
+                      </Button>
+                    </div>
+
+                    <Progress value={Math.min(progress, 100)} className="h-2" />
+
+                    {index < keyResults.length - 1 && (
+                      <Separator className="mt-6" />
+                    )}
                   </div>
-
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span>
-                      現在値: {kr.currentValue}
-                      {kr.unit} / 目標: {kr.targetValue}
-                      {kr.unit}
-                    </span>
-                    <Button size="sm" variant="ghost">
-                      <Edit className="h-3 w-3 mr-1" />
-                      更新
-                    </Button>
-                  </div>
-
-                  <Progress value={kr.progress} className="h-2" />
-
-                  {index < keyResults.length - 1 && (
-                    <Separator className="mt-6" />
-                  )}
-                </div>
-              ))}
+                );
+              })}
+              {keyResults.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">
+                  Key Resultがありません
+                </p>
+              )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                最近のレビュー
+                レビュー
                 <Button size="sm" variant="outline" asChild>
                   <Link
                     href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews`}
@@ -178,38 +144,21 @@ export default function OkrDetailPage({
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {recentReviews.map((review) => (
-                <div key={review.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{review.author}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {new Date(review.date).toLocaleDateString("ja-JP")}
-                      </span>
-                    </div>
-                    <Badge variant="outline">{review.score}/5</Badge>
-                  </div>
-                  <p className="text-sm">{review.content}</p>
-                </div>
-              ))}
-
-              {recentReviews.length === 0 && (
-                <div className="text-center py-8">
-                  <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">
-                    まだレビューがありません
-                  </p>
-                  <Button size="sm" className="mt-2" asChild>
-                    <Link
-                      href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      最初のレビューを作成
-                    </Link>
-                  </Button>
-                </div>
-              )}
+            <CardContent>
+              <div className="text-center py-8">
+                <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground">
+                  レビュー機能は近日実装予定です
+                </p>
+                <Button size="sm" className="mt-2" asChild>
+                  <Link
+                    href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    レビューを作成
+                  </Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -222,21 +171,29 @@ export default function OkrDetailPage({
             <CardContent className="space-y-4">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">所有者: {okr.owner}</span>
+                <span className="text-sm">
+                  所有者: {okr.owner?.displayName || "チーム"}
+                </span>
               </div>
 
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
-                  期間: {new Date(okr.startDate).toLocaleDateString("ja-JP")} -{" "}
-                  {new Date(okr.endDate).toLocaleDateString("ja-JP")}
+                  期間: Q{okr.quarterQuarter} {okr.quarterYear}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">
+                  種類: {okr.type === "team" ? "チーム" : "個人"}
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
-                  作成日: {new Date(okr.createdAt).toLocaleDateString("ja-JP")}
+                  作成日: {okr.createdAt.toLocaleDateString("ja-JP")}
                 </span>
               </div>
 
@@ -246,12 +203,15 @@ export default function OkrDetailPage({
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">全体進捗</span>
                   <span
-                    className={`text-sm font-bold ${getProgressColor(okr.progress)}`}
+                    className={`text-sm font-bold ${getProgressColor(overallProgress)}`}
                   >
-                    {okr.progress}%
+                    {Math.round(overallProgress)}%
                   </span>
                 </div>
-                <Progress value={okr.progress} className="h-3" />
+                <Progress
+                  value={Math.min(overallProgress, 100)}
+                  className="h-3"
+                />
               </div>
             </CardContent>
           </Card>

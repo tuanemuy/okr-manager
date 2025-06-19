@@ -1,38 +1,48 @@
+import { getOkrsAction } from "@/actions/okr";
+import { getTeamAction, getTeamMembersAction } from "@/actions/team";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Settings, Target, Users } from "lucide-react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
-export default function TeamDetailPage({
+export default async function TeamDetailPage({
   params,
 }: {
   params: { teamId: string };
 }) {
-  // TODO: Fetch team data using server actions
-  const team = {
-    id: params.teamId,
-    name: "Engineering Team",
-    description: "Product development and engineering excellence",
-    memberCount: 8,
-    okrCount: 12,
-    adminCount: 2,
-  };
+  // Fetch team data and related information
+  const [team, teamMembers, okrs] = await Promise.all([
+    getTeamAction(params.teamId),
+    getTeamMembersAction(params.teamId),
+    getOkrsAction(params.teamId),
+  ]);
+
+  if (!team) {
+    notFound();
+  }
+
+  const memberCount = teamMembers.items.length;
+  const okrCount = okrs.length;
+  const adminCount = teamMembers.items.filter(
+    (member) => member.role === "admin",
+  ).length;
 
   const stats = [
     {
       title: "メンバー数",
-      value: team.memberCount,
+      value: memberCount,
       icon: Users,
     },
     {
       title: "OKR数",
-      value: team.okrCount,
+      value: okrCount,
       icon: Target,
     },
     {
       title: "管理者数",
-      value: team.adminCount,
+      value: adminCount,
       icon: Settings,
     },
   ];
@@ -90,36 +100,49 @@ export default function TeamDetailPage({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {/* TODO: Implement member list */}
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
-                    JD
-                  </div>
-                  <div>
-                    <p className="font-medium">John Doe</p>
-                    <p className="text-sm text-muted-foreground">
-                      john@example.com
-                    </p>
-                  </div>
-                </div>
-                <Badge variant="outline">管理者</Badge>
-              </div>
+              {teamMembers.items.slice(0, 3).map((member) => {
+                const initials = member.user.displayName
+                  .split(" ")
+                  .map((name) => name[0])
+                  .join("")
+                  .toUpperCase();
+                const roleDisplayMap = {
+                  admin: "管理者",
+                  member: "メンバー",
+                  viewer: "閲覧者",
+                };
 
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center text-secondary-foreground text-sm font-medium">
-                    JS
+                return (
+                  <div
+                    key={member.userId}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
+                        {initials}
+                      </div>
+                      <div>
+                        <p className="font-medium">{member.user.displayName}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {member.user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge
+                      variant={
+                        member.role === "admin" ? "outline" : "secondary"
+                      }
+                    >
+                      {roleDisplayMap[member.role]}
+                    </Badge>
                   </div>
-                  <div>
-                    <p className="font-medium">Jane Smith</p>
-                    <p className="text-sm text-muted-foreground">
-                      jane@example.com
-                    </p>
-                  </div>
-                </div>
-                <Badge variant="secondary">メンバー</Badge>
-              </div>
+                );
+              })}
+              {teamMembers.items.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  メンバーがいません
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -135,28 +158,41 @@ export default function TeamDetailPage({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {/* TODO: Implement recent OKRs list */}
-              <div className="p-3 border rounded-lg">
-                <h4 className="font-medium">Q1 プロダクト開発</h4>
-                <p className="text-sm text-muted-foreground mt-1">
-                  新機能のリリースと品質向上
-                </p>
-                <div className="flex items-center justify-between mt-2">
-                  <Badge variant="outline">進行中</Badge>
-                  <span className="text-sm font-medium">75%</span>
-                </div>
-              </div>
+              {okrs.slice(0, 3).map((okr) => {
+                // Calculate progress from key results
+                const totalKeyResults = okr.keyResults.length;
+                const progress =
+                  totalKeyResults > 0
+                    ? (okr.keyResults.reduce(
+                        (sum, kr) => sum + kr.currentValue / kr.targetValue,
+                        0,
+                      ) /
+                        totalKeyResults) *
+                      100
+                    : 0;
 
-              <div className="p-3 border rounded-lg">
-                <h4 className="font-medium">チーム生産性向上</h4>
-                <p className="text-sm text-muted-foreground mt-1">
-                  開発効率とコードクオリティの改善
+                return (
+                  <div key={okr.id} className="p-3 border rounded-lg">
+                    <h4 className="font-medium">{okr.title}</h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {okr.description || "説明なし"}
+                    </p>
+                    <div className="flex items-center justify-between mt-2">
+                      <Badge variant="outline">
+                        Q{okr.quarterQuarter} {okr.quarterYear}
+                      </Badge>
+                      <span className="text-sm font-medium">
+                        {Math.round(progress)}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+              {okrs.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  OKRがありません
                 </p>
-                <div className="flex items-center justify-between mt-2">
-                  <Badge variant="outline">進行中</Badge>
-                  <span className="text-sm font-medium">60%</span>
-                </div>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>

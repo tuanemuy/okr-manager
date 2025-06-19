@@ -1,3 +1,4 @@
+import { getTeamAction, getTeamMembersAction } from "@/actions/team";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,42 +18,32 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Mail, MoreHorizontal, UserPlus } from "lucide-react";
+import { notFound } from "next/navigation";
 
-export default function TeamMembersPage({
+export default async function TeamMembersPage({
   params,
 }: {
   params: { teamId: string };
 }) {
-  // TODO: Fetch team members using server actions
-  const members = [
-    {
-      id: "1",
-      name: "John Doe",
-      email: "john@example.com",
-      role: "admin",
-      joinedAt: "2024-01-15",
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      email: "jane@example.com",
-      role: "member",
-      joinedAt: "2024-02-01",
-    },
-    {
-      id: "3",
-      name: "Mike Johnson",
-      email: "mike@example.com",
-      role: "member",
-      joinedAt: "2024-02-15",
-    },
-  ];
+  const [team, teamMembers] = await Promise.all([
+    getTeamAction(params.teamId),
+    getTeamMembersAction(params.teamId),
+  ]);
+
+  if (!team) {
+    notFound();
+  }
 
   const getRoleBadge = (role: string) => {
-    return role === "admin" ? (
-      <Badge variant="default">管理者</Badge>
-    ) : (
-      <Badge variant="secondary">メンバー</Badge>
+    const roleMap = {
+      admin: "管理者",
+      member: "メンバー",
+      viewer: "閲覧者",
+    };
+    return (
+      <Badge variant={role === "admin" ? "default" : "secondary"}>
+        {roleMap[role as keyof typeof roleMap] || role}
+      </Badge>
     );
   };
 
@@ -87,7 +78,7 @@ export default function TeamMembersPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>メンバー一覧 ({members.length}人)</CardTitle>
+          <CardTitle>メンバー一覧 ({teamMembers.items.length}人)</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -101,41 +92,58 @@ export default function TeamMembersPage({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {members.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
-                        {member.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
+              {teamMembers.items.map((member) => {
+                const initials = member.user.displayName
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase();
+
+                return (
+                  <TableRow key={member.userId}>
+                    <TableCell>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
+                          {initials}
+                        </div>
+                        <span className="font-medium">
+                          {member.user.displayName}
+                        </span>
                       </div>
-                      <span className="font-medium">{member.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{member.email}</TableCell>
-                  <TableCell>{getRoleBadge(member.role)}</TableCell>
-                  <TableCell>
-                    {new Date(member.joinedAt).toLocaleDateString("ja-JP")}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>役割を変更</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
-                          メンバーを削除
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    </TableCell>
+                    <TableCell>{member.user.email}</TableCell>
+                    <TableCell>{getRoleBadge(member.role)}</TableCell>
+                    <TableCell>
+                      {member.joinedAt.toLocaleDateString("ja-JP")}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>役割を変更</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive">
+                            メンバーを削除
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {teamMembers.items.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    メンバーがいません
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>
