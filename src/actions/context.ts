@@ -13,7 +13,8 @@ import type { Context } from "@/core/application/context";
 import { z } from "zod/v4";
 
 export const envSchema = z.object({
-  DATABASE_FILE_NAME: z.string(),
+  TURSO_DATABASE_URL: z.string().min(1),
+  TURSO_AUTH_TOKEN: z.string().min(1),
   AUTH_SECRET: z.string().min(32),
 });
 
@@ -27,7 +28,7 @@ if (!env.success) {
   throw new Error(`Environment validation failed: ${errors}`);
 }
 
-const db = getDatabase(env.data.DATABASE_FILE_NAME);
+const db = getDatabase(env.data.TURSO_DATABASE_URL, env.data.TURSO_AUTH_TOKEN);
 
 export const context: Context = {
   userRepository: new DrizzleSqliteUserRepository(db),
