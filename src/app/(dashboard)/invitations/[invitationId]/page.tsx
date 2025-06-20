@@ -16,9 +16,10 @@ import {
 export default async function InvitationDetailPage({
   params,
 }: {
-  params: { invitationId: string };
+  params: Promise<{ invitationId: string }>;
 }) {
-  const invitationResult = await getInvitationAction(params.invitationId);
+  const { invitationId } = await params;
+  const invitationResult = await getInvitationAction(invitationId);
 
   if (!invitationResult.success) {
     notFound();

@@ -5,9 +5,10 @@ import { CreateReviewForm } from "@/components/okr/CreateReviewForm";
 export default async function NewReviewPage({
   params,
 }: {
-  params: { teamId: string; okrId: string };
+  params: Promise<{ teamId: string; okrId: string }>;
 }) {
-  const okrData = await getOkrAction(params.okrId);
+  const { teamId, okrId } = await params;
+  const okrData = await getOkrAction(okrId);
 
   if (!okrData.okr) {
     notFound();
@@ -15,8 +16,8 @@ export default async function NewReviewPage({
 
   return (
     <CreateReviewForm
-      teamId={params.teamId}
-      okrId={params.okrId}
+      teamId={teamId}
+      okrId={okrId}
       okrTitle={okrData.okr.title}
     />
   );

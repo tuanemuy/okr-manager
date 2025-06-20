@@ -20,9 +20,10 @@ import { Separator } from "@/components/ui/separator";
 export default async function OkrDetailPage({
   params,
 }: {
-  params: { teamId: string; okrId: string };
+  params: Promise<{ teamId: string; okrId: string }>;
 }) {
-  const okrData = await getOkrAction(params.okrId);
+  const { teamId, okrId } = await params;
+  const okrData = await getOkrAction(okrId);
 
   if (!okrData.okr) {
     notFound();
@@ -60,15 +61,13 @@ export default async function OkrDetailPage({
           </div>
           <div className="flex gap-2">
             <Button variant="outline" asChild>
-              <Link href={`/teams/${params.teamId}/okrs/${params.okrId}/edit`}>
+              <Link href={`/teams/${teamId}/okrs/${okrId}/edit`}>
                 <Edit className="h-4 w-4 mr-2" />
                 編集
               </Link>
             </Button>
             <Button asChild>
-              <Link
-                href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}
-              >
+              <Link href={`/teams/${teamId}/okrs/${okrId}/reviews/new`}>
                 <MessageSquare className="h-4 w-4 mr-2" />
                 レビュー作成
               </Link>
@@ -134,9 +133,7 @@ export default async function OkrDetailPage({
               <CardTitle className="flex items-center justify-between">
                 レビュー
                 <Button size="sm" variant="outline" asChild>
-                  <Link
-                    href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews`}
-                  >
+                  <Link href={`/teams/${teamId}/okrs/${okrId}/reviews`}>
                     すべて見る
                   </Link>
                 </Button>
@@ -149,9 +146,7 @@ export default async function OkrDetailPage({
                   レビュー機能は近日実装予定です
                 </p>
                 <Button size="sm" className="mt-2" asChild>
-                  <Link
-                    href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}
-                  >
+                  <Link href={`/teams/${teamId}/okrs/${okrId}/reviews/new`}>
                     <Plus className="h-3 w-3 mr-1" />
                     レビューを作成
                   </Link>
@@ -220,18 +215,14 @@ export default async function OkrDetailPage({
             </CardHeader>
             <CardContent className="space-y-2">
               <Button className="w-full" variant="outline" asChild>
-                <Link
-                  href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}
-                >
+                <Link href={`/teams/${teamId}/okrs/${okrId}/reviews/new`}>
                   <MessageSquare className="h-4 w-4 mr-2" />
                   レビューを作成
                 </Link>
               </Button>
 
               <Button className="w-full" variant="outline" asChild>
-                <Link
-                  href={`/teams/${params.teamId}/okrs/${params.okrId}/edit`}
-                >
+                <Link href={`/teams/${teamId}/okrs/${okrId}/edit`}>
                   <Edit className="h-4 w-4 mr-2" />
                   OKRを編集
                 </Link>
