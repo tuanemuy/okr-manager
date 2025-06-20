@@ -25,18 +25,15 @@ export async function getTeamById(
 
   const { teamId, userId } = parseResult.value;
 
-  // First check if user is a member of the team
-  const memberResult = await context.teamMemberRepository.getByTeamAndUser(
-    teamId,
-    userId,
-  );
+  // Check team membership and get team details in parallel
+  const [memberResult, teamResult] = await Promise.all([
+    context.teamMemberRepository.getByTeamAndUser(teamId, userId),
+    context.teamRepository.getById(teamId),
+  ]);
 
   if (memberResult.isErr() || !memberResult.value) {
     return err(new ApplicationError("User is not a member of this team"));
   }
-
-  // Get team details
-  const teamResult = await context.teamRepository.getById(teamId);
 
   if (teamResult.isErr()) {
     return err(new ApplicationError("Failed to get team", teamResult.error));

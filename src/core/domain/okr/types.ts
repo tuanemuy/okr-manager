@@ -120,6 +120,7 @@ export const okrWithKeyResultsSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
   keyResults: z.array(keyResultSchema),
+  progress: z.number().min(0).max(100).optional(),
   owner: z
     .object({
       displayName: z.string(),

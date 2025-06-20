@@ -161,6 +161,34 @@ export class MockTeamRepository implements TeamRepository {
     return ok(teams);
   }
 
+  async getTeamMembers(
+    teamId: TeamId,
+  ): Promise<Result<UserId[], RepositoryError>> {
+    const members: UserId[] = [];
+    for (const [userId, teamIds] of this.teamsByUser.entries()) {
+      if (teamIds.includes(teamId)) {
+        members.push(userId);
+      }
+    }
+    return ok(members);
+  }
+
+  async getBatchTeamMemberCounts(
+    teamIds: TeamId[],
+  ): Promise<Result<Record<string, number>, RepositoryError>> {
+    const counts: Record<string, number> = {};
+    for (const teamId of teamIds) {
+      let count = 0;
+      for (const [, userTeamIds] of this.teamsByUser.entries()) {
+        if (userTeamIds.includes(teamId)) {
+          count++;
+        }
+      }
+      counts[teamId] = count;
+    }
+    return ok(counts);
+  }
+
   // Helper methods for testing
   clear(): void {
     this.teams.clear();

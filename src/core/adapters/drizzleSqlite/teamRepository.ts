@@ -160,4 +160,51 @@ export class DrizzleSqliteTeamRepository implements TeamRepository {
       return err(new RepositoryError("Failed to list teams by user ID", error));
     }
   }
+
+  async getTeamMembers(
+    teamId: TeamId,
+  ): Promise<Result<UserId[], RepositoryError>> {
+    try {
+      const result = await this.db
+        .select({ userId: teamMembers.userId })
+        .from(teamMembers)
+        .where(eq(teamMembers.teamId, teamId));
+
+      return ok(result.map((member) => member.userId as UserId));
+    } catch (error) {
+      return err(new RepositoryError("Failed to get team members", error));
+    }
+  }
+
+  async getBatchTeamMemberCounts(
+    teamIds: TeamId[],
+  ): Promise<Result<Record<string, number>, RepositoryError>> {
+    try {
+      if (teamIds.length === 0) {
+        return ok({});
+      }
+
+      const result = await this.db
+        .select({
+          teamId: teamMembers.teamId,
+          count: sql<number>`count(*)`,
+        })
+        .from(teamMembers)
+        .where(
+          sql`${teamMembers.teamId} IN (${teamIds.map(() => "?").join(",")})`,
+        )
+        .groupBy(teamMembers.teamId);
+
+      const counts: Record<string, number> = {};
+      for (const row of result) {
+        counts[row.teamId] = Number(row.count);
+      }
+
+      return ok(counts);
+    } catch (error) {
+      return err(
+        new RepositoryError("Failed to get batch team member counts", error),
+      );
+    }
+  }
 }

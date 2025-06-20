@@ -12,6 +12,19 @@ import type {
   UpdateOkrParams,
 } from "../types";
 
+export interface SearchOkrResult extends Omit<Okr, "keyResults"> {
+  teamName: string;
+  ownerName: string;
+  progress: number;
+  keyResults?: Array<{
+    id: string;
+    title: string;
+    currentValue: number;
+    targetValue: number;
+    unit: string;
+  }>;
+}
+
 export interface OkrRepository {
   create(params: CreateOkrParams): Promise<Result<Okr, RepositoryError>>;
   getById(
@@ -35,5 +48,21 @@ export interface OkrRepository {
     userId: UserId,
     quarter?: Quarter,
   ): Promise<Result<OkrWithKeyResults[], RepositoryError>>;
+  listByUserId(
+    userId: UserId,
+  ): Promise<Result<OkrWithKeyResults[], RepositoryError>>;
+  listByTeams(
+    teamIds: TeamId[],
+  ): Promise<Result<OkrWithKeyResults[], RepositoryError>>;
   countByTeam(teamId: TeamId): Promise<Result<number, RepositoryError>>;
+  search(params: {
+    query: string;
+    teamId?: TeamId;
+    userId?: UserId;
+    quarter?: string;
+    year?: number;
+    pagination: { page: number; limit: number };
+  }): Promise<
+    Result<{ items: SearchOkrResult[]; totalCount: number }, RepositoryError>
+  >;
 }

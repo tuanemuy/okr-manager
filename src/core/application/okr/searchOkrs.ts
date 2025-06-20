@@ -1,7 +1,6 @@
-import { err, ok, type Result } from "neverthrow";
+import { err, type Result } from "neverthrow";
 import { z } from "zod/v4";
-import type { Okr } from "@/core/domain/okr/types";
-import { okrIdSchema } from "@/core/domain/okr/types";
+import type { SearchOkrResult } from "@/core/domain/okr/ports/okrRepository";
 import { teamIdSchema } from "@/core/domain/team/types";
 import { userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
@@ -21,21 +20,8 @@ export const searchOkrsInputSchema = z.object({
 
 export type SearchOkrsInput = z.infer<typeof searchOkrsInputSchema>;
 
-export interface SearchOkrResult extends Omit<Okr, "keyResults"> {
-  teamName: string;
-  ownerName: string;
-  progress: number;
-  keyResults?: Array<{
-    id: string;
-    title: string;
-    currentValue: number;
-    targetValue: number;
-    unit: string;
-  }>;
-}
-
 export async function searchOkrs(
-  _context: Context<unknown>,
+  context: Context<unknown>,
   input: SearchOkrsInput,
 ): Promise<
   Result<{ items: SearchOkrResult[]; totalCount: number }, ApplicationError>
@@ -56,53 +42,19 @@ export async function searchOkrs(
     pagination,
   } = parseResult.value;
 
-  // Mock implementation for now - in a real app you'd have proper search functionality
   try {
-    const mockOkrs: SearchOkrResult[] = [
-      {
-        id: okrIdSchema.parse("550e8400-e29b-41d4-a716-446655440001"),
-        title: "Increase user engagement",
-        description: "Improve user engagement metrics across all platforms",
-        type: "team" as const,
-        teamId:
-          teamId || teamIdSchema.parse("550e8400-e29b-41d4-a716-446655440002"),
-        quarterYear: year || 2024,
-        quarterQuarter: 4,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        teamName: "Product Team",
-        ownerName: "John Doe",
-        progress: 75,
-        keyResults: [
-          {
-            id: "kr-1",
-            title: "Increase daily active users by 20%",
-            currentValue: 15,
-            targetValue: 20,
-            unit: "%",
-          },
-        ],
-      },
-    ];
-
-    // Apply basic text search filter
-    const filteredOkrs = query
-      ? mockOkrs.filter(
-          (okr) =>
-            okr.title.toLowerCase().includes(query.toLowerCase()) ||
-            okr.description?.toLowerCase().includes(query.toLowerCase()),
-        )
-      : mockOkrs;
-
-    // Apply pagination
-    const startIndex = (pagination.page - 1) * pagination.limit;
-    const endIndex = startIndex + pagination.limit;
-    const paginatedItems = filteredOkrs.slice(startIndex, endIndex);
-
-    return ok({
-      items: paginatedItems,
-      totalCount: filteredOkrs.length,
+    const result = await context.okrRepository.search({
+      query,
+      teamId,
+      userId: _userId,
+      quarter: _quarter,
+      year,
+      pagination,
     });
+
+    return result.mapErr(
+      (error) => new ApplicationError("Failed to search OKRs", error),
+    );
   } catch (error) {
     return err(new ApplicationError("Failed to search OKRs", error));
   }
