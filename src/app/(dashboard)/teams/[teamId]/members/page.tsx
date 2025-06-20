@@ -1,4 +1,6 @@
 import { getTeamAction, getTeamMembersAction } from "@/actions/team";
+import { InviteMemberForm } from "@/components/team/invite-member-form";
+import { MemberActionsMenu } from "@/components/team/member-actions-menu";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,17 +73,7 @@ export default async function TeamMembersPage({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex space-x-2">
-            <Input
-              placeholder="招待するメールアドレス"
-              type="email"
-              className="flex-1"
-            />
-            <Button>
-              <Mail className="h-4 w-4 mr-2" />
-              招待を送信
-            </Button>
-          </div>
+          <InviteMemberForm teamId={params.teamId} />
         </CardContent>
       </Card>
 
@@ -128,19 +120,10 @@ export default async function TeamMembersPage({
                       {member.joinedAt.toLocaleDateString("ja-JP")}
                     </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>役割を変更</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            メンバーを削除
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <MemberActionsMenu
+                        teamId={params.teamId}
+                        member={member}
+                      />
                     </TableCell>
                   </TableRow>
                 );
