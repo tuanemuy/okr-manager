@@ -3,13 +3,16 @@
 import { context } from "@/context";
 import { createOkr } from "@/core/application/okr/createOkr";
 import { createReview } from "@/core/application/okr/createReview";
+import { deleteReview } from "@/core/application/okr/deleteReview";
 import { updateKeyResult } from "@/core/application/okr/updateKeyResult";
 import { updateKeyResultProgress } from "@/core/application/okr/updateKeyResultProgress";
 import { updateOkr } from "@/core/application/okr/updateOkr";
+import { updateReview } from "@/core/application/okr/updateReview";
 import {
   type OkrType,
   keyResultIdSchema,
   okrIdSchema,
+  reviewIdSchema,
 } from "@/core/domain/okr/types";
 import { teamIdSchema } from "@/core/domain/team/types";
 import { getUserIdFromSession } from "@/lib/session";
@@ -440,6 +443,131 @@ export async function deleteKeyResultAction(keyResultId: string) {
     };
   } catch (error) {
     console.error("Error in deleteKeyResultAction:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+export async function getReviewAction(reviewId: string) {
+  const sessionResult = await context.sessionManager.get();
+  if (sessionResult.isErr() || !sessionResult.value) {
+    throw new Error("Not authenticated");
+  }
+
+  const result = await context.reviewRepository.findById(
+    reviewIdSchema.parse(reviewId),
+  );
+
+  if (result.isErr()) {
+    throw new Error(result.error.message);
+  }
+
+  if (!result.value) {
+    throw new Error("Review not found");
+  }
+
+  return result.value;
+}
+
+const updateReviewInputSchema = z.object({
+  content: z.string().min(1),
+});
+
+export type UpdateReviewInput = z.infer<typeof updateReviewInputSchema>;
+
+export async function updateReviewAction(reviewId: string, input: UpdateReviewInput) {
+  try {
+    const session = await requireAuth();
+    const validInput = updateReviewInputSchema.parse(input);
+
+    const result = await updateReview(context, {
+      reviewId: reviewIdSchema.parse(reviewId),
+      userId: getUserIdFromSession(session),
+      ...validInput,
+    });
+
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    // Get review and OKR for revalidation
+    const reviewResult = await context.reviewRepository.findById(
+      reviewIdSchema.parse(reviewId),
+    );
+    if (reviewResult.isOk() && reviewResult.value) {
+      const okrResult = await context.okrRepository.getById(reviewResult.value.okrId);
+      if (okrResult.isOk() && okrResult.value) {
+        revalidatePath(`/teams/${okrResult.value.teamId}/okrs/${reviewResult.value.okrId}/reviews/${reviewId}`);
+        revalidatePath(`/teams/${okrResult.value.teamId}/okrs/${reviewResult.value.okrId}/reviews`);
+      }
+    }
+
+    return {
+      success: true,
+      data: result.value,
+    };
+  } catch (error) {
+    console.error("Error in updateReviewAction:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+export async function deleteReviewAction(reviewId: string) {
+  try {
+    const session = await requireAuth();
+
+    // Get review to check permissions and get IDs for revalidation
+    const reviewResult = await context.reviewRepository.findById(
+      reviewIdSchema.parse(reviewId),
+    );
+    if (reviewResult.isErr() || !reviewResult.value) {
+      return {
+        success: false,
+        error: "Review not found",
+      };
+    }
+
+    const review = reviewResult.value;
+
+    // Get OKR to check permissions
+    const okrResult = await context.okrRepository.getById(review.okrId);
+    if (okrResult.isErr() || !okrResult.value) {
+      return {
+        success: false,
+        error: "OKR not found",
+      };
+    }
+
+    const result = await deleteReview(context, {
+      reviewId: reviewIdSchema.parse(reviewId),
+      userId: getUserIdFromSession(session),
+    });
+
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    const okr = okrResult.value;
+    revalidatePath(`/teams/${okr.teamId}/okrs/${review.okrId}/reviews`);
+    revalidatePath(`/teams/${okr.teamId}/okrs/${review.okrId}`);
+
+    return {
+      success: true,
+      data: undefined,
+    };
+  } catch (error) {
+    console.error("Error in deleteReviewAction:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",
