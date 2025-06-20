@@ -25,14 +25,23 @@ export default async function TeamMembersPage({
 }: {
   params: { teamId: string };
 }) {
-  const [team, teamMembers] = await Promise.all([
+  const [teamResult, teamMembersResult] = await Promise.all([
     getTeamAction(params.teamId),
     getTeamMembersAction(params.teamId),
   ]);
 
-  if (!team) {
+  if (!teamResult.success) {
     notFound();
   }
+
+  if (!teamResult.data) {
+    return <div>Team not found</div>;
+  }
+
+  const team = teamResult.data;
+  const teamMembers = teamMembersResult.success
+    ? teamMembersResult.data
+    : { items: [], totalCount: 0 };
 
   const getRoleBadge = (role: string) => {
     const roleMap = {
@@ -78,7 +87,9 @@ export default async function TeamMembersPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>メンバー一覧 ({teamMembers.items.length}人)</CardTitle>
+          <CardTitle>
+            メンバー一覧 ({teamMembers?.items?.length || 0}人)
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -92,10 +103,10 @@ export default async function TeamMembersPage({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {teamMembers.items.map((member) => {
+              {teamMembers?.items?.map((member) => {
                 const initials = member.user.displayName
                   .split(" ")
-                  .map((n) => n[0])
+                  .map((n: string) => n[0])
                   .join("")
                   .toUpperCase();
 
@@ -134,7 +145,7 @@ export default async function TeamMembersPage({
                   </TableRow>
                 );
               })}
-              {teamMembers.items.length === 0 && (
+              {(teamMembers?.items?.length || 0) === 0 && (
                 <TableRow>
                   <TableCell
                     colSpan={5}

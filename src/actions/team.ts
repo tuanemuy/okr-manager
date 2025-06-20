@@ -3,36 +3,60 @@
 import { context } from "@/context";
 import { acceptInvitation } from "@/core/application/team/acceptInvitation";
 import { createTeam } from "@/core/application/team/createTeam";
+import { deleteTeam } from "@/core/application/team/deleteTeam";
+import { getTeamById } from "@/core/application/team/getTeamById";
+import { getTeamMembers } from "@/core/application/team/getTeamMembers";
+import { getTeamsByUserId } from "@/core/application/team/getTeamsByUserId";
 import { inviteToTeam } from "@/core/application/team/inviteToTeam";
+import { removeMemberFromTeam } from "@/core/application/team/removeMemberFromTeam";
+import { updateMemberRole } from "@/core/application/team/updateMemberRole";
+import { updateTeam } from "@/core/application/team/updateTeam";
+import { updateTeamReviewFrequency } from "@/core/application/team/updateTeamReviewFrequency";
 import { invitationIdSchema, teamIdSchema } from "@/core/domain/team/types";
 import { userIdSchema } from "@/core/domain/user/types";
 import { getUserIdFromSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod/v4";
+import { requireAuth } from "./session";
 
-export async function createTeamAction(formData: FormData) {
-  const name = formData.get("name") as string;
-  const description = formData.get("description") as string;
+const createTeamInputSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().optional(),
+});
 
-  const sessionResult = await context.sessionManager.get();
-  if (sessionResult.isErr() || !sessionResult.value) {
-    throw new Error("Not authenticated");
+export type CreateTeamInput = z.infer<typeof createTeamInputSchema>;
+
+export async function createTeamAction(input: CreateTeamInput) {
+  try {
+    const session = await requireAuth();
+    const validInput = createTeamInputSchema.parse(input);
+
+    const result = await createTeam(context, {
+      name: validInput.name,
+      description: validInput.description,
+      ownerId: getUserIdFromSession(session),
+    });
+
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    revalidatePath("/teams");
+    return {
+      success: true,
+      data: result.value,
+    };
+  } catch (error) {
+    console.error("Error in createTeamAction:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
   }
-
-  const session = sessionResult.value;
-
-  const result = await createTeam(context, {
-    name,
-    description: description || undefined,
-    ownerId: getUserIdFromSession(session),
-  });
-
-  if (result.isErr()) {
-    throw new Error(result.error.message);
-  }
-
-  revalidatePath("/teams");
-  redirect("/teams");
 }
 
 export async function inviteToTeamAction(teamId: string, formData: FormData) {
@@ -81,193 +105,262 @@ export async function acceptInvitationAction(invitationId: string) {
 }
 
 export async function getTeamsAction() {
-  const sessionResult = await context.sessionManager.get();
-  if (sessionResult.isErr() || !sessionResult.value) {
-    throw new Error("Not authenticated");
+  try {
+    const session = await requireAuth();
+
+    const result = await getTeamsByUserId(context, {
+      userId: getUserIdFromSession(session),
+    });
+
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    return {
+      success: true,
+      data: result.value,
+    };
+  } catch (error) {
+    console.error("Error in getTeamsAction:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
   }
-
-  const session = sessionResult.value;
-
-  const result = await context.teamRepository.listByUserId(
-    getUserIdFromSession(session),
-  );
-
-  if (result.isErr()) {
-    throw new Error(result.error.message);
-  }
-
-  return result.value;
 }
 
 export async function getTeamAction(teamId: string) {
-  const sessionResult = await context.sessionManager.get();
-  if (sessionResult.isErr() || !sessionResult.value) {
-    throw new Error("Not authenticated");
-  }
+  try {
+    const session = await requireAuth();
 
-  const teamResult = await context.teamRepository.findById(
-    teamIdSchema.parse(teamId),
-  );
-  if (teamResult.isErr()) {
-    throw new Error(teamResult.error.message);
-  }
+    const result = await getTeamById(context, {
+      teamId: teamIdSchema.parse(teamId),
+      userId: getUserIdFromSession(session),
+    });
 
-  return teamResult.value;
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    return {
+      success: true,
+      data: result.value,
+    };
+  } catch (error) {
+    console.error("Error in getTeamAction:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
 }
 
 export async function getTeamMembersAction(teamId: string) {
-  const sessionResult = await context.sessionManager.get();
-  if (sessionResult.isErr() || !sessionResult.value) {
-    throw new Error("Not authenticated");
-  }
+  try {
+    const session = await requireAuth();
 
-  const result = await context.teamMemberRepository.list({
-    teamId: teamIdSchema.parse(teamId),
-    pagination: { page: 1, limit: 100, order: "asc", orderBy: "joinedAt" },
-  });
-  if (result.isErr()) {
-    throw new Error(result.error.message);
-  }
+    const result = await getTeamMembers(context, {
+      teamId: teamIdSchema.parse(teamId),
+      userId: getUserIdFromSession(session),
+    });
 
-  return result.value;
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    return {
+      success: true,
+      data: result.value,
+    };
+  } catch (error) {
+    console.error("Error in getTeamMembersAction:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
 }
 
-export async function removeTeamMemberAction(teamId: string, userId: string) {
-  const sessionResult = await context.sessionManager.get();
-  if (sessionResult.isErr() || !sessionResult.value) {
-    throw new Error("Not authenticated");
+export async function removeTeamMemberAction(
+  teamId: string,
+  targetUserId: string,
+) {
+  try {
+    const session = await requireAuth();
+
+    const result = await removeMemberFromTeam(context, {
+      teamId: teamIdSchema.parse(teamId),
+      userId: getUserIdFromSession(session),
+      targetUserId: userIdSchema.parse(targetUserId),
+    });
+
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    revalidatePath(`/teams/${teamId}/members`);
+    return {
+      success: true,
+      data: result.value,
+    };
+  } catch (error) {
+    console.error("Error in removeTeamMemberAction:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
   }
-
-  const session = sessionResult.value;
-
-  // Check if user is admin of the team
-  const memberResult = await context.teamMemberRepository.getByTeamAndUser(
-    teamIdSchema.parse(teamId),
-    getUserIdFromSession(session),
-  );
-  if (
-    memberResult.isErr() ||
-    !memberResult.value ||
-    memberResult.value.role !== "admin"
-  ) {
-    throw new Error("Not authorized");
-  }
-
-  const result = await context.teamMemberRepository.delete(
-    teamIdSchema.parse(teamId),
-    userIdSchema.parse(userId),
-  );
-  if (result.isErr()) {
-    throw new Error(result.error.message);
-  }
-
-  revalidatePath(`/teams/${teamId}/members`);
 }
 
 export async function updateTeamMemberRoleAction(
   teamId: string,
-  userId: string,
+  targetUserId: string,
   role: "admin" | "member" | "viewer",
 ) {
-  const sessionResult = await context.sessionManager.get();
-  if (sessionResult.isErr() || !sessionResult.value) {
-    throw new Error("Not authenticated");
+  try {
+    const session = await requireAuth();
+
+    const result = await updateMemberRole(context, {
+      teamId: teamIdSchema.parse(teamId),
+      userId: getUserIdFromSession(session),
+      targetUserId: userIdSchema.parse(targetUserId),
+      role,
+    });
+
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    revalidatePath(`/teams/${teamId}/members`);
+    return {
+      success: true,
+      data: result.value,
+    };
+  } catch (error) {
+    console.error("Error in updateTeamMemberRoleAction:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
   }
-
-  const session = sessionResult.value;
-
-  // Check if user is admin of the team
-  const memberResult = await context.teamMemberRepository.getByTeamAndUser(
-    teamIdSchema.parse(teamId),
-    getUserIdFromSession(session),
-  );
-  if (
-    memberResult.isErr() ||
-    !memberResult.value ||
-    memberResult.value.role !== "admin"
-  ) {
-    throw new Error("Not authorized");
-  }
-
-  const result = await context.teamMemberRepository.updateRole(
-    teamIdSchema.parse(teamId),
-    userIdSchema.parse(userId),
-    role,
-  );
-  if (result.isErr()) {
-    throw new Error(result.error.message);
-  }
-
-  revalidatePath(`/teams/${teamId}/members`);
 }
 
-export async function updateTeamAction(teamId: string, formData: FormData) {
-  const name = formData.get("name") as string;
-  const description = formData.get("description") as string;
+const updateTeamInputSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().nullable().optional(),
+});
 
-  const sessionResult = await context.sessionManager.get();
-  if (sessionResult.isErr() || !sessionResult.value) {
-    throw new Error("Not authenticated");
+export type UpdateTeamInput = z.infer<typeof updateTeamInputSchema>;
+
+export async function updateTeamAction(teamId: string, input: UpdateTeamInput) {
+  try {
+    const session = await requireAuth();
+    const validInput = updateTeamInputSchema.parse(input);
+
+    const result = await updateTeam(context, {
+      teamId: teamIdSchema.parse(teamId),
+      userId: getUserIdFromSession(session),
+      name: validInput.name,
+      description: validInput.description,
+    });
+
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    revalidatePath(`/teams/${teamId}`);
+    revalidatePath(`/teams/${teamId}/settings`);
+    return {
+      success: true,
+      data: result.value,
+    };
+  } catch (error) {
+    console.error("Error in updateTeamAction:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
   }
+}
 
-  const session = sessionResult.value;
+export async function updateTeamReviewFrequencyAction(
+  teamId: string,
+  frequency: "weekly" | "biweekly" | "monthly",
+) {
+  try {
+    const session = await requireAuth();
 
-  // Check if user is admin of the team
-  const memberResult = await context.teamMemberRepository.getByTeamAndUser(
-    teamIdSchema.parse(teamId),
-    getUserIdFromSession(session),
-  );
-  if (
-    memberResult.isErr() ||
-    !memberResult.value ||
-    memberResult.value.role !== "admin"
-  ) {
-    throw new Error("Not authorized");
+    const result = await updateTeamReviewFrequency(context, {
+      teamId: teamIdSchema.parse(teamId),
+      userId: getUserIdFromSession(session),
+      reviewFrequency: frequency,
+    });
+
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    revalidatePath(`/teams/${teamId}/settings`);
+    return {
+      success: true,
+      data: result.value,
+    };
+  } catch (error) {
+    console.error("Error in updateTeamReviewFrequencyAction:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
   }
-
-  const result = await context.teamRepository.update(
-    teamIdSchema.parse(teamId),
-    {
-      name,
-      description: description || undefined,
-    },
-  );
-  if (result.isErr()) {
-    throw new Error(result.error.message);
-  }
-
-  revalidatePath(`/teams/${teamId}`);
-  redirect(`/teams/${teamId}`);
 }
 
 export async function deleteTeamAction(teamId: string) {
-  const sessionResult = await context.sessionManager.get();
-  if (sessionResult.isErr() || !sessionResult.value) {
-    throw new Error("Not authenticated");
+  try {
+    const session = await requireAuth();
+
+    const result = await deleteTeam(context, {
+      teamId: teamIdSchema.parse(teamId),
+      userId: getUserIdFromSession(session),
+    });
+
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    revalidatePath("/teams");
+    return {
+      success: true,
+      data: result.value,
+    };
+  } catch (error) {
+    console.error("Error in deleteTeamAction:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
   }
-
-  const session = sessionResult.value;
-
-  // Check if user is admin of the team
-  const memberResult = await context.teamMemberRepository.getByTeamAndUser(
-    teamIdSchema.parse(teamId),
-    getUserIdFromSession(session),
-  );
-  if (
-    memberResult.isErr() ||
-    !memberResult.value ||
-    memberResult.value.role !== "admin"
-  ) {
-    throw new Error("Not authorized");
-  }
-
-  const result = await context.teamRepository.delete(
-    teamIdSchema.parse(teamId),
-  );
-  if (result.isErr()) {
-    throw new Error(result.error.message);
-  }
-
-  revalidatePath("/teams");
-  redirect("/teams");
 }

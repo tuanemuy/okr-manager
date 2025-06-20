@@ -12,7 +12,8 @@ import {
 import Link from "next/link";
 
 export default async function TeamsPage() {
-  const teams = await getTeamsAction();
+  const teamsResult = await getTeamsAction();
+  const teams = teamsResult.success ? teamsResult.data?.teams || [] : [];
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">

@@ -13,21 +13,30 @@ export default async function TeamDetailPage({
   params: { teamId: string };
 }) {
   // Fetch team data and related information
-  const [team, teamMembers, okrs] = await Promise.all([
+  const [teamResult, teamMembersResult, okrsResult] = await Promise.all([
     getTeamAction(params.teamId),
     getTeamMembersAction(params.teamId),
     getOkrsAction(params.teamId),
   ]);
 
-  if (!team) {
+  if (!teamResult.success) {
     notFound();
   }
 
-  const memberCount = teamMembers.items.length;
+  if (!teamResult.data) {
+    return <div>Team not found</div>;
+  }
+
+  const team = teamResult.data;
+  const teamMembers = teamMembersResult.success
+    ? teamMembersResult.data
+    : { items: [], totalCount: 0 };
+  const okrs = Array.isArray(okrsResult) ? okrsResult : [];
+
+  const memberCount = teamMembers?.items?.length || 0;
   const okrCount = okrs.length;
-  const adminCount = teamMembers.items.filter(
-    (member) => member.role === "admin",
-  ).length;
+  const adminCount =
+    teamMembers?.items?.filter((member) => member.role === "admin").length || 0;
 
   const stats = [
     {
@@ -100,13 +109,13 @@ export default async function TeamDetailPage({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {teamMembers.items.slice(0, 3).map((member) => {
+              {teamMembers?.items?.slice(0, 3).map((member) => {
                 const initials = member.user.displayName
                   .split(" ")
-                  .map((name) => name[0])
+                  .map((name: string) => name[0])
                   .join("")
                   .toUpperCase();
-                const roleDisplayMap = {
+                const roleDisplayMap: Record<string, string> = {
                   admin: "管理者",
                   member: "メンバー",
                   viewer: "閲覧者",
@@ -133,12 +142,12 @@ export default async function TeamDetailPage({
                         member.role === "admin" ? "outline" : "secondary"
                       }
                     >
-                      {roleDisplayMap[member.role]}
+                      {roleDisplayMap[member.role] || member.role}
                     </Badge>
                   </div>
                 );
               })}
-              {teamMembers.items.length === 0 && (
+              {(teamMembers?.items?.length || 0) === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   メンバーがいません
                 </p>
@@ -160,11 +169,12 @@ export default async function TeamDetailPage({
             <div className="space-y-4">
               {okrs.slice(0, 3).map((okr) => {
                 // Calculate progress from key results
-                const totalKeyResults = okr.keyResults.length;
+                const totalKeyResults = okr.keyResults?.length || 0;
                 const progress =
                   totalKeyResults > 0
                     ? (okr.keyResults.reduce(
-                        (sum, kr) => sum + kr.currentValue / kr.targetValue,
+                        (sum: number, kr) =>
+                          sum + kr.currentValue / kr.targetValue,
                         0,
                       ) /
                         totalKeyResults) *

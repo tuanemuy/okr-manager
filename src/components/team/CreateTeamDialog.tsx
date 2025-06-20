@@ -34,7 +34,9 @@ export function CreateTeamDialog({ children }: CreateTeamDialogProps) {
         </DialogHeader>
         <form
           action={async (formData) => {
-            await createTeamAction(formData);
+            const name = formData.get("name") as string;
+            const description = formData.get("description") as string;
+            await createTeamAction({ name, description });
             setOpen(false);
           }}
           className="space-y-4"

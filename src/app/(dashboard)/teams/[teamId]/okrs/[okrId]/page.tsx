@@ -1,4 +1,5 @@
 import { getOkrAction } from "@/actions/okr";
+import { ProgressUpdateDialog } from "@/components/okr/ProgressUpdateDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -109,10 +110,7 @@ export default async function OkrDetailPage({
                         {kr.unit && ` ${kr.unit}`} / 目標: {kr.targetValue}
                         {kr.unit && ` ${kr.unit}`}
                       </span>
-                      <Button size="sm" variant="ghost">
-                        <Edit className="h-3 w-3 mr-1" />
-                        更新
-                      </Button>
+                      <ProgressUpdateDialog keyResult={kr} />
                     </div>
 
                     <Progress value={Math.min(progress, 100)} className="h-2" />
