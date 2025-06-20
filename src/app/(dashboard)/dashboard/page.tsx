@@ -49,7 +49,9 @@ export default async function DashboardPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">チーム数</span>
-                  <Badge variant="secondary">{teams.length}</Badge>
+                  <Badge variant="secondary">
+                    {teams.success ? teams.data?.teams?.length || 0 : 0}
+                  </Badge>
                 </div>
                 <Link href="/teams">
                   <Button variant="outline" className="w-full">
