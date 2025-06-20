@@ -1,6 +1,6 @@
+import { err, ok } from "neverthrow";
 import type { UserId } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
-import { err, ok } from "neverthrow";
 import type { Context } from "../context";
 
 export interface DashboardData {

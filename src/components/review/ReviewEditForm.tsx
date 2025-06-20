@@ -1,11 +1,11 @@
 "use client";
 
-import { updateReviewAction, type UpdateReviewInput } from "@/actions/okr";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { type UpdateReviewInput, updateReviewAction } from "@/actions/okr";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ReviewEditFormProps {
   reviewId: string;
@@ -14,14 +14,19 @@ interface ReviewEditFormProps {
   initialContent: string;
 }
 
-export function ReviewEditForm({ reviewId, teamId, okrId, initialContent }: ReviewEditFormProps) {
+export function ReviewEditForm({
+  reviewId,
+  teamId,
+  okrId,
+  initialContent,
+}: ReviewEditFormProps) {
   const [content, setContent] = useState(initialContent);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (content.trim() === "") {
       toast.error("レビュー内容は必須です");
       return;
@@ -29,13 +34,13 @@ export function ReviewEditForm({ reviewId, teamId, okrId, initialContent }: Revi
 
     try {
       setIsSubmitting(true);
-      
+
       const input: UpdateReviewInput = {
         content: content.trim(),
       };
-      
+
       const result = await updateReviewAction(reviewId, input);
-      
+
       if (result.success) {
         toast.success("レビューを更新しました");
         router.push(`/teams/${teamId}/okrs/${okrId}/reviews/${reviewId}`);
@@ -65,18 +70,17 @@ export function ReviewEditForm({ reviewId, teamId, okrId, initialContent }: Revi
           required
         />
       </div>
-      
+
       <div className="flex items-center gap-2 pt-4">
-        <Button
-          type="submit"
-          disabled={isSubmitting || content.trim() === ""}
-        >
+        <Button type="submit" disabled={isSubmitting || content.trim() === ""}>
           {isSubmitting ? "更新中..." : "更新"}
         </Button>
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push(`/teams/${teamId}/okrs/${okrId}/reviews/${reviewId}`)}
+          onClick={() =>
+            router.push(`/teams/${teamId}/okrs/${okrId}/reviews/${reviewId}`)
+          }
         >
           キャンセル
         </Button>

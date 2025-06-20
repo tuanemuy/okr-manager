@@ -1,5 +1,9 @@
 "use client";
 
+import { Calendar, Check, ExternalLink, Users, X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import {
   acceptInvitationAction,
   rejectInvitationAction,
@@ -22,10 +26,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { InvitationWithTeam } from "@/core/domain/team/types";
-import { Calendar, Check, ExternalLink, Users, X } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
 
 interface InvitationCardProps {
   invitation: InvitationWithTeam;

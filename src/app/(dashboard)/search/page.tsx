@@ -1,9 +1,9 @@
+import { Suspense } from "react";
 import { getSearchFiltersAction } from "@/actions/search";
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { SearchOkrs } from "@/components/search/SearchOkrs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Suspense } from "react";
 
 export default async function SearchPage({
   searchParams,

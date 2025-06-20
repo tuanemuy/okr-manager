@@ -1,10 +1,10 @@
+import { Calendar, MessageSquare } from "lucide-react";
+import Link from "next/link";
 import { getReviewAction } from "@/actions/okr";
 import { ReviewEditForm } from "@/components/review/ReviewEditForm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, MessageSquare } from "lucide-react";
-import Link from "next/link";
 
 export default async function ReviewEditPage({
   params,
@@ -30,12 +30,12 @@ export default async function ReviewEditPage({
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">レビュー編集</h1>
-            <p className="text-muted-foreground mt-2">
-              レビュー内容を編集
-            </p>
+            <p className="text-muted-foreground mt-2">レビュー内容を編集</p>
           </div>
           <Button variant="outline" asChild>
-            <Link href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/${params.reviewId}`}>
+            <Link
+              href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/${params.reviewId}`}
+            >
               キャンセル
             </Link>
           </Button>
@@ -54,7 +54,9 @@ export default async function ReviewEditPage({
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
-              <span>作成日: {new Date(review.createdAt).toLocaleDateString("ja-JP")}</span>
+              <span>
+                作成日: {new Date(review.createdAt).toLocaleDateString("ja-JP")}
+              </span>
             </div>
           </CardHeader>
         </Card>

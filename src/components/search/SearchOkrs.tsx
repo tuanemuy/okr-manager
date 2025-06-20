@@ -1,9 +1,9 @@
+import { CalendarDays, Target, Users } from "lucide-react";
+import Link from "next/link";
 import { searchOkrsAction } from "@/actions/search";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { CalendarDays, Target, Users } from "lucide-react";
-import Link from "next/link";
 import { SearchPagination } from "./SearchPagination";
 
 interface SearchOkrsProps {

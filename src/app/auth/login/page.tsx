@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { loginAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +10,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
 
 export default function LoginPage() {
   return (

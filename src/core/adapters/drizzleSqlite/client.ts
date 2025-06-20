@@ -1,15 +1,16 @@
+import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 import * as schema from "./schema";
+
 export * from "./schema";
 
 export type Database = ReturnType<typeof drizzle<typeof schema>>;
 
-export function getDatabase(url: string, authToken: string) {
+export function getDatabase(path: string) {
   return drizzle({
-    connection: {
-      url,
-      authToken,
-    },
+    client: createClient({
+      url: `file:${path}`,
+    }),
     schema,
   });
 }

@@ -1,3 +1,4 @@
+import { err, ok, type Result } from "neverthrow";
 import type { SessionManager } from "@/core/domain/auth/ports/sessionManager";
 import {
   type SessionData,
@@ -5,7 +6,6 @@ import {
   sessionDataSchema,
 } from "@/core/domain/auth/types";
 import { validate } from "@/lib/validation";
-import { type Result, err, ok } from "neverthrow";
 import type { NextAuthService } from "./authService";
 
 export class NextAuthSessionManager implements SessionManager {

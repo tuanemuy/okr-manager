@@ -1,3 +1,5 @@
+import { Bell, Settings } from "lucide-react";
+import { Suspense } from "react";
 import {
   getNotificationSettingsAction,
   getNotificationsAction,
@@ -8,8 +10,6 @@ import { NotificationsList } from "@/components/notifications/NotificationsList"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bell, Settings } from "lucide-react";
-import { Suspense } from "react";
 
 export default async function NotificationsPage({
   searchParams,

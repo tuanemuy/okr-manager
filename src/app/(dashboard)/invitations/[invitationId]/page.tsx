@@ -1,3 +1,6 @@
+import { ArrowLeft, Calendar, Mail, Users } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 import { getInvitationAction } from "@/actions/invitation";
 import { InvitationActions } from "@/components/invitation/invitation-actions";
 import { Badge } from "@/components/ui/badge";
@@ -9,9 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowLeft, Calendar, Mail, Users } from "lucide-react";
-import Link from "next/link";
-import { notFound } from "next/navigation";
 
 export default async function InvitationDetailPage({
   params,

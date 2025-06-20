@@ -1,5 +1,8 @@
 "use client";
 
+import { AlertTriangle, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { deleteTeamAction } from "@/actions/team";
 import {
   AlertDialog,
@@ -15,9 +18,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertTriangle, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 interface TeamDangerZoneProps {
   team: {

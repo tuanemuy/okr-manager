@@ -1,10 +1,10 @@
-import { z } from "zod/v4";
 import { err, ok, type Result } from "neverthrow";
+import { z } from "zod/v4";
+import { type Review, reviewIdSchema } from "@/core/domain/okr/types";
+import { userIdSchema } from "@/core/domain/user/types";
+import { ApplicationError } from "@/lib/error";
 import { validate } from "@/lib/validation";
 import type { Context } from "../context";
-import { ApplicationError } from "@/lib/error";
-import { reviewIdSchema, type Review } from "@/core/domain/okr/types";
-import { userIdSchema } from "@/core/domain/user/types";
 
 export const updateReviewInputSchema = z.object({
   reviewId: reviewIdSchema,
@@ -28,7 +28,9 @@ export async function updateReview(
   // Get the review to check permissions
   const reviewResult = await context.reviewRepository.findById(reviewId);
   if (reviewResult.isErr()) {
-    return err(new ApplicationError("Failed to get review", reviewResult.error));
+    return err(
+      new ApplicationError("Failed to get review", reviewResult.error),
+    );
   }
 
   if (!reviewResult.value) {
@@ -39,7 +41,9 @@ export async function updateReview(
 
   // Check if user is the reviewer (owner of the review)
   if (review.reviewerId !== userId) {
-    return err(new ApplicationError("Unauthorized: You can only edit your own reviews"));
+    return err(
+      new ApplicationError("Unauthorized: You can only edit your own reviews"),
+    );
   }
 
   // Update the review
@@ -51,9 +55,14 @@ export async function updateReview(
     return err(new ApplicationError("No fields to update"));
   }
 
-  const updateResult = await context.reviewRepository.update(reviewId, updateParams);
+  const updateResult = await context.reviewRepository.update(
+    reviewId,
+    updateParams,
+  );
   if (updateResult.isErr()) {
-    return err(new ApplicationError("Failed to update review", updateResult.error));
+    return err(
+      new ApplicationError("Failed to update review", updateResult.error),
+    );
   }
 
   return ok(updateResult.value);

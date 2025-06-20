@@ -1,10 +1,10 @@
-import { z } from "zod/v4";
 import { err, ok, type Result } from "neverthrow";
-import { validate } from "@/lib/validation";
-import type { Context } from "../context";
-import { ApplicationError } from "@/lib/error";
+import { z } from "zod/v4";
 import { reviewIdSchema } from "@/core/domain/okr/types";
 import { userIdSchema } from "@/core/domain/user/types";
+import { ApplicationError } from "@/lib/error";
+import { validate } from "@/lib/validation";
+import type { Context } from "../context";
 
 export const deleteReviewInputSchema = z.object({
   reviewId: reviewIdSchema,
@@ -27,7 +27,9 @@ export async function deleteReview(
   // Get the review to check permissions
   const reviewResult = await context.reviewRepository.findById(reviewId);
   if (reviewResult.isErr()) {
-    return err(new ApplicationError("Failed to get review", reviewResult.error));
+    return err(
+      new ApplicationError("Failed to get review", reviewResult.error),
+    );
   }
 
   if (!reviewResult.value) {
@@ -38,13 +40,19 @@ export async function deleteReview(
 
   // Check if user is the reviewer (owner of the review)
   if (review.reviewerId !== userId) {
-    return err(new ApplicationError("Unauthorized: You can only delete your own reviews"));
+    return err(
+      new ApplicationError(
+        "Unauthorized: You can only delete your own reviews",
+      ),
+    );
   }
 
   // Delete the review
   const deleteResult = await context.reviewRepository.delete(reviewId);
   if (deleteResult.isErr()) {
-    return err(new ApplicationError("Failed to delete review", deleteResult.error));
+    return err(
+      new ApplicationError("Failed to delete review", deleteResult.error),
+    );
   }
 
   return ok(undefined);

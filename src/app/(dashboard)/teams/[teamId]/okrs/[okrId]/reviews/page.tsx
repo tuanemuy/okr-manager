@@ -1,3 +1,5 @@
+import { Calendar, MessageSquare, Plus, Star } from "lucide-react";
+import Link from "next/link";
 import { getOkrReviewsAction } from "@/actions/okr";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,8 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, MessageSquare, Plus, Star } from "lucide-react";
-import Link from "next/link";
 
 export default async function OkrReviewsPage({
   params,
@@ -91,7 +91,9 @@ export default async function OkrReviewsPage({
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/${review.id}`}>
+                    <Link
+                      href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/${review.id}`}
+                    >
                       詳細
                     </Link>
                   </Button>

@@ -1,3 +1,5 @@
+import { AlertTriangle, Clock, Settings } from "lucide-react";
+import { notFound } from "next/navigation";
 import { requireAuth } from "@/actions/session";
 import { getTeamAction } from "@/actions/team";
 import { TeamBasicSettings } from "@/components/team/TeamBasicSettings";
@@ -5,8 +7,6 @@ import { TeamDangerZone } from "@/components/team/TeamDangerZone";
 import { TeamReviewSettings } from "@/components/team/TeamReviewSettings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, Clock, Settings } from "lucide-react";
-import { notFound } from "next/navigation";
 
 interface TeamSettingsPageProps {
   params: {

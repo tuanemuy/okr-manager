@@ -1,3 +1,5 @@
+import { CalendarClock, Target, TrendingUp, Users } from "lucide-react";
+import Link from "next/link";
 import { logoutAction } from "@/actions/auth";
 import { getDashboardDataAction } from "@/actions/dashboard";
 import { Badge } from "@/components/ui/badge";
@@ -9,8 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CalendarClock, Target, TrendingUp, Users } from "lucide-react";
-import Link from "next/link";
 
 export default async function DashboardPage() {
   const dashboardResult = await getDashboardDataAction();

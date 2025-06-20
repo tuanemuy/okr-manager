@@ -1,5 +1,7 @@
 "use client";
 
+import { Edit } from "lucide-react";
+import { useState, useTransition } from "react";
 import { updateKeyResultProgressAction } from "@/actions/okr";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,8 +14,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Edit } from "lucide-react";
-import { useState, useTransition } from "react";
 
 interface ProgressUpdateDialogProps {
   keyResult: {

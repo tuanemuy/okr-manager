@@ -1,10 +1,3 @@
-import { getOkrAction } from "@/actions/okr";
-import { ProgressUpdateDialog } from "@/components/okr/ProgressUpdateDialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import {
   Calendar,
   Edit,
@@ -16,6 +9,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getOkrAction } from "@/actions/okr";
+import { ProgressUpdateDialog } from "@/components/okr/ProgressUpdateDialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 
 export default async function OkrDetailPage({
   params,

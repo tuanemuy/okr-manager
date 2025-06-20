@@ -1,10 +1,10 @@
-import { getReviewAction, deleteReviewAction } from "@/actions/okr";
+import { Calendar, Edit, MessageSquare, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { deleteReviewAction, getReviewAction } from "@/actions/okr";
+import { DeleteReviewButton } from "@/components/review/DeleteReviewButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Edit, MessageSquare, Trash2 } from "lucide-react";
-import Link from "next/link";
-import { DeleteReviewButton } from "@/components/review/DeleteReviewButton";
 
 export default async function ReviewDetailPage({
   params,
@@ -30,23 +30,25 @@ export default async function ReviewDetailPage({
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">レビュー詳細</h1>
-            <p className="text-muted-foreground mt-2">
-              レビューの詳細情報
-            </p>
+            <p className="text-muted-foreground mt-2">レビューの詳細情報</p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
-              <Link href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews`}>
+              <Link
+                href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews`}
+              >
                 一覧に戻る
               </Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/${params.reviewId}/edit`}>
+              <Link
+                href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/${params.reviewId}/edit`}
+              >
                 <Edit className="h-4 w-4 mr-2" />
                 編集
               </Link>
             </Button>
-            <DeleteReviewButton 
+            <DeleteReviewButton
               reviewId={params.reviewId}
               teamId={params.teamId}
               okrId={params.okrId}
@@ -67,13 +69,17 @@ export default async function ReviewDetailPage({
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
-              <span>作成日: {new Date(review.createdAt).toLocaleDateString("ja-JP")}</span>
+              <span>
+                作成日: {new Date(review.createdAt).toLocaleDateString("ja-JP")}
+              </span>
             </div>
           </div>
           {review.updatedAt !== review.createdAt && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
-              <span>更新日: {new Date(review.updatedAt).toLocaleDateString("ja-JP")}</span>
+              <span>
+                更新日: {new Date(review.updatedAt).toLocaleDateString("ja-JP")}
+              </span>
             </div>
           )}
         </CardHeader>
@@ -82,7 +88,9 @@ export default async function ReviewDetailPage({
             <div>
               <h3 className="font-medium mb-2">レビュー内容</h3>
               <div className="bg-muted p-4 rounded-md">
-                <p className="leading-relaxed whitespace-pre-wrap">{review.content}</p>
+                <p className="leading-relaxed whitespace-pre-wrap">
+                  {review.content}
+                </p>
               </div>
             </div>
           </div>

@@ -1,5 +1,8 @@
 "use client";
 
+import { MoreHorizontal } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import {
   removeTeamMemberAction,
   updateTeamMemberRoleAction,
@@ -29,9 +32,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { TeamMemberWithUser } from "@/core/domain/team/types";
-import { MoreHorizontal } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
 
 interface MemberActionsMenuProps {
   teamId: string;

@@ -1,7 +1,7 @@
-import type { MockAuthService } from "@/core/adapters/mock/authService";
-import { AuthenticationError } from "@/core/domain/auth/types";
 import { err, ok } from "neverthrow";
 import { beforeEach, describe, expect, it } from "vitest";
+import type { MockAuthService } from "@/core/adapters/mock/authService";
+import { AuthenticationError } from "@/core/domain/auth/types";
 import type { Context } from "../context";
 import { createTestContext } from "../testUtils";
 import { signOut } from "./signOut";

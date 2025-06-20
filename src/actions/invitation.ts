@@ -1,10 +1,10 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { context } from "@/context";
 import { invitationIdSchema } from "@/core/domain/team/types";
 import { getUserEmailFromSession, getUserIdFromSession } from "@/lib/session";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { requireAuth } from "./session";
 
 export async function acceptInvitationAction(invitationId: string) {

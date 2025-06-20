@@ -1,11 +1,11 @@
+import { Settings, Target, Users } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 import { getOkrsAction } from "@/actions/okr";
 import { getTeamAction, getTeamMembersAction } from "@/actions/team";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings, Target, Users } from "lucide-react";
-import Link from "next/link";
-import { notFound } from "next/navigation";
 
 export default async function TeamDetailPage({
   params,

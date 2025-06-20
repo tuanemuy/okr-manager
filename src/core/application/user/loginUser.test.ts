@@ -1,9 +1,9 @@
+import { beforeEach, describe, expect, it } from "vitest";
 import type { MockPasswordHasher } from "@/core/adapters/mock/passwordHasher";
 import type { MockSessionManager } from "@/core/adapters/mock/sessionManager";
 import type { MockUserRepository } from "@/core/adapters/mock/userRepository";
 import { type User, userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
-import { beforeEach, describe, expect, it } from "vitest";
 import type { Context } from "../context";
 import { createTestContext } from "../testUtils";
 import { type LoginUserInput, loginUser } from "./loginUser";

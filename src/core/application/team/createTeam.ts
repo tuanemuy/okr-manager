@@ -1,8 +1,8 @@
+import { err, ok, type Result } from "neverthrow";
+import { z } from "zod/v4";
 import type { Team } from "@/core/domain/team/types";
 import { userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
-import { type Result, err, ok } from "neverthrow";
-import { z } from "zod/v4";
 import type { Context } from "../context";
 
 export const createTeamInputSchema = z.object({

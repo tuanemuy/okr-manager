@@ -1,6 +1,6 @@
+import { notFound } from "next/navigation";
 import { getOkrAction } from "@/actions/okr";
 import { CreateReviewForm } from "@/components/okr/CreateReviewForm";
-import { notFound } from "next/navigation";
 
 export default async function NewReviewPage({
   params,

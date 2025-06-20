@@ -1,3 +1,5 @@
+import { Plus, Target, User, Users } from "lucide-react";
+import Link from "next/link";
 import { getOkrsAction } from "@/actions/okr";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,8 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Target, User, Users } from "lucide-react";
-import Link from "next/link";
 
 export default async function TeamOkrsPage({
   params,

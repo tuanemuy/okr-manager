@@ -1,3 +1,5 @@
+import { Mail, MoreHorizontal, UserPlus } from "lucide-react";
+import { notFound } from "next/navigation";
 import { getTeamAction, getTeamMembersAction } from "@/actions/team";
 import { InviteMemberForm } from "@/components/team/invite-member-form";
 import { MemberActionsMenu } from "@/components/team/member-actions-menu";
@@ -19,8 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Mail, MoreHorizontal, UserPlus } from "lucide-react";
-import { notFound } from "next/navigation";
 
 export default async function TeamMembersPage({
   params,

@@ -1,5 +1,8 @@
 "use client";
 
+import { Check, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import {
   acceptInvitationAction,
   rejectInvitationAction,
@@ -14,9 +17,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { InvitationWithTeam } from "@/core/domain/team/types";
-import { Check, X } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
 
 interface InvitationActionsProps {
   invitation: InvitationWithTeam;

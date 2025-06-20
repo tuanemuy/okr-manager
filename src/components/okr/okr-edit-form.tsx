@@ -1,10 +1,13 @@
 "use client";
 
+import { Edit2, Plus, Save, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import {
-  type UpdateKeyResultInput,
-  type UpdateOkrInput,
   addKeyResultAction,
   deleteKeyResultAction,
+  type UpdateKeyResultInput,
+  type UpdateOkrInput,
   updateKeyResultAction,
   updateOkrAction,
 } from "@/actions/okr";
@@ -28,9 +31,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { KeyResult, OkrWithKeyResults } from "@/core/domain/okr/types";
-import { Edit2, Plus, Save, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
 
 interface OkrEditFormProps {
   teamId: string;

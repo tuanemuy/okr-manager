@@ -1,6 +1,6 @@
+import { beforeEach, describe, expect, it } from "vitest";
 import { MockAuthService } from "@/core/adapters/mock/authService";
 import type { SessionData } from "@/core/domain/auth/types";
-import { beforeEach, describe, expect, it } from "vitest";
 import type { Context } from "../context";
 import { getSession } from "./getSession";
 

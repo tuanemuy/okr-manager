@@ -1,7 +1,7 @@
+import { err, ok, type Result } from "neverthrow";
 import type { SessionManager } from "@/core/domain/auth/ports/sessionManager";
 import type { SessionData } from "@/core/domain/auth/types";
 import { SessionError } from "@/core/domain/auth/types";
-import { type Result, err, ok } from "neverthrow";
 
 export class MockSessionManager implements SessionManager {
   private currentSession: SessionData | null = null;

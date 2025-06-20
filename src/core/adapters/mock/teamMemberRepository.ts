@@ -1,3 +1,4 @@
+import { err, ok, type Result } from "neverthrow";
 import type { TeamMemberRepository } from "@/core/domain/team/ports/teamMemberRepository";
 import type {
   ListTeamMemberQuery,
@@ -8,7 +9,6 @@ import type {
 } from "@/core/domain/team/types";
 import type { UserId } from "@/core/domain/user/types";
 import { RepositoryError } from "@/lib/error";
-import { type Result, err, ok } from "neverthrow";
 
 interface TeamMemberKey {
   teamId: TeamId;

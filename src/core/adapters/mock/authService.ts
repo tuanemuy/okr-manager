@@ -1,3 +1,7 @@
+import type { Result } from "neverthrow";
+import { err, ok } from "neverthrow";
+import type { NextRequest } from "next/server";
+import { v7 as uuidv7 } from "uuid";
 import type { AuthService } from "@/core/domain/auth/ports/authService";
 import type {
   AuthenticationError,
@@ -9,10 +13,6 @@ import {
   AuthenticationError as AuthError,
   SessionError as SessError,
 } from "@/core/domain/auth/types";
-import type { Result } from "neverthrow";
-import { err, ok } from "neverthrow";
-import type { NextRequest } from "next/server";
-import { v7 as uuidv7 } from "uuid";
 
 interface MockHandlers {
   handlers: {

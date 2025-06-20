@@ -1,5 +1,5 @@
-import type { SessionData, SessionError } from "@/core/domain/auth/types";
 import type { Result } from "neverthrow";
+import type { SessionData, SessionError } from "@/core/domain/auth/types";
 import type { Context } from "../context";
 
 export async function getSession(

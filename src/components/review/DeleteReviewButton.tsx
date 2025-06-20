@@ -1,5 +1,9 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 import { deleteReviewAction } from "@/actions/okr";
 import {
   AlertDialog,
@@ -13,10 +17,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
 
 interface DeleteReviewButtonProps {
   reviewId: string;
@@ -24,7 +24,11 @@ interface DeleteReviewButtonProps {
   okrId: string;
 }
 
-export function DeleteReviewButton({ reviewId, teamId, okrId }: DeleteReviewButtonProps) {
+export function DeleteReviewButton({
+  reviewId,
+  teamId,
+  okrId,
+}: DeleteReviewButtonProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
@@ -32,7 +36,7 @@ export function DeleteReviewButton({ reviewId, teamId, okrId }: DeleteReviewButt
     try {
       setIsDeleting(true);
       const result = await deleteReviewAction(reviewId);
-      
+
       if (result.success) {
         toast.success("レビューを削除しました");
         router.push(`/teams/${teamId}/okrs/${okrId}/reviews`);

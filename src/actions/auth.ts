@@ -1,9 +1,9 @@
 "use server";
 
+import { redirect } from "next/navigation";
+import { AuthError } from "next-auth";
 import { context } from "@/context";
 import { createUser } from "@/core/application/user/createUser";
-import { AuthError } from "next-auth";
-import { redirect } from "next/navigation";
 
 export async function signupAction(formData: FormData) {
   const email = formData.get("email") as string;

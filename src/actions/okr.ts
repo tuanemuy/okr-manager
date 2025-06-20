@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod/v4";
 import { context } from "@/context";
 import { createOkr } from "@/core/application/okr/createOkr";
 import { createReview } from "@/core/application/okr/createReview";
@@ -9,16 +12,13 @@ import { updateKeyResultProgress } from "@/core/application/okr/updateKeyResultP
 import { updateOkr } from "@/core/application/okr/updateOkr";
 import { updateReview } from "@/core/application/okr/updateReview";
 import {
-  type OkrType,
   keyResultIdSchema,
+  type OkrType,
   okrIdSchema,
   reviewIdSchema,
 } from "@/core/domain/okr/types";
 import { teamIdSchema } from "@/core/domain/team/types";
 import { getUserIdFromSession } from "@/lib/session";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { z } from "zod/v4";
 import { requireAuth } from "./session";
 
 export async function createOkrAction(teamId: string, formData: FormData) {
@@ -477,7 +477,10 @@ const updateReviewInputSchema = z.object({
 
 export type UpdateReviewInput = z.infer<typeof updateReviewInputSchema>;
 
-export async function updateReviewAction(reviewId: string, input: UpdateReviewInput) {
+export async function updateReviewAction(
+  reviewId: string,
+  input: UpdateReviewInput,
+) {
   try {
     const session = await requireAuth();
     const validInput = updateReviewInputSchema.parse(input);
@@ -500,10 +503,16 @@ export async function updateReviewAction(reviewId: string, input: UpdateReviewIn
       reviewIdSchema.parse(reviewId),
     );
     if (reviewResult.isOk() && reviewResult.value) {
-      const okrResult = await context.okrRepository.getById(reviewResult.value.okrId);
+      const okrResult = await context.okrRepository.getById(
+        reviewResult.value.okrId,
+      );
       if (okrResult.isOk() && okrResult.value) {
-        revalidatePath(`/teams/${okrResult.value.teamId}/okrs/${reviewResult.value.okrId}/reviews/${reviewId}`);
-        revalidatePath(`/teams/${okrResult.value.teamId}/okrs/${reviewResult.value.okrId}/reviews`);
+        revalidatePath(
+          `/teams/${okrResult.value.teamId}/okrs/${reviewResult.value.okrId}/reviews/${reviewId}`,
+        );
+        revalidatePath(
+          `/teams/${okrResult.value.teamId}/okrs/${reviewResult.value.okrId}/reviews`,
+        );
       }
     }
 

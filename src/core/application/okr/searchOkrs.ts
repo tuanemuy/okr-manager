@@ -1,3 +1,5 @@
+import { err, ok, type Result } from "neverthrow";
+import { z } from "zod/v4";
 import type { Okr } from "@/core/domain/okr/types";
 import { okrIdSchema } from "@/core/domain/okr/types";
 import { type TeamId, teamIdSchema } from "@/core/domain/team/types";
@@ -5,8 +7,6 @@ import { type UserId, userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
 import { type Pagination, paginationSchema } from "@/lib/pagination";
 import { validate } from "@/lib/validation";
-import { type Result, err, ok } from "neverthrow";
-import { z } from "zod/v4";
 import type { Context } from "../context";
 
 export const searchOkrsInputSchema = z.object({
