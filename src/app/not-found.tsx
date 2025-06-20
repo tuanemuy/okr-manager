@@ -19,9 +19,6 @@ export default function NotFound() {
           </p>
           <div className="flex gap-2">
             <Button asChild className="flex-1">
-              <Link href="/">ホームに戻る</Link>
-            </Button>
-            <Button variant="outline" asChild className="flex-1">
               <Link href="/dashboard">ダッシュボード</Link>
             </Button>
           </div>

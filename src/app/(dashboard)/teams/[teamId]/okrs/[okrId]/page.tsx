@@ -80,7 +80,7 @@ export default async function OkrDetailPage({
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Key Results</CardTitle>
+              <CardTitle>キーリザルト</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               {keyResults.map((kr, index) => {
@@ -122,7 +122,7 @@ export default async function OkrDetailPage({
               })}
               {keyResults.length === 0 && (
                 <p className="text-center text-muted-foreground py-8">
-                  Key Resultがありません
+                  キーリザルトがありません
                 </p>
               )}
             </CardContent>

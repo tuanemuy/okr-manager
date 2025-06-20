@@ -30,7 +30,7 @@ export default async function EditOkrPage({
           </Link>
           <h1 className="text-3xl font-bold">OKRを編集</h1>
           <p className="text-muted-foreground">
-            OKRのタイトルと説明、Key Resultsを編集できます。
+            OKRのタイトルと説明、キーリザルトを編集できます。
           </p>
         </div>
 

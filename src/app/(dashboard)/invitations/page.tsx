@@ -12,7 +12,7 @@ export default async function InvitationsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-destructive">
-              {invitationsResult.error || "Error loading invitations"}
+              {invitationsResult.error || "招待状の読み込みエラー"}
             </p>
           </CardContent>
         </Card>

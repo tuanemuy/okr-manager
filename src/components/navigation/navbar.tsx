@@ -1,4 +1,4 @@
-import { LogOut, Mail, Settings, User } from "lucide-react";
+import { LogOut, Mail, User } from "lucide-react";
 import Link from "next/link";
 import { getSession, logout } from "@/actions/session";
 import { Button } from "@/components/ui/button";
@@ -82,12 +82,6 @@ export async function Navbar() {
                   <Link href="/invitations" className="flex items-center">
                     <Mail className="mr-2 h-4 w-4" />
                     招待
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/profile" className="flex items-center">
-                    <Settings className="mr-2 h-4 w-4" />
-                    設定
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

@@ -36,7 +36,7 @@ export default async function SearchPage({
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Search OKRs</h1>
+      <h1 className="text-3xl font-bold mb-6">OKR検索</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Search Filters */}

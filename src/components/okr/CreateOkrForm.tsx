@@ -175,7 +175,7 @@ export function CreateOkrForm({ teamId }: CreateOkrFormProps) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              Key Results
+              キーリザルト
               <Button
                 type="button"
                 size="sm"
@@ -191,7 +191,7 @@ export function CreateOkrForm({ teamId }: CreateOkrFormProps) {
             {keyResults.map((keyResult, index) => (
               <div key={keyResult.id} className="border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-medium">Key Result {index + 1}</h4>
+                  <h4 className="font-medium">キーリザルト {index + 1}</h4>
                   {keyResults.length > 1 && (
                     <Button
                       type="button"
@@ -283,7 +283,7 @@ export function CreateOkrForm({ teamId }: CreateOkrFormProps) {
             <div className="text-center">
               <Button type="button" variant="outline" onClick={addKeyResult}>
                 <Plus className="h-4 w-4 mr-2" />
-                Key Result を追加
+                キーリザルトを追加
               </Button>
             </div>
           </CardContent>
