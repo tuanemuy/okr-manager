@@ -46,8 +46,15 @@ export async function searchOkrs(
     return err(new ApplicationError("Invalid input", parseResult.error));
   }
 
-  const { searcherId, query, teamId, userId, quarter, year, pagination } =
-    parseResult.value;
+  const {
+    searcherId: _searcherId,
+    query,
+    teamId,
+    userId: _userId,
+    quarter: _quarter,
+    year,
+    pagination,
+  } = parseResult.value;
 
   // Mock implementation for now - in a real app you'd have proper search functionality
   try {

@@ -42,7 +42,7 @@ export async function getNotificationsByUserId(
     return err(new ApplicationError("Invalid input", parseResult.error));
   }
 
-  const { userId, pagination, unreadOnly } = parseResult.value;
+  const { userId: _userId, pagination, unreadOnly } = parseResult.value;
 
   // Mock implementation - in a real app you'd have a notification repository
   const mockNotifications: Notification[] = [
