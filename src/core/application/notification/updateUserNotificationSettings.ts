@@ -1,10 +1,10 @@
 import { err, ok, type Result } from "neverthrow";
 import { z } from "zod/v4";
+import type { NotificationSettings } from "@/core/domain/notification/types";
 import { userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
 import { validate } from "@/lib/validation";
 import type { Context } from "../context";
-import type { NotificationSettings } from "./getUserNotificationSettings";
 
 export const updateUserNotificationSettingsInputSchema = z.object({
   userId: userIdSchema,
@@ -21,7 +21,7 @@ export type UpdateUserNotificationSettingsInput = z.infer<
 >;
 
 export async function updateUserNotificationSettings(
-  _context: Context<unknown>,
+  context: Context<unknown>,
   input: UpdateUserNotificationSettingsInput,
 ): Promise<Result<NotificationSettings, ApplicationError>> {
   const parseResult = validate(
@@ -35,8 +35,19 @@ export async function updateUserNotificationSettings(
 
   const { userId, settings } = parseResult.value;
 
-  // Mock implementation - in a real app you'd update in the database
-  console.log(`Updating notification settings for user ${userId}:`, settings);
+  const result = await context.notificationRepository.updateUserSettings(
+    userId,
+    settings,
+  );
+
+  if (result.isErr()) {
+    return err(
+      new ApplicationError(
+        "Failed to update notification settings",
+        result.error,
+      ),
+    );
+  }
 
   return ok(settings);
 }
