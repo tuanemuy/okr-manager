@@ -4,7 +4,6 @@ import type { TeamMember } from "@/core/domain/team/types";
 import { invitationIdSchema } from "@/core/domain/team/types";
 import { userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
-import { validate } from "@/lib/validation";
 import type { Context } from "../context";
 
 export const acceptInvitationInputSchema = z.object({

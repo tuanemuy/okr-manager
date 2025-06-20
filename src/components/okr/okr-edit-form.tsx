@@ -283,7 +283,7 @@ export function OkrEditForm({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {keyResults.map((keyResult, index) => (
+            {keyResults.map((keyResult, _index) => (
               <div
                 key={keyResult.id}
                 className="flex items-center justify-between p-4 border rounded-lg"

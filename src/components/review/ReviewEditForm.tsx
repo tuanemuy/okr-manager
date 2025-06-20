@@ -47,7 +47,7 @@ export function ReviewEditForm({
       } else {
         toast.error(result.error || "レビューの更新に失敗しました");
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("レビューの更新に失敗しました");
     } finally {
       setIsSubmitting(false);

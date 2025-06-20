@@ -12,7 +12,7 @@ describe("loginUser", () => {
   let context: Context;
   let mockUserRepository: MockUserRepository;
   let mockPasswordHasher: MockPasswordHasher;
-  let mockSessionManager: MockSessionManager;
+  let _mockSessionManager: MockSessionManager;
   let testUser: User;
   let validInput: LoginUserInput;
 
@@ -20,7 +20,7 @@ describe("loginUser", () => {
     context = createTestContext();
     mockUserRepository = context.userRepository as MockUserRepository;
     mockPasswordHasher = context.passwordHasher as MockPasswordHasher;
-    mockSessionManager = context.sessionManager as MockSessionManager;
+    _mockSessionManager = context.sessionManager as MockSessionManager;
 
     // Set up test user
     const hashedPasswordResult = await mockPasswordHasher.hash("password123");

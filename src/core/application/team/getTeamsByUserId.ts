@@ -1,8 +1,7 @@
 import { err, ok, type Result } from "neverthrow";
 import { z } from "zod/v4";
-import type { TeamRepository } from "@/core/domain/team/ports/teamRepository";
 import type { Team } from "@/core/domain/team/types";
-import { type UserId, userIdSchema } from "@/core/domain/user/types";
+import { userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
 import { validate } from "@/lib/validation";
 import type { Context } from "../context";

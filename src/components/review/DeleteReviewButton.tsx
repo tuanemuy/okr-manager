@@ -43,7 +43,7 @@ export function DeleteReviewButton({
       } else {
         toast.error(result.error || "レビューの削除に失敗しました");
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("レビューの削除に失敗しました");
     } finally {
       setIsDeleting(false);

@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod/v4";
 import { context } from "@/context";
 import { searchOkrs } from "@/core/application/okr/searchOkrs";

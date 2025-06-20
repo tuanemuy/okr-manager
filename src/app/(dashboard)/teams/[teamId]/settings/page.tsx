@@ -17,7 +17,7 @@ interface TeamSettingsPageProps {
 export default async function TeamSettingsPage({
   params,
 }: TeamSettingsPageProps) {
-  const session = await requireAuth();
+  const _session = await requireAuth();
 
   const teamResult = await getTeamAction(params.teamId);
 

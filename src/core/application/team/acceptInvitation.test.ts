@@ -8,7 +8,6 @@ import {
   teamIdSchema,
 } from "@/core/domain/team/types";
 import { type User, userIdSchema } from "@/core/domain/user/types";
-import { ApplicationError } from "@/lib/error";
 import type { Context } from "../context";
 import { createTestContext } from "../testUtils";
 import {

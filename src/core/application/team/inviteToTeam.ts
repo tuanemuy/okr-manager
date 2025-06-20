@@ -1,4 +1,4 @@
-import { err, ok, type Result } from "neverthrow";
+import { err, type Result } from "neverthrow";
 import { z } from "zod/v4";
 import type { Invitation } from "@/core/domain/team/types";
 import { teamIdSchema } from "@/core/domain/team/types";

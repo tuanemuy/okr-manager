@@ -1,4 +1,4 @@
-import { err, ok, type Result } from "neverthrow";
+import { err, type Result } from "neverthrow";
 import { z } from "zod/v4";
 import type { User } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";

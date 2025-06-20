@@ -5,14 +5,13 @@ import type { MockTeamRepository } from "@/core/adapters/mock/teamRepository";
 import type { MockUserRepository } from "@/core/adapters/mock/userRepository";
 import { type TeamMember, teamIdSchema } from "@/core/domain/team/types";
 import { type User, userIdSchema } from "@/core/domain/user/types";
-import { ApplicationError } from "@/lib/error";
 import type { Context } from "../context";
 import { createTestContext } from "../testUtils";
 import { type InviteToTeamInput, inviteToTeam } from "./inviteToTeam";
 
 describe("inviteToTeam", () => {
   let context: Context;
-  let mockTeamRepository: MockTeamRepository;
+  let _mockTeamRepository: MockTeamRepository;
   let mockTeamMemberRepository: MockTeamMemberRepository;
   let mockInvitationRepository: MockInvitationRepository;
   let mockUserRepository: MockUserRepository;
@@ -24,7 +23,7 @@ describe("inviteToTeam", () => {
 
   beforeEach(async () => {
     context = createTestContext();
-    mockTeamRepository = context.teamRepository as MockTeamRepository;
+    _mockTeamRepository = context.teamRepository as MockTeamRepository;
     mockTeamMemberRepository =
       context.teamMemberRepository as MockTeamMemberRepository;
     mockInvitationRepository =

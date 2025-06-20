@@ -15,7 +15,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -90,7 +89,7 @@ export function MemberActionsMenu({ teamId, member }: MemberActionsMenuProps) {
     });
   };
 
-  const getRoleLabel = (role: string) => {
+  const _getRoleLabel = (role: string) => {
     const roleMap = {
       admin: "管理者",
       member: "メンバー",

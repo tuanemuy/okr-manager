@@ -1,4 +1,4 @@
-import { Calendar, MessageSquare, Plus, Star } from "lucide-react";
+import { Calendar, MessageSquare, Plus, } from "lucide-react";
 import Link from "next/link";
 import { getOkrReviewsAction } from "@/actions/okr";
 import { Badge } from "@/components/ui/badge";

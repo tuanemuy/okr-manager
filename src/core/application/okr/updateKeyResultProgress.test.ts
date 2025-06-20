@@ -10,7 +10,6 @@ import {
 } from "@/core/domain/okr/types";
 import { type TeamMember, teamIdSchema } from "@/core/domain/team/types";
 import { userIdSchema } from "@/core/domain/user/types";
-import { ApplicationError } from "@/lib/error";
 import type { Context } from "../context";
 import { createTestContext } from "../testUtils";
 import {

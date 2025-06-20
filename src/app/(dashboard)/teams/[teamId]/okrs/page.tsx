@@ -20,7 +20,7 @@ export default async function TeamOkrsPage({
 }) {
   const okrs = await getOkrsAction(params.teamId);
 
-  const getStatusBadge = (status: string) => {
+  const _getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
         return <Badge variant="default">進行中</Badge>;
@@ -47,7 +47,7 @@ export default async function TeamOkrsPage({
     );
   };
 
-  const getProgressColor = (progress: number) => {
+  const _getProgressColor = (progress: number) => {
     if (progress >= 80) return "bg-green-500";
     if (progress >= 50) return "bg-yellow-500";
     return "bg-red-500";

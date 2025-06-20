@@ -1,18 +1,10 @@
-import { Mail, MoreHorizontal, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { notFound } from "next/navigation";
 import { getTeamAction, getTeamMembersAction } from "@/actions/team";
 import { InviteMemberForm } from "@/components/team/invite-member-form";
 import { MemberActionsMenu } from "@/components/team/member-actions-menu";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -40,7 +32,7 @@ export default async function TeamMembersPage({
     return <div>Team not found</div>;
   }
 
-  const team = teamResult.data;
+  const _team = teamResult.data;
   const teamMembers = teamMembersResult.success
     ? teamMembersResult.data
     : { items: [], totalCount: 0 };

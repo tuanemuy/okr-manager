@@ -1,6 +1,6 @@
-import { Calendar, Edit, MessageSquare, Trash2 } from "lucide-react";
+import { Calendar, Edit, MessageSquare, } from "lucide-react";
 import Link from "next/link";
-import { deleteReviewAction, getReviewAction } from "@/actions/okr";
+import { getReviewAction } from "@/actions/okr";
 import { DeleteReviewButton } from "@/components/review/DeleteReviewButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

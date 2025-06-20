@@ -1,6 +1,5 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { err, ok, type Result } from "neverthrow";
-import type { NextRequest } from "next/server";
 import NextAuth, { type NextAuthConfig, type NextAuthResult } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod/v4";
@@ -105,7 +104,7 @@ export class NextAuthService implements AuthService<NextAuthResult> {
   }
 
   async signIn(
-    credentials: SignInCredentials,
+    _credentials: SignInCredentials,
   ): Promise<Result<SessionData, AuthenticationError>> {
     try {
       return err(

@@ -4,7 +4,7 @@ import { ArrowLeft, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { addKeyResultAction, createOkrAction } from "@/actions/okr";
+import { createOkrAction } from "@/actions/okr";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -36,7 +36,7 @@ export function CreateOkrForm({ teamId }: CreateOkrFormProps) {
     { id: "1", title: "", description: "", targetValue: 0, unit: "" },
   ]);
   const [isPending, startTransition] = useTransition();
-  const router = useRouter();
+  const _router = useRouter();
 
   const addKeyResult = () => {
     const newId = String(keyResults.length + 1);

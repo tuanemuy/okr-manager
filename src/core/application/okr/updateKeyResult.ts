@@ -1,6 +1,6 @@
 import { err, ok, type Result } from "neverthrow";
 import { z } from "zod/v4";
-import type { KeyResult, KeyResultId } from "@/core/domain/okr/types";
+import type { KeyResult, } from "@/core/domain/okr/types";
 import { keyResultIdSchema } from "@/core/domain/okr/types";
 import { userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
