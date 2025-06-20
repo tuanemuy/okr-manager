@@ -20,42 +20,6 @@ export default async function TeamOkrsPage({
 }) {
   const okrs = await getOkrsAction(params.teamId);
 
-  const mockOkrs = [
-    {
-      id: "1",
-      title: "Q1 プロダクト開発",
-      description: "新機能のリリースと品質向上",
-      type: "team",
-      owner: "Engineering Team",
-      period: "2024 Q1",
-      progress: 75,
-      status: "active",
-      keyResultsCount: 3,
-    },
-    {
-      id: "2",
-      title: "チーム生産性向上",
-      description: "開発効率とコードクオリティの改善",
-      type: "personal",
-      owner: "John Doe",
-      period: "2024 Q1",
-      progress: 60,
-      status: "active",
-      keyResultsCount: 4,
-    },
-    {
-      id: "3",
-      title: "技術債務の解消",
-      description: "レガシーコードのリファクタリング",
-      type: "personal",
-      owner: "Jane Smith",
-      period: "2024 Q1",
-      progress: 40,
-      status: "active",
-      keyResultsCount: 2,
-    },
-  ];
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
