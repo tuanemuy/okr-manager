@@ -1,10 +1,7 @@
-import { Mail, } from "lucide-react";
+import { Mail } from "lucide-react";
 import { getInvitationsAction } from "@/actions/invitation";
 import { InvitationCard } from "@/components/invitation/invitation-card";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default async function InvitationsPage() {
   const invitationsResult = await getInvitationsAction();
