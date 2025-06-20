@@ -1,3 +1,5 @@
+import { Plus, Target, User, Users } from "lucide-react";
+import Link from "next/link";
 import { getOkrsAction } from "@/actions/okr";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,8 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Target, User, Users } from "lucide-react";
-import Link from "next/link";
 
 export default async function TeamOkrsPage({
   params,
@@ -20,43 +20,7 @@ export default async function TeamOkrsPage({
 }) {
   const okrs = await getOkrsAction(params.teamId);
 
-  const mockOkrs = [
-    {
-      id: "1",
-      title: "Q1 プロダクト開発",
-      description: "新機能のリリースと品質向上",
-      type: "team",
-      owner: "Engineering Team",
-      period: "2024 Q1",
-      progress: 75,
-      status: "active",
-      keyResultsCount: 3,
-    },
-    {
-      id: "2",
-      title: "チーム生産性向上",
-      description: "開発効率とコードクオリティの改善",
-      type: "personal",
-      owner: "John Doe",
-      period: "2024 Q1",
-      progress: 60,
-      status: "active",
-      keyResultsCount: 4,
-    },
-    {
-      id: "3",
-      title: "技術債務の解消",
-      description: "レガシーコードのリファクタリング",
-      type: "personal",
-      owner: "Jane Smith",
-      period: "2024 Q1",
-      progress: 40,
-      status: "active",
-      keyResultsCount: 2,
-    },
-  ];
-
-  const getStatusBadge = (status: string) => {
+  const _getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
         return <Badge variant="default">進行中</Badge>;
@@ -83,7 +47,7 @@ export default async function TeamOkrsPage({
     );
   };
 
-  const getProgressColor = (progress: number) => {
+  const _getProgressColor = (progress: number) => {
     if (progress >= 80) return "bg-green-500";
     if (progress >= 50) return "bg-yellow-500";
     return "bg-red-500";

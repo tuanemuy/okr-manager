@@ -12,6 +12,7 @@ import type { Context } from "./context";
 
 export function createTestContext(): Context {
   return {
+    publicUrl: "http://localhost:3000",
     userRepository: new MockUserRepository(),
     passwordHasher: new MockPasswordHasher(),
     sessionManager: new MockSessionManager(),

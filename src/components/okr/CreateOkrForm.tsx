@@ -1,6 +1,10 @@
 "use client";
 
-import { addKeyResultAction, createOkrAction } from "@/actions/okr";
+import { ArrowLeft, Plus, X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { createOkrAction } from "@/actions/okr";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,10 +18,6 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Plus, X } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
 
 interface KeyResult {
   id: string;
@@ -36,7 +36,7 @@ export function CreateOkrForm({ teamId }: CreateOkrFormProps) {
     { id: "1", title: "", description: "", targetValue: 0, unit: "" },
   ]);
   const [isPending, startTransition] = useTransition();
-  const router = useRouter();
+  const _router = useRouter();
 
   const addKeyResult = () => {
     const newId = String(keyResults.length + 1);

@@ -1,3 +1,8 @@
+import { DrizzleAdapter } from "@auth/drizzle-adapter";
+import { err, ok, type Result } from "neverthrow";
+import NextAuth, { type NextAuthConfig, type NextAuthResult } from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import { z } from "zod/v4";
 import type { AuthService } from "@/core/domain/auth/ports/authService";
 import {
   AuthenticationError,
@@ -9,12 +14,6 @@ import {
 import type { PasswordHasher } from "@/core/domain/user/ports/passwordHasher";
 import type { UserRepository } from "@/core/domain/user/ports/userRepository";
 import { validate } from "@/lib/validation";
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import { type Result, err, ok } from "neverthrow";
-import NextAuth, { type NextAuthConfig, type NextAuthResult } from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import type { NextRequest } from "next/server";
-import { z } from "zod/v4";
 import type { Database } from "../drizzleSqlite/client";
 
 const envSchema = z.object({
@@ -105,7 +104,7 @@ export class NextAuthService implements AuthService<NextAuthResult> {
   }
 
   async signIn(
-    credentials: SignInCredentials,
+    _credentials: SignInCredentials,
   ): Promise<Result<SessionData, AuthenticationError>> {
     try {
       return err(

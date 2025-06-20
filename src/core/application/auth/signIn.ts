@@ -1,10 +1,10 @@
+import { err, type Result } from "neverthrow";
+import type { z } from "zod/v4";
 import {
   AuthenticationError,
   type SessionData,
+  signInCredentialsSchema,
 } from "@/core/domain/auth/types";
-import { signInCredentialsSchema } from "@/core/domain/auth/types";
-import { type Result, err } from "neverthrow";
-import type { z } from "zod/v4";
 import type { Context } from "../context";
 
 export const signInInputSchema = signInCredentialsSchema;

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { createTeamAction } from "@/actions/team";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +14,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
 
 interface CreateTeamDialogProps {
   children: React.ReactNode;

@@ -1,5 +1,8 @@
 "use client";
 
+import { Save } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   type UpdateNotificationSettingsInput,
   updateNotificationSettingsAction,
@@ -14,9 +17,6 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Save } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 interface NotificationSettingsProps {
   settings: {

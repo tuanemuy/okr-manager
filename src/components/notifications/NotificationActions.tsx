@@ -1,10 +1,10 @@
 "use client";
 
-import { markAllNotificationsAsReadAction } from "@/actions/notification";
-import { Button } from "@/components/ui/button";
 import { CheckCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { markAllNotificationsAsReadAction } from "@/actions/notification";
+import { Button } from "@/components/ui/button";
 
 interface NotificationActionsProps {
   unreadCount: number;

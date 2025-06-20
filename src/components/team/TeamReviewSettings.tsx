@@ -1,5 +1,8 @@
 "use client";
 
+import { Clock, Save } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { updateTeamReviewFrequencyAction } from "@/actions/team";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -10,9 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Clock, Save } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 interface TeamReviewSettingsProps {
   team: {

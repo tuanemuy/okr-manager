@@ -1,3 +1,5 @@
+import type { NextAuthResult } from "next-auth";
+import { z } from "zod/v4";
 import { BcryptPasswordHasher } from "@/core/adapters/bcryptjs/passwordHasher";
 import { getDatabase } from "@/core/adapters/drizzleSqlite/client";
 import { DrizzleSqliteInvitationRepository } from "@/core/adapters/drizzleSqlite/invitationRepository";
@@ -10,12 +12,12 @@ import { DrizzleSqliteUserRepository } from "@/core/adapters/drizzleSqlite/userR
 import { NextAuthService } from "@/core/adapters/nextAuth/authService";
 import { NextAuthSessionManager } from "@/core/adapters/nextAuth/sessionManager";
 import type { Context } from "@/core/application/context";
-import type { NextAuthResult } from "next-auth";
-import { z } from "zod/v4";
 
 export const envSchema = z.object({
-  TURSO_DATABASE_URL: z.string().min(1),
-  TURSO_AUTH_TOKEN: z.string().min(1),
+  NEXT_PUBLIC_URL: z.string().url(),
+  // TURSO_DATABASE_URL: z.string().min(1),
+  // TURSO_AUTH_TOKEN: z.string().min(1),
+  SQLITE_FILEPATH: z.string().min(1),
   AUTH_SECRET: z.string().min(32),
 });
 
@@ -29,13 +31,14 @@ if (!env.success) {
   throw new Error(`Environment validation failed: ${errors}`);
 }
 
-const db = getDatabase(env.data.TURSO_DATABASE_URL, env.data.TURSO_AUTH_TOKEN);
+const db = getDatabase(env.data.SQLITE_FILEPATH);
 const userRepository = new DrizzleSqliteUserRepository(db);
 const passwordHasher = new BcryptPasswordHasher();
 const authService = new NextAuthService(userRepository, passwordHasher, db);
 const sessionManager = new NextAuthSessionManager(authService);
 
 export const context: Context<NextAuthResult> = {
+  publicUrl: env.data.NEXT_PUBLIC_URL,
   userRepository,
   passwordHasher,
   sessionManager,

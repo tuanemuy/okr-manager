@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getTeamsAction } from "@/actions/team";
 import { CreateTeamDialog } from "@/components/team/CreateTeamDialog";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import Link from "next/link";
 
 export default async function TeamsPage() {
   const teamsResult = await getTeamsAction();

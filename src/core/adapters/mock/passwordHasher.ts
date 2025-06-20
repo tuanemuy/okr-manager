@@ -1,6 +1,6 @@
+import { err, ok, type Result } from "neverthrow";
 import type { PasswordHasher } from "@/core/domain/user/ports/passwordHasher";
 import { ApplicationError } from "@/lib/error";
-import { type Result, err, ok } from "neverthrow";
 
 export class MockPasswordHasher implements PasswordHasher {
   private shouldFailHash = false;

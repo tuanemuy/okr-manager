@@ -1,3 +1,5 @@
+import { and, eq, sql } from "drizzle-orm";
+import { err, ok, type Result } from "neverthrow";
 import type { KeyResultRepository } from "@/core/domain/okr/ports/keyResultRepository";
 import type {
   CreateKeyResultParams,
@@ -10,8 +12,6 @@ import type {
 import { keyResultSchema } from "@/core/domain/okr/types";
 import { RepositoryError } from "@/lib/error";
 import { validate } from "@/lib/validation";
-import { and, eq, sql } from "drizzle-orm";
-import { type Result, err, ok } from "neverthrow";
 import type { Database } from "./client";
 import { keyResults } from "./schema";
 

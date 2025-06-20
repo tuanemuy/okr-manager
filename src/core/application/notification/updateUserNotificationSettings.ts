@@ -1,8 +1,8 @@
-import { type UserId, userIdSchema } from "@/core/domain/user/types";
+import { err, ok, type Result } from "neverthrow";
+import { z } from "zod/v4";
+import { userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
 import { validate } from "@/lib/validation";
-import { type Result, err, ok } from "neverthrow";
-import { z } from "zod/v4";
 import type { Context } from "../context";
 import type { NotificationSettings } from "./getUserNotificationSettings";
 
@@ -21,7 +21,7 @@ export type UpdateUserNotificationSettingsInput = z.infer<
 >;
 
 export async function updateUserNotificationSettings(
-  context: Context<unknown>,
+  _context: Context<unknown>,
   input: UpdateUserNotificationSettingsInput,
 ): Promise<Result<NotificationSettings, ApplicationError>> {
   const parseResult = validate(

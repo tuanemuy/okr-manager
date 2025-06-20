@@ -1,3 +1,5 @@
+import { and, eq, inArray, sql } from "drizzle-orm";
+import { err, ok, type Result } from "neverthrow";
 import type { OkrRepository } from "@/core/domain/okr/ports/okrRepository";
 import type {
   CreateOkrParams,
@@ -13,8 +15,6 @@ import type { TeamId } from "@/core/domain/team/types";
 import type { UserId } from "@/core/domain/user/types";
 import { RepositoryError } from "@/lib/error";
 import { validate } from "@/lib/validation";
-import { and, eq, inArray, sql } from "drizzle-orm";
-import { type Result, err, ok } from "neverthrow";
 import type { Database } from "./client";
 import { keyResults, okrs, users } from "./schema";
 

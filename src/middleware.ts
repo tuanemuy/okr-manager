@@ -1,6 +1,6 @@
-import { context } from "@/context";
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { context } from "@/context";
 
 interface AuthenticatedRequest extends NextRequest {
   auth?: {
@@ -21,12 +21,12 @@ export default authHandlers.auth(async (req: NextRequest) => {
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
 
   if (!(req as AuthenticatedRequest).auth && !isPublicPath) {
-    const loginUrl = new URL("/auth/login", req.nextUrl.origin);
+    const loginUrl = new URL("/auth/login", context.publicUrl);
     return NextResponse.redirect(loginUrl);
   }
 
   if ((req as AuthenticatedRequest).auth && pathname.startsWith("/auth/")) {
-    const dashboardUrl = new URL("/dashboard", req.nextUrl.origin);
+    const dashboardUrl = new URL("/dashboard", context.publicUrl);
     return NextResponse.redirect(dashboardUrl);
   }
 

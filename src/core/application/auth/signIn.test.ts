@@ -1,5 +1,5 @@
-import { MockAuthService } from "@/core/adapters/mock/authService";
 import { beforeEach, describe, expect, it } from "vitest";
+import { MockAuthService } from "@/core/adapters/mock/authService";
 import type { Context } from "../context";
 import { type SignInInput, signIn } from "./signIn";
 

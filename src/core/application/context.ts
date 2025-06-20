@@ -10,6 +10,7 @@ import type { PasswordHasher } from "@/core/domain/user/ports/passwordHasher";
 import type { UserRepository } from "@/core/domain/user/ports/userRepository";
 
 export interface Context<TAuthHandlers = unknown> {
+  publicUrl: string;
   userRepository: UserRepository;
   passwordHasher: PasswordHasher;
   sessionManager: SessionManager;

@@ -1,3 +1,7 @@
+import type { Result } from "neverthrow";
+import { err, ok } from "neverthrow";
+import type { NextRequest } from "next/server";
+import { v7 as uuidv7 } from "uuid";
 import type { AuthService } from "@/core/domain/auth/ports/authService";
 import type {
   AuthenticationError,
@@ -7,12 +11,7 @@ import type {
 } from "@/core/domain/auth/types";
 import {
   AuthenticationError as AuthError,
-  SessionError as SessError,
 } from "@/core/domain/auth/types";
-import type { Result } from "neverthrow";
-import { err, ok } from "neverthrow";
-import type { NextRequest } from "next/server";
-import { v7 as uuidv7 } from "uuid";
 
 interface MockHandlers {
   handlers: {
@@ -72,13 +71,13 @@ export class MockAuthService implements AuthService<MockHandlers> {
     return {
       auth: mockAuth,
       signIn: async (
-        provider: string,
-        options?: { email?: string; password?: string; redirectTo?: string },
+        _provider: string,
+        _options?: { email?: string; password?: string; redirectTo?: string },
       ) => Promise.resolve(),
-      signOut: async (options?: { redirectTo?: string }) => Promise.resolve(),
+      signOut: async (_options?: { redirectTo?: string }) => Promise.resolve(),
       handlers: {
-        GET: async (request: Request) => new Response(),
-        POST: async (request: Request) => new Response(),
+        GET: async (_request: Request) => new Response(),
+        POST: async (_request: Request) => new Response(),
       },
     };
   }

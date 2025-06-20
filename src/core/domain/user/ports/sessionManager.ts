@@ -1,6 +1,6 @@
+import type { Result } from "neverthrow";
 import type { SessionData as AuthSessionData } from "@/core/domain/auth/types";
 import type { ApplicationError } from "@/lib/error";
-import type { Result } from "neverthrow";
 
 export type SessionData = AuthSessionData;
 

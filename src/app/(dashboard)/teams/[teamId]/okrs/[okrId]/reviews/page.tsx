@@ -1,3 +1,5 @@
+import { Calendar, MessageSquare, Plus, } from "lucide-react";
+import Link from "next/link";
 import { getOkrReviewsAction } from "@/actions/okr";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,8 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, MessageSquare, Plus, Star } from "lucide-react";
-import Link from "next/link";
 
 export default async function OkrReviewsPage({
   params,
@@ -20,59 +20,14 @@ export default async function OkrReviewsPage({
 }) {
   const reviews = await getOkrReviewsAction(params.okrId);
 
-  const mockReviews = [
-    {
-      id: "1",
-      date: "2024-03-01",
-      author: "John Doe",
-      content:
-        "順調に進捗しています。新機能のリリースが予定通り進んでいます。テストカバレッジも目標に近づいており、品質面でも良好です。",
-      score: 4,
-      type: "regular",
-    },
-    {
-      id: "2",
-      date: "2024-02-15",
-      author: "Jane Smith",
-      content:
-        "テストカバレッジの向上が素晴らしいです。品質が確実に向上しており、バグ数も順調に減少しています。",
-      score: 5,
-      type: "regular",
-    },
-    {
-      id: "3",
-      date: "2024-02-01",
-      author: "Mike Johnson",
-      content:
-        "最初の新機能をリリースしました。ユーザーからの反応も良好で、品質も期待通りです。",
-      score: 4,
-      type: "regular",
-    },
-    {
-      id: "4",
-      date: "2024-01-15",
-      author: "John Doe",
-      content:
-        "プロジェクトを開始しました。チーム全体でコミットし、目標達成に向けて頑張ります。",
-      score: 3,
-      type: "initial",
-    },
-  ];
-
-  const getScoreColor = (score: number) => {
-    if (score >= 4) return "text-green-600";
-    if (score >= 3) return "text-yellow-600";
-    return "text-red-600";
-  };
-
   const getTypeBadge = (type: string) => {
     switch (type) {
-      case "initial":
-        return <Badge variant="outline">初期</Badge>;
+      case "progress":
+        return <Badge variant="secondary">進捗</Badge>;
       case "final":
         return <Badge variant="default">最終</Badge>;
       default:
-        return <Badge variant="secondary">定期</Badge>;
+        return <Badge variant="outline">その他</Badge>;
     }
   };
 
@@ -110,22 +65,8 @@ export default async function OkrReviewsPage({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">すべて</SelectItem>
-                <SelectItem value="initial">初期レビュー</SelectItem>
-                <SelectItem value="regular">定期レビュー</SelectItem>
+                <SelectItem value="progress">進捗レビュー</SelectItem>
                 <SelectItem value="final">最終レビュー</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select defaultValue="all">
-              <SelectTrigger className="md:w-[180px]">
-                <SelectValue placeholder="評価で絞り込み" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">すべての評価</SelectItem>
-                <SelectItem value="5">5点</SelectItem>
-                <SelectItem value="4">4点</SelectItem>
-                <SelectItem value="3">3点</SelectItem>
-                <SelectItem value="2">2点</SelectItem>
-                <SelectItem value="1">1点</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -140,15 +81,22 @@ export default async function OkrReviewsPage({
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5 text-primary" />
-                    <span className="font-medium">レビュアー</span>
+                    <span className="font-medium">レビュー</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
                     {new Date(review.createdAt).toLocaleDateString("ja-JP")}
                   </div>
-                  <Badge variant="secondary">
-                    {review.type === "progress" ? "進捗" : "最終"}
-                  </Badge>
+                  {getTypeBadge(review.type)}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link
+                      href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/${review.id}`}
+                    >
+                      詳細
+                    </Link>
+                  </Button>
                 </div>
               </div>
             </CardHeader>

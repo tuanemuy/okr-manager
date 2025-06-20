@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+import { z } from "zod/v4";
 import { context } from "@/context";
 import { getNotificationsByUserId } from "@/core/application/notification/getNotificationsByUserId";
 import { getUserNotificationSettings } from "@/core/application/notification/getUserNotificationSettings";
@@ -7,8 +9,6 @@ import { markAllNotificationsAsRead } from "@/core/application/notification/mark
 import { markNotificationAsRead } from "@/core/application/notification/markNotificationAsRead";
 import { updateUserNotificationSettings } from "@/core/application/notification/updateUserNotificationSettings";
 import { getUserIdFromSession } from "@/lib/session";
-import { revalidatePath } from "next/cache";
-import { z } from "zod/v4";
 import { requireAuth } from "./session";
 
 const getNotificationsInputSchema = z.object({

@@ -1,3 +1,5 @@
+import { LogOut, Mail, Settings, User } from "lucide-react";
+import Link from "next/link";
 import { getSession, logout } from "@/actions/session";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,8 +10,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getUserEmailFromSession, getUserNameFromSession } from "@/lib/session";
-import { LogOut, Mail, Settings, User } from "lucide-react";
-import Link from "next/link";
 
 export async function Navbar() {
   const session = await getSession();

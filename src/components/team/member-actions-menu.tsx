@@ -1,5 +1,8 @@
 "use client";
 
+import { MoreHorizontal } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import {
   removeTeamMemberAction,
   updateTeamMemberRoleAction,
@@ -12,7 +15,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -29,9 +31,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { TeamMemberWithUser } from "@/core/domain/team/types";
-import { MoreHorizontal } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
 
 interface MemberActionsMenuProps {
   teamId: string;
@@ -90,7 +89,7 @@ export function MemberActionsMenu({ teamId, member }: MemberActionsMenuProps) {
     });
   };
 
-  const getRoleLabel = (role: string) => {
+  const _getRoleLabel = (role: string) => {
     const roleMap = {
       admin: "管理者",
       member: "メンバー",

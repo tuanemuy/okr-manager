@@ -1,7 +1,7 @@
+import bcrypt from "bcryptjs";
+import { err, ok, type Result } from "neverthrow";
 import type { PasswordHasher } from "@/core/domain/user/ports/passwordHasher";
 import { ApplicationError } from "@/lib/error";
-import bcrypt from "bcryptjs";
-import { type Result, err, ok } from "neverthrow";
 
 export class BcryptPasswordHasher implements PasswordHasher {
   private readonly saltRounds = 12;

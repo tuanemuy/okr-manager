@@ -1,10 +1,10 @@
-import type { Okr, OkrId } from "@/core/domain/okr/types";
+import { err, ok, type Result } from "neverthrow";
+import { z } from "zod/v4";
+import type { Okr, } from "@/core/domain/okr/types";
 import { okrIdSchema } from "@/core/domain/okr/types";
 import { userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
 import { validate } from "@/lib/validation";
-import { type Result, err, ok } from "neverthrow";
-import { z } from "zod/v4";
 import type { Context } from "../context";
 
 export const updateOkrInputSchema = z.object({

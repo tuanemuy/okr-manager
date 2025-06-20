@@ -1,5 +1,5 @@
-import { paginationSchema } from "@/lib/pagination";
 import { z } from "zod/v4";
+import { paginationSchema } from "@/lib/pagination";
 
 export const userIdSchema = z.string().uuid().brand("userId");
 export type UserId = z.infer<typeof userIdSchema>;

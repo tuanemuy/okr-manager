@@ -1,9 +1,9 @@
+import { beforeEach, describe, expect, it } from "vitest";
 import type { MockPasswordHasher } from "@/core/adapters/mock/passwordHasher";
 import type { MockSessionManager } from "@/core/adapters/mock/sessionManager";
 import type { MockUserRepository } from "@/core/adapters/mock/userRepository";
 import { type User, userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
-import { beforeEach, describe, expect, it } from "vitest";
 import type { Context } from "../context";
 import { createTestContext } from "../testUtils";
 import { type LoginUserInput, loginUser } from "./loginUser";
@@ -12,7 +12,7 @@ describe("loginUser", () => {
   let context: Context;
   let mockUserRepository: MockUserRepository;
   let mockPasswordHasher: MockPasswordHasher;
-  let mockSessionManager: MockSessionManager;
+  let _mockSessionManager: MockSessionManager;
   let testUser: User;
   let validInput: LoginUserInput;
 
@@ -20,7 +20,7 @@ describe("loginUser", () => {
     context = createTestContext();
     mockUserRepository = context.userRepository as MockUserRepository;
     mockPasswordHasher = context.passwordHasher as MockPasswordHasher;
-    mockSessionManager = context.sessionManager as MockSessionManager;
+    _mockSessionManager = context.sessionManager as MockSessionManager;
 
     // Set up test user
     const hashedPasswordResult = await mockPasswordHasher.hash("password123");

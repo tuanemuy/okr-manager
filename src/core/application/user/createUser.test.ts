@@ -1,8 +1,8 @@
+import { beforeEach, describe, expect, it } from "vitest";
 import { MockAuthService } from "@/core/adapters/mock/authService";
 import { MockPasswordHasher } from "@/core/adapters/mock/passwordHasher";
 import { MockUserRepository } from "@/core/adapters/mock/userRepository";
 import type { UserId } from "@/core/domain/user/types";
-import { beforeEach, describe, expect, it } from "vitest";
 import type { Context } from "../context";
 import { type CreateUserInput, createUser } from "./createUser";
 

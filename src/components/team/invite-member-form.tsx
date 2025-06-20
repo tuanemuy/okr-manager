@@ -1,11 +1,11 @@
 "use client";
 
-import { inviteToTeamAction } from "@/actions/team";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { inviteToTeamAction } from "@/actions/team";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface InviteMemberFormProps {
   teamId: string;

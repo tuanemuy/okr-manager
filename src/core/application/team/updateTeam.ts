@@ -1,8 +1,8 @@
-import { type Team, type TeamId, teamIdSchema } from "@/core/domain/team/types";
-import { type UserId, userIdSchema } from "@/core/domain/user/types";
-import { ApplicationError } from "@/lib/error";
-import { type Result, err } from "neverthrow";
+import { err, type Result } from "neverthrow";
 import { z } from "zod/v4";
+import { type Team, teamIdSchema } from "@/core/domain/team/types";
+import { userIdSchema } from "@/core/domain/user/types";
+import { ApplicationError } from "@/lib/error";
 import type { Context } from "../context";
 
 export const updateTeamInputSchema = z.object({
