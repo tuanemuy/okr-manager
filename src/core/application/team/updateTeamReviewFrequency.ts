@@ -24,7 +24,11 @@ export async function updateTeamReviewFrequency(
     return err(new ApplicationError("Invalid input", parseResult.error));
   }
 
-  const { teamId, userId, reviewFrequency } = parseResult.data;
+  const {
+    teamId,
+    userId,
+    reviewFrequency: _reviewFrequency,
+  } = parseResult.data;
 
   // Check if user is admin of the team
   const memberResult = await context.teamMemberRepository.getByTeamAndUser(

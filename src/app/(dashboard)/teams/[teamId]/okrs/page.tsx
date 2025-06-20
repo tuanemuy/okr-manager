@@ -16,9 +16,10 @@ import {
 export default async function TeamOkrsPage({
   params,
 }: {
-  params: { teamId: string };
+  params: Promise<{ teamId: string }>;
 }) {
-  const okrs = await getOkrsAction(params.teamId);
+  const { teamId } = await params;
+  const okrs = await getOkrsAction(teamId);
 
   const _getStatusBadge = (status: string) => {
     switch (status) {
@@ -64,7 +65,7 @@ export default async function TeamOkrsPage({
             </p>
           </div>
           <Button asChild>
-            <Link href={`/teams/${params.teamId}/okrs/new`}>
+            <Link href={`/teams/${teamId}/okrs/new`}>
               <Plus className="h-4 w-4 mr-2" />
               新しいOKR
             </Link>
@@ -125,7 +126,7 @@ export default async function TeamOkrsPage({
                   </div>
                 </div>
                 <Button variant="outline" size="sm" asChild>
-                  <Link href={`/teams/${params.teamId}/okrs/${okr.id}`}>
+                  <Link href={`/teams/${teamId}/okrs/${okr.id}`}>
                     詳細を見る
                   </Link>
                 </Button>
@@ -156,7 +157,7 @@ export default async function TeamOkrsPage({
               最初のOKRを作成して目標管理を始めましょう
             </p>
             <Button asChild>
-              <Link href={`/teams/${params.teamId}/okrs/new`}>
+              <Link href={`/teams/${teamId}/okrs/new`}>
                 <Plus className="h-4 w-4 mr-2" />
                 新しいOKR
               </Link>

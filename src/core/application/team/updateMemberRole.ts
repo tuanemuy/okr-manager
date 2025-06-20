@@ -1,9 +1,6 @@
 import { err, ok, type Result } from "neverthrow";
 import { z } from "zod/v4";
-import {
-  type TeamMember,
-  teamIdSchema,
-} from "@/core/domain/team/types";
+import { type TeamMember, teamIdSchema } from "@/core/domain/team/types";
 import { userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
 import { validate } from "@/lib/validation";

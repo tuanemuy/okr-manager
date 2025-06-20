@@ -39,7 +39,7 @@ interface OkrEditFormProps {
 }
 
 export function OkrEditForm({
-  teamId,
+  teamId: _teamId,
   okr,
   keyResults: initialKeyResults,
 }: OkrEditFormProps) {

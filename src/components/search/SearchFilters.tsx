@@ -66,11 +66,11 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
     <div className="space-y-4">
       {/* Search Query */}
       <div>
-        <Label htmlFor="query">Search Keywords</Label>
+        <Label htmlFor="query">検索キーワード</Label>
         <div className="flex gap-2 mt-1">
           <Input
             id="query"
-            placeholder="Search OKRs..."
+            placeholder="OKRを検索..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -83,13 +83,13 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
 
       {/* Team Filter */}
       <div>
-        <Label htmlFor="team">Team</Label>
+        <Label htmlFor="team">チーム</Label>
         <Select value={teamId} onValueChange={setTeamId}>
           <SelectTrigger>
-            <SelectValue placeholder="All teams" />
+            <SelectValue placeholder="すべてのチーム" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All teams</SelectItem>
+            <SelectItem value="">すべてのチーム</SelectItem>
             {filters.teams.map((team) => (
               <SelectItem key={team.id} value={team.id}>
                 {team.name}
@@ -101,13 +101,13 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
 
       {/* User Filter */}
       <div>
-        <Label htmlFor="user">Owner</Label>
+        <Label htmlFor="user">担当者</Label>
         <Select value={userId} onValueChange={setUserId}>
           <SelectTrigger>
-            <SelectValue placeholder="All members" />
+            <SelectValue placeholder="すべてのメンバー" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All members</SelectItem>
+            <SelectItem value="">すべてのメンバー</SelectItem>
             {filters.users.map((user) => (
               <SelectItem key={user.id} value={user.id}>
                 {user.displayName}
@@ -119,13 +119,13 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
 
       {/* Quarter Filter */}
       <div>
-        <Label htmlFor="quarter">Quarter</Label>
+        <Label htmlFor="quarter">四半期</Label>
         <Select value={quarter} onValueChange={setQuarter}>
           <SelectTrigger>
-            <SelectValue placeholder="All quarters" />
+            <SelectValue placeholder="すべての四半期" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All quarters</SelectItem>
+            <SelectItem value="">すべての四半期</SelectItem>
             {filters.quarters.map((q) => (
               <SelectItem key={q} value={q}>
                 {q}
@@ -137,13 +137,13 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
 
       {/* Year Filter */}
       <div>
-        <Label htmlFor="year">Year</Label>
+        <Label htmlFor="year">年</Label>
         <Select value={year} onValueChange={setYear}>
           <SelectTrigger>
-            <SelectValue placeholder="All years" />
+            <SelectValue placeholder="すべての年" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All years</SelectItem>
+            <SelectItem value="">すべての年</SelectItem>
             {filters.years.map((y) => (
               <SelectItem key={y} value={y.toString()}>
                 {y}
@@ -157,7 +157,7 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
       <div className="flex gap-2 pt-4">
         <Button onClick={handleSearch} className="flex-1">
           <Search className="h-4 w-4 mr-2" />
-          Search
+          検索
         </Button>
         <Button onClick={handleClear} variant="outline">
           <X className="h-4 w-4" />

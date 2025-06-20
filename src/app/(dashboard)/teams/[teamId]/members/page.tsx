@@ -17,11 +17,12 @@ import {
 export default async function TeamMembersPage({
   params,
 }: {
-  params: { teamId: string };
+  params: Promise<{ teamId: string }>;
 }) {
+  const { teamId } = await params;
   const [teamResult, teamMembersResult] = await Promise.all([
-    getTeamAction(params.teamId),
-    getTeamMembersAction(params.teamId),
+    getTeamAction(teamId),
+    getTeamMembersAction(teamId),
   ]);
 
   if (!teamResult.success) {
@@ -65,7 +66,7 @@ export default async function TeamMembersPage({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <InviteMemberForm teamId={params.teamId} />
+          <InviteMemberForm teamId={teamId} />
         </CardContent>
       </Card>
 
@@ -112,10 +113,7 @@ export default async function TeamMembersPage({
                       {member.joinedAt.toLocaleDateString("ja-JP")}
                     </TableCell>
                     <TableCell className="text-right">
-                      <MemberActionsMenu
-                        teamId={params.teamId}
-                        member={member}
-                      />
+                      <MemberActionsMenu teamId={teamId} member={member} />
                     </TableCell>
                   </TableRow>
                 );

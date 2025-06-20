@@ -1,7 +1,11 @@
 import { AlertTriangle, Clock, Settings } from "lucide-react";
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/actions/session";
-import { getTeamAction } from "@/actions/team";
+import {
+  getTeamAction,
+  getTeamMemberCountAction,
+  getUserTeamRoleAction,
+} from "@/actions/team";
 import { TeamBasicSettings } from "@/components/team/TeamBasicSettings";
 import { TeamDangerZone } from "@/components/team/TeamDangerZone";
 import { TeamReviewSettings } from "@/components/team/TeamReviewSettings";
@@ -9,17 +13,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface TeamSettingsPageProps {
-  params: {
+  params: Promise<{
     teamId: string;
-  };
+  }>;
 }
 
 export default async function TeamSettingsPage({
   params,
 }: TeamSettingsPageProps) {
+  const { teamId } = await params;
   const _session = await requireAuth();
 
-  const teamResult = await getTeamAction(params.teamId);
+  const [teamResult, userRoleResult, memberCountResult] = await Promise.all([
+    getTeamAction(teamId),
+    getUserTeamRoleAction(teamId),
+    getTeamMemberCountAction(teamId),
+  ]);
 
   if (!teamResult.success) {
     notFound();
@@ -30,10 +39,11 @@ export default async function TeamSettingsPage({
   }
 
   const team = teamResult.data;
-
-  // TODO: Check if user is admin of this team by fetching team members
-  // For now, allow all authenticated users to access settings
-  const isAdmin = true;
+  const userRole = userRoleResult.success ? userRoleResult.data : null;
+  const memberCount = memberCountResult.success
+    ? memberCountResult.data || 0
+    : 0;
+  const isAdmin = userRole === "admin";
 
   if (!isAdmin) {
     return (
@@ -119,7 +129,7 @@ export default async function TeamSettingsPage({
                 team={{
                   id: team.id,
                   name: team.name,
-                  memberCount: 1,
+                  memberCount,
                 }}
               />
             </CardContent>

@@ -335,6 +335,74 @@ export async function updateTeamReviewFrequencyAction(
   }
 }
 
+export async function getUserTeamRoleAction(teamId: string) {
+  try {
+    const session = await requireAuth();
+
+    const result = await context.teamMemberRepository.getUserRole(
+      teamIdSchema.parse(teamId),
+      getUserIdFromSession(session),
+    );
+
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    return {
+      success: true,
+      data: result.value,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+export async function getTeamMemberCountAction(teamId: string) {
+  try {
+    const session = await requireAuth();
+
+    // First check if user is a member of the team
+    const memberResult = await context.teamMemberRepository.getByTeamAndUser(
+      teamIdSchema.parse(teamId),
+      getUserIdFromSession(session),
+    );
+
+    if (memberResult.isErr() || !memberResult.value) {
+      return {
+        success: false,
+        error: "User is not a member of this team",
+      };
+    }
+
+    const result = await context.teamMemberRepository.countByTeam(
+      teamIdSchema.parse(teamId),
+    );
+
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    return {
+      success: true,
+      data: result.value,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
 export async function deleteTeamAction(teamId: string) {
   try {
     const session = await requireAuth();

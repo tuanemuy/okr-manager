@@ -1,4 +1,4 @@
-import { err, } from "neverthrow";
+import { err } from "neverthrow";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { MockAuthService } from "@/core/adapters/mock/authService";
 import { AuthenticationError } from "@/core/domain/auth/types";

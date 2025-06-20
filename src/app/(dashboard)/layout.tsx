@@ -1,17 +1,23 @@
+import { Suspense } from "react";
 import { requireAuth } from "@/actions/session";
 import { Navbar } from "@/components/navigation/navbar";
 
-export default async function DashboardLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  await requireAuth();
-
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
+      <Suspense fallback={<div className="h-16 bg-white border-b" />}>
+        <AuthenticatedNavbar />
+      </Suspense>
       <main>{children}</main>
     </div>
   );
+}
+
+async function AuthenticatedNavbar() {
+  await requireAuth();
+  return <Navbar />;
 }

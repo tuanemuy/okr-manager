@@ -1,4 +1,4 @@
-import { Calendar, Edit, MessageSquare, } from "lucide-react";
+import { Calendar, Edit, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { getReviewAction } from "@/actions/okr";
 import { DeleteReviewButton } from "@/components/review/DeleteReviewButton";
@@ -9,9 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default async function ReviewDetailPage({
   params,
 }: {
-  params: { teamId: string; okrId: string; reviewId: string };
+  params: Promise<{ teamId: string; okrId: string; reviewId: string }>;
 }) {
-  const review = await getReviewAction(params.reviewId);
+  const { teamId, okrId, reviewId } = await params;
+  const review = await getReviewAction(reviewId);
 
   const getTypeBadge = (type: string) => {
     switch (type) {
@@ -34,24 +35,22 @@ export default async function ReviewDetailPage({
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
-              <Link
-                href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews`}
-              >
+              <Link href={`/teams/${teamId}/okrs/${okrId}/reviews`}>
                 一覧に戻る
               </Link>
             </Button>
             <Button variant="outline" asChild>
               <Link
-                href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/${params.reviewId}/edit`}
+                href={`/teams/${teamId}/okrs/${okrId}/reviews/${reviewId}/edit`}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 編集
               </Link>
             </Button>
             <DeleteReviewButton
-              reviewId={params.reviewId}
-              teamId={params.teamId}
-              okrId={params.okrId}
+              reviewId={reviewId}
+              teamId={teamId}
+              okrId={okrId}
             />
           </div>
         </div>
@@ -99,9 +98,7 @@ export default async function ReviewDetailPage({
 
       <div className="mt-6 flex justify-center">
         <Button variant="outline" asChild>
-          <Link href={`/teams/${params.teamId}/okrs/${params.okrId}`}>
-            OKRに戻る
-          </Link>
+          <Link href={`/teams/${teamId}/okrs/${okrId}`}>OKRに戻る</Link>
         </Button>
       </div>
     </div>

@@ -30,7 +30,7 @@ export async function getUserNotificationSettings(
     return err(new ApplicationError("Invalid input", parseResult.error));
   }
 
-  const { userId } = parseResult.value;
+  const { userId: _userId } = parseResult.value;
 
   // Mock implementation - in a real app you'd fetch from the database
   const mockSettings: NotificationSettings = {

@@ -10,13 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default async function TeamDetailPage({
   params,
 }: {
-  params: { teamId: string };
+  params: Promise<{ teamId: string }>;
 }) {
+  const { teamId } = await params;
   // Fetch team data and related information
   const [teamResult, teamMembersResult, okrsResult] = await Promise.all([
-    getTeamAction(params.teamId),
-    getTeamMembersAction(params.teamId),
-    getOkrsAction(params.teamId),
+    getTeamAction(teamId),
+    getTeamMembersAction(teamId),
+    getOkrsAction(teamId),
   ]);
 
   if (!teamResult.success) {

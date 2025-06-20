@@ -15,26 +15,20 @@ export default async function TeamsPage() {
   const teamsResult = await getTeamsAction();
   const teams = teamsResult.success ? teamsResult.data?.teams || [] : [];
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/dashboard" className="text-blue-600 hover:underline">
-                ← ダッシュボード
-              </Link>
-              <h1 className="text-xl font-semibold text-gray-900">
-                チーム一覧
-              </h1>
-            </div>
-            <CreateTeamDialog>
-              <Button>新しいチーム作成</Button>
-            </CreateTeamDialog>
-          </div>
+    <div className="container mx-auto py-8">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">チーム一覧</h1>
+          <p className="text-muted-foreground">
+            参加しているチームを管理しましょう
+          </p>
         </div>
-      </header>
+        <CreateTeamDialog>
+          <Button>新しいチーム作成</Button>
+        </CreateTeamDialog>
+      </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="main">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {teams.map((team) => (
             <Card key={team.id}>
@@ -87,16 +81,16 @@ export default async function TeamsPage() {
 
         {/* Invitations Section */}
         <div className="mt-12">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">招待</h2>
+          <h2 className="text-lg font-medium mb-4">招待</h2>
           <Card>
             <CardContent className="p-6">
-              <div className="text-center text-gray-600">
+              <div className="text-center text-muted-foreground">
                 現在、保留中の招待はありません
               </div>
             </CardContent>
           </Card>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

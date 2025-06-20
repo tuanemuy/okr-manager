@@ -9,9 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default async function ReviewEditPage({
   params,
 }: {
-  params: { teamId: string; okrId: string; reviewId: string };
+  params: Promise<{ teamId: string; okrId: string; reviewId: string }>;
 }) {
-  const review = await getReviewAction(params.reviewId);
+  const { teamId, okrId, reviewId } = await params;
+  const review = await getReviewAction(reviewId);
 
   const getTypeBadge = (type: string) => {
     switch (type) {
@@ -33,9 +34,7 @@ export default async function ReviewEditPage({
             <p className="text-muted-foreground mt-2">レビュー内容を編集</p>
           </div>
           <Button variant="outline" asChild>
-            <Link
-              href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/${params.reviewId}`}
-            >
+            <Link href={`/teams/${teamId}/okrs/${okrId}/reviews/${reviewId}`}>
               キャンセル
             </Link>
           </Button>
@@ -67,9 +66,9 @@ export default async function ReviewEditPage({
           </CardHeader>
           <CardContent>
             <ReviewEditForm
-              reviewId={params.reviewId}
-              teamId={params.teamId}
-              okrId={params.okrId}
+              reviewId={reviewId}
+              teamId={teamId}
+              okrId={okrId}
               initialContent={review.content}
             />
           </CardContent>

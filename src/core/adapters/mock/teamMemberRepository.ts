@@ -10,11 +10,6 @@ import type {
 import type { UserId } from "@/core/domain/user/types";
 import { RepositoryError } from "@/lib/error";
 
-interface TeamMemberKey {
-  teamId: TeamId;
-  userId: UserId;
-}
-
 export class MockTeamMemberRepository implements TeamMemberRepository {
   private members: Map<string, TeamMember> = new Map();
   private userProfiles: Map<UserId, { displayName: string; email: string }> =

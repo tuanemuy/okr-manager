@@ -8,20 +8,21 @@ import { Button } from "@/components/ui/button";
 export default async function EditOkrPage({
   params,
 }: {
-  params: { teamId: string; okrId: string };
+  params: Promise<{ teamId: string; okrId: string }>;
 }) {
+  const { teamId, okrId } = await params;
   try {
-    const { okr, keyResults } = await getOkrAction(params.okrId);
+    const { okr, keyResults } = await getOkrAction(okrId);
 
     // Verify the OKR belongs to the correct team
-    if (okr.teamId !== params.teamId) {
+    if (okr.teamId !== teamId) {
       notFound();
     }
 
     return (
       <div className="container max-w-4xl mx-auto p-6">
         <div className="mb-6">
-          <Link href={`/teams/${params.teamId}/okrs/${params.okrId}`}>
+          <Link href={`/teams/${teamId}/okrs/${okrId}`}>
             <Button variant="ghost" size="sm" className="mb-4">
               <ArrowLeft className="h-4 w-4 mr-2" />
               OKR詳細に戻る
@@ -33,7 +34,7 @@ export default async function EditOkrPage({
           </p>
         </div>
 
-        <OkrEditForm teamId={params.teamId} okr={okr} keyResults={keyResults} />
+        <OkrEditForm teamId={teamId} okr={okr} keyResults={keyResults} />
       </div>
     );
   } catch (error) {

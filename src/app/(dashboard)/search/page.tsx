@@ -15,11 +15,11 @@ export default async function SearchPage({
   if (!filtersResult.success) {
     return (
       <div className="container mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6">Search OKRs</h1>
+        <h1 className="text-3xl font-bold mb-6">OKR検索</h1>
         <Card>
           <CardContent className="p-6">
             <p className="text-red-600">
-              Error loading search filters: {filtersResult.error}
+              検索フィルターの読み込みエラー: {filtersResult.error}
             </p>
           </CardContent>
         </Card>
@@ -43,7 +43,7 @@ export default async function SearchPage({
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>Filters</CardTitle>
+              <CardTitle>フィルター</CardTitle>
             </CardHeader>
             <CardContent>
               <SearchFilters filters={filters} />
@@ -66,7 +66,7 @@ function SearchResultsSkeleton() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Search Results</CardTitle>
+        <CardTitle>検索結果</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

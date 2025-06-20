@@ -9,9 +9,7 @@ import type {
   SessionError,
   SignInCredentials,
 } from "@/core/domain/auth/types";
-import {
-  AuthenticationError as AuthError,
-} from "@/core/domain/auth/types";
+import { AuthenticationError as AuthError } from "@/core/domain/auth/types";
 
 interface MockHandlers {
   handlers: {
