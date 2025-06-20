@@ -53,7 +53,7 @@ export class MockTeamRepository implements TeamRepository {
     return ok(team);
   }
 
-  async findById(id: TeamId): Promise<Result<Team | null, RepositoryError>> {
+  async getById(id: TeamId): Promise<Result<Team | null, RepositoryError>> {
     if (this.shouldFailFindById) {
       return err(new RepositoryError(this.findByIdErrorMessage));
     }

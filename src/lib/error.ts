@@ -34,4 +34,9 @@ export class RepositoryError extends AnyError {
 
 export class ApplicationError extends AnyError {
   override readonly name: string = "ApplicationError";
+
+  toErr() {
+    const { Result } = require("neverthrow");
+    return Result.err(this);
+  }
 }

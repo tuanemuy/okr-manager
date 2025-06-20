@@ -92,5 +92,5 @@ export async function acceptInvitation(
     );
   }
 
-  return memberResult;
+  return ok(memberResult.value);
 }

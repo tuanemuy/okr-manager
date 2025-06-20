@@ -11,7 +11,7 @@ import type {
 
 export interface TeamRepository {
   create(params: CreateTeamParams): Promise<Result<Team, RepositoryError>>;
-  findById(id: TeamId): Promise<Result<Team | null, RepositoryError>>;
+  getById(id: TeamId): Promise<Result<Team | null, RepositoryError>>;
   update(
     id: TeamId,
     params: UpdateTeamParams,

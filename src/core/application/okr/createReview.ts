@@ -70,10 +70,18 @@ export async function createReview(
   }
 
   // Create review
-  return await context.reviewRepository.create({
+  const createResult = await context.reviewRepository.create({
     okrId: params.okrId,
     type: params.type,
     content: params.content,
     reviewerId: params.reviewerId,
   });
+
+  if (createResult.isErr()) {
+    return err(
+      new ApplicationError("Failed to create review", createResult.error),
+    );
+  }
+
+  return ok(createResult.value);
 }

@@ -84,8 +84,19 @@ export async function updateKeyResultProgress(
   }
 
   // Update key result
-  return await context.keyResultRepository.updateProgress(
+  const updateResult = await context.keyResultRepository.updateProgress(
     params.keyResultId,
     params.currentValue,
   );
+
+  if (updateResult.isErr()) {
+    return err(
+      new ApplicationError(
+        "Failed to update key result progress",
+        updateResult.error,
+      ),
+    );
+  }
+
+  return ok(updateResult.value);
 }

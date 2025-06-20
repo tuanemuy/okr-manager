@@ -72,10 +72,14 @@ export async function inviteToTeam(
   }
 
   // Create invitation
-  return await context.invitationRepository.create({
+  const createResult = await context.invitationRepository.create({
     teamId: params.teamId,
     invitedEmail: params.invitedEmail,
     invitedById: params.invitedById,
     role: params.role,
   });
+
+  return createResult.mapErr(
+    (error) => new ApplicationError("Failed to create invitation", error),
+  );
 }

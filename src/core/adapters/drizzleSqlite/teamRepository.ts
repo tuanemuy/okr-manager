@@ -37,7 +37,7 @@ export class DrizzleSqliteTeamRepository implements TeamRepository {
     }
   }
 
-  async findById(id: TeamId): Promise<Result<Team | null, RepositoryError>> {
+  async getById(id: TeamId): Promise<Result<Team | null, RepositoryError>> {
     try {
       const result = await this.db
         .select()
