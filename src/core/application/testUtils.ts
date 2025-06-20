@@ -1,6 +1,8 @@
+import { MockActivityRepository } from "@/core/adapters/mock/activityRepository";
 import { MockAuthService } from "@/core/adapters/mock/authService";
 import { MockInvitationRepository } from "@/core/adapters/mock/invitationRepository";
 import { MockKeyResultRepository } from "@/core/adapters/mock/keyResultRepository";
+import { MockNotificationRepository } from "@/core/adapters/mock/notificationRepository";
 import { MockOkrRepository } from "@/core/adapters/mock/okrRepository";
 import { MockPasswordHasher } from "@/core/adapters/mock/passwordHasher";
 import { MockReviewRepository } from "@/core/adapters/mock/reviewRepository";
@@ -23,5 +25,7 @@ export function createTestContext(): Context {
     okrRepository: new MockOkrRepository(),
     keyResultRepository: new MockKeyResultRepository(),
     reviewRepository: new MockReviewRepository(),
+    activityRepository: new MockActivityRepository(),
+    notificationRepository: new MockNotificationRepository(),
   };
 }

@@ -1,9 +1,11 @@
 import type { NextAuthResult } from "next-auth";
 import { z } from "zod/v4";
 import { BcryptPasswordHasher } from "@/core/adapters/bcryptjs/passwordHasher";
+import { DrizzleSqliteActivityRepository } from "@/core/adapters/drizzleSqlite/activityRepository";
 import { getDatabase } from "@/core/adapters/drizzleSqlite/client";
 import { DrizzleSqliteInvitationRepository } from "@/core/adapters/drizzleSqlite/invitationRepository";
 import { DrizzleSqliteKeyResultRepository } from "@/core/adapters/drizzleSqlite/keyResultRepository";
+import { DrizzleSqliteNotificationRepository } from "@/core/adapters/drizzleSqlite/notificationRepository";
 import { DrizzleSqliteOkrRepository } from "@/core/adapters/drizzleSqlite/okrRepository";
 import { DrizzleSqliteReviewRepository } from "@/core/adapters/drizzleSqlite/reviewRepository";
 import { DrizzleSqliteTeamMemberRepository } from "@/core/adapters/drizzleSqlite/teamMemberRepository";
@@ -49,4 +51,6 @@ export const context: Context<NextAuthResult> = {
   okrRepository: new DrizzleSqliteOkrRepository(db),
   keyResultRepository: new DrizzleSqliteKeyResultRepository(db),
   reviewRepository: new DrizzleSqliteReviewRepository(db),
+  activityRepository: new DrizzleSqliteActivityRepository(),
+  notificationRepository: new DrizzleSqliteNotificationRepository(),
 };
