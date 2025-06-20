@@ -3,7 +3,9 @@
 import { context } from "@/context";
 import { createOkr } from "@/core/application/okr/createOkr";
 import { createReview } from "@/core/application/okr/createReview";
+import { updateKeyResult } from "@/core/application/okr/updateKeyResult";
 import { updateKeyResultProgress } from "@/core/application/okr/updateKeyResultProgress";
+import { updateOkr } from "@/core/application/okr/updateOkr";
 import {
   type OkrType,
   keyResultIdSchema,
@@ -13,6 +15,8 @@ import { teamIdSchema } from "@/core/domain/team/types";
 import { getUserIdFromSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod/v4";
+import { requireAuth } from "./session";
 
 export async function createOkrAction(teamId: string, formData: FormData) {
   const title = formData.get("title") as string;
@@ -264,5 +268,181 @@ export async function addKeyResultAction(okrId: string, formData: FormData) {
   );
   if (okrResult.isOk() && okrResult.value) {
     revalidatePath(`/teams/${okrResult.value.teamId}/okrs/${okrId}`);
+  }
+}
+
+const updateOkrInputSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().optional(),
+});
+
+export type UpdateOkrInput = z.infer<typeof updateOkrInputSchema>;
+
+export async function updateOkrAction(okrId: string, input: UpdateOkrInput) {
+  try {
+    const session = await requireAuth();
+    const validInput = updateOkrInputSchema.parse(input);
+
+    const result = await updateOkr(context, {
+      okrId: okrIdSchema.parse(okrId),
+      userId: getUserIdFromSession(session),
+      ...validInput,
+    });
+
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    // Get team ID for revalidation
+    const okrResult = await context.okrRepository.getById(
+      okrIdSchema.parse(okrId),
+    );
+    if (okrResult.isOk() && okrResult.value) {
+      revalidatePath(`/teams/${okrResult.value.teamId}/okrs/${okrId}`);
+      revalidatePath(`/teams/${okrResult.value.teamId}/okrs`);
+    }
+
+    return {
+      success: true,
+      data: result.value,
+    };
+  } catch (error) {
+    console.error("Error in updateOkrAction:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+const updateKeyResultInputSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  targetValue: z.number().min(0).optional(),
+  currentValue: z.number().min(0).optional(),
+  unit: z.string().optional(),
+});
+
+export type UpdateKeyResultInput = z.infer<typeof updateKeyResultInputSchema>;
+
+export async function updateKeyResultAction(
+  keyResultId: string,
+  input: UpdateKeyResultInput,
+) {
+  try {
+    const session = await requireAuth();
+    const validInput = updateKeyResultInputSchema.parse(input);
+
+    const result = await updateKeyResult(context, {
+      keyResultId: keyResultIdSchema.parse(keyResultId),
+      userId: getUserIdFromSession(session),
+      ...validInput,
+    });
+
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    // Get OKR and team ID for revalidation
+    const keyResult = result.value;
+    const okrResult = await context.okrRepository.getById(keyResult.okrId);
+    if (okrResult.isOk() && okrResult.value) {
+      revalidatePath(
+        `/teams/${okrResult.value.teamId}/okrs/${keyResult.okrId}`,
+      );
+      revalidatePath(`/teams/${okrResult.value.teamId}/okrs`);
+    }
+
+    return {
+      success: true,
+      data: result.value,
+    };
+  } catch (error) {
+    console.error("Error in updateKeyResultAction:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+export async function deleteKeyResultAction(keyResultId: string) {
+  try {
+    const session = await requireAuth();
+
+    // Get key result to verify permissions and get OKR info
+    const keyResultResult = await context.keyResultRepository.getById(
+      keyResultIdSchema.parse(keyResultId),
+    );
+    if (keyResultResult.isErr() || !keyResultResult.value) {
+      return {
+        success: false,
+        error: "Key result not found",
+      };
+    }
+
+    const keyResult = keyResultResult.value;
+
+    // Get OKR to check permissions
+    const okrResult = await context.okrRepository.getById(keyResult.okrId);
+    if (okrResult.isErr() || !okrResult.value) {
+      return {
+        success: false,
+        error: "OKR not found",
+      };
+    }
+
+    const okr = okrResult.value;
+    const userId = getUserIdFromSession(session);
+
+    // Check permissions: user must be the owner or admin of the team
+    const teamMemberResult =
+      await context.teamMemberRepository.getByTeamAndUser(okr.teamId, userId);
+    if (teamMemberResult.isErr() || !teamMemberResult.value) {
+      return {
+        success: false,
+        error: "User is not a member of this team",
+      };
+    }
+
+    const teamMember = teamMemberResult.value;
+    const isOwner = okr.ownerId === userId;
+    const isAdmin = teamMember.role === "admin";
+    if (!isOwner && !isAdmin) {
+      return {
+        success: false,
+        error: "Insufficient permissions to delete this key result",
+      };
+    }
+
+    // Delete the key result
+    const deleteResult = await context.keyResultRepository.delete(
+      keyResultIdSchema.parse(keyResultId),
+    );
+    if (deleteResult.isErr()) {
+      return {
+        success: false,
+        error: deleteResult.error.message,
+      };
+    }
+
+    revalidatePath(`/teams/${okr.teamId}/okrs/${keyResult.okrId}`);
+    revalidatePath(`/teams/${okr.teamId}/okrs`);
+
+    return {
+      success: true,
+      data: undefined,
+    };
+  } catch (error) {
+    console.error("Error in deleteKeyResultAction:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
   }
 }
