@@ -1,23 +1,21 @@
 import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
 
-const fileName = process.env.DATABASE_FILE_NAME;
+const url = process.env.TURSO_DATABASE_URL;
+const authToken = process.env.TURSO_AUTH_TOKEN;
 
-if (!fileName) {
-  throw new Error("DATABASE_FILE_NAME environment variable is not set.");
+if (!url || !authToken) {
+  throw new Error(
+    "TURSO_DATABASE_URL and TURSO_AUTH_TOKEN must be set in the environment variables.",
+  );
 }
-
-const filePath = path.join(
-  import.meta.dirname,
-  "src/core/adapters/drizzleSqlite",
-  fileName,
-);
 
 export default defineConfig({
   out: "./src/core/adapters/drizzleSqlite/migrations",
   schema: "./src/core/adapters/drizzleSqlite/schema.ts",
-  dialect: "sqlite",
+  dialect: "turso",
   dbCredentials: {
-    url: `file:${filePath}`,
+    url,
+    authToken,
   },
 });

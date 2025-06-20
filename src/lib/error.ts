@@ -27,3 +27,16 @@ export function fromUnknown(error: unknown): AnyError {
 
   return new AnyError("Unknown error occurred", error);
 }
+
+export class RepositoryError extends AnyError {
+  override readonly name: string = "RepositoryError";
+}
+
+export class ApplicationError extends AnyError {
+  override readonly name: string = "ApplicationError";
+
+  toErr() {
+    const { Result } = require("neverthrow");
+    return Result.err(this);
+  }
+}

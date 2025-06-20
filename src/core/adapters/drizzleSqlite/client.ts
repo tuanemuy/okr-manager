@@ -1,17 +1,15 @@
-import path from "node:path";
 import { drizzle } from "drizzle-orm/libsql";
-import { createClient } from "@libsql/client";
 import * as schema from "./schema";
+export * from "./schema";
 
 export type Database = ReturnType<typeof drizzle<typeof schema>>;
 
-export function getDatabase(fileName: string) {
-  const filePath = path.join(import.meta.dirname, fileName);
-
+export function getDatabase(url: string, authToken: string) {
   return drizzle({
-    client: createClient({
-      url: `file:${filePath}`,
-    }),
+    connection: {
+      url,
+      authToken,
+    },
     schema,
   });
 }

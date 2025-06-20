@@ -4,15 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-- `pnpm run lint` - Lint code with Biome
-- `pnpm run lint:fix` - Lint code with Biome and fix issues
-- `pnpm run format` - Format code with Biome
+- `pnpm lint` - Lint code with Biome
+- `pnpm lint:fix` - Lint code with Biome and fix issues
+- `pnpm format` - Format code with Biome
+- `pnpm format:check` - Check code formatting with Biome
 - `pnpm typecheck` - Type check code with tsc
-- `pnpm run test` - Run tests with Vitest
+- `pnpm test` - Run tests with Vitest
 
 ## Development Workflow
 
-- Run `pnpm typecheck`, `pnpm run lint:fix` and `pnpm run format` after making changes to ensure code quality and consistency.
+- Run `pnpm typecheck`, `pnpm lint:fix` and `pnpm format` after making changes to ensure code quality and consistency.
 - Update `docs/progress.md` with current progress and any issues encountered.
 
 ## Backend Architecture
@@ -30,7 +31,7 @@ Hexagonal architecture with domain-driven design principles:
 
 ### External Services
 
-- **Database**: SQLite with Drizzle ORM
+- **Database**: Turso with Drizzle ORM
 - **Authentication**: Auth.js
 - Other external services can be added as needed
 
@@ -266,7 +267,7 @@ export const context = {
 
 - **Runtime**: Node.js 22.x
 - **Frontend**: Next.js 15 with React 19, Tailwind CSS, shadcn/ui
-- **Database**: SQLite with Drizzle ORM
+- **Database**: Turso with Drizzle ORM
 - **Validation**: Zod 4 schemas with branded types
 - **Error Handling**: neverthrow for Result types
 
