@@ -21,6 +21,27 @@ export async function createOkrAction(teamId: string, formData: FormData) {
   const quarter = formData.get("quarter") as string;
   const year = Number(formData.get("year"));
 
+  // Parse key results from form data
+  const keyResults = [];
+  let keyResultIndex = 1;
+
+  while (formData.get(`keyResult-${keyResultIndex}-title`)) {
+    const krTitle = formData.get(`keyResult-${keyResultIndex}-title`) as string;
+    const krTargetValue = Number(
+      formData.get(`keyResult-${keyResultIndex}-targetValue`),
+    );
+    const krUnit = formData.get(`keyResult-${keyResultIndex}-unit`) as string;
+
+    if (krTitle && krTargetValue) {
+      keyResults.push({
+        title: krTitle,
+        targetValue: krTargetValue,
+        unit: krUnit || undefined,
+      });
+    }
+    keyResultIndex++;
+  }
+
   const sessionResult = await context.sessionManager.get();
   if (sessionResult.isErr() || !sessionResult.value) {
     throw new Error("Not authenticated");
@@ -31,14 +52,14 @@ export async function createOkrAction(teamId: string, formData: FormData) {
   const result = await createOkr(context, {
     title,
     description: description || undefined,
-    type,
+    type: type === "team" ? "team" : "individual",
     quarter: {
       year,
       quarter: Number(quarter),
     },
     teamId: teamIdSchema.parse(teamId),
     ownerId: getUserIdFromSession(session),
-    keyResults: [], // Will be added separately
+    keyResults,
   });
 
   if (result.isErr()) {
