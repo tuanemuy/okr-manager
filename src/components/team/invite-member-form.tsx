@@ -31,7 +31,7 @@ export function InviteMemberForm({ teamId }: InviteMemberFormProps) {
         );
         router.refresh();
       } catch (error) {
-        setError(error instanceof Error ? error.message : "Unknown error");
+        setError(error instanceof Error ? error.message : "不明なエラー");
       }
     });
   };
