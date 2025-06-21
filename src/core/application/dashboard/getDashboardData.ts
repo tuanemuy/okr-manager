@@ -14,6 +14,8 @@ export interface DashboardData {
     personalOkrs: number;
     teamOkrs: number;
     totalProgress: number;
+    overdue: number;
+    dueThisWeek: number;
   };
   recentActivity: Activity[];
 }
@@ -66,10 +68,43 @@ export async function getDashboardData(context: Context, userId: UserId) {
           )
         : 0;
 
+    // Calculate overdue and due this week OKRs
+    const now = new Date();
+    const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    // Get the end of the current quarter for deadline calculation
+    const currentQuarter = Math.ceil((now.getMonth() + 1) / 3);
+    const currentYear = now.getFullYear();
+    const quarterEndMonth = currentQuarter * 3 - 1; // 0-based month index
+    const quarterEndDate = new Date(currentYear, quarterEndMonth + 1, 0); // Last day of quarter
+
+    const overdue = allOkrs.filter((okr) => {
+      // Check if OKR is from a past quarter/year
+      const isOldQuarter =
+        okr.quarterYear < currentYear ||
+        (okr.quarterYear === currentYear &&
+          okr.quarterQuarter < currentQuarter);
+      return isOldQuarter && (okr.progress || 0) < 100;
+    }).length;
+
+    const dueThisWeek = allOkrs.filter((okr) => {
+      // Check if OKR is due within a week
+      const isCurrentQuarter =
+        okr.quarterYear === currentYear &&
+        okr.quarterQuarter === currentQuarter;
+      return (
+        isCurrentQuarter &&
+        quarterEndDate <= oneWeekFromNow &&
+        quarterEndDate >= now
+      );
+    }).length;
+
     const okrStats = {
       personalOkrs: personalOkrs.length,
       teamOkrs: teamOkrs.length,
       totalProgress,
+      overdue,
+      dueThisWeek,
     };
 
     const recentActivity = recentActivityResult.isOk()
