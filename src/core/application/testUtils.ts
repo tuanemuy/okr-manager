@@ -12,6 +12,24 @@ import { MockTeamRepository } from "@/core/adapters/mock/teamRepository";
 import { MockUserRepository } from "@/core/adapters/mock/userRepository";
 import type { Context } from "./context";
 
+export function createMockContext(): Context {
+  return {
+    publicUrl: "http://localhost:3000",
+    userRepository: new MockUserRepository(),
+    passwordHasher: new MockPasswordHasher(),
+    sessionManager: new MockSessionManager(),
+    authService: new MockAuthService(),
+    teamRepository: new MockTeamRepository(),
+    teamMemberRepository: new MockTeamMemberRepository(),
+    invitationRepository: new MockInvitationRepository(),
+    okrRepository: new MockOkrRepository(),
+    keyResultRepository: new MockKeyResultRepository(),
+    reviewRepository: new MockReviewRepository(),
+    activityRepository: new MockActivityRepository(),
+    notificationRepository: new MockNotificationRepository(),
+  };
+}
+
 export function createTestContext(): Context {
   return {
     publicUrl: "http://localhost:3000",
