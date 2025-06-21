@@ -479,7 +479,8 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
     Result<{ items: SearchOkrResult[]; totalCount: number }, RepositoryError>
   > {
     try {
-      const { query, teamId, userId, quarter, year, type, pagination } = params;
+      const { query, teamId, userId, quarter, year, type, status, pagination } =
+        params;
       const limit = pagination.limit;
       const offset = (pagination.page - 1) * pagination.limit;
 
@@ -497,7 +498,9 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
           : undefined,
         teamId ? eq(okrs.teamId, teamId) : undefined,
         userId ? eq(okrs.ownerId, userId) : undefined,
-        quarter ? eq(okrs.quarterQuarter, Number(quarter)) : undefined,
+        quarter
+          ? eq(okrs.quarterQuarter, Number.parseInt(quarter.replace("Q", "")))
+          : undefined,
         year ? eq(okrs.quarterYear, year) : undefined,
         type ? eq(okrs.type, type) : undefined,
       ].filter((filter) => filter !== undefined);
@@ -512,6 +515,7 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
             description: okrs.description,
             type: okrs.type,
             teamId: okrs.teamId,
+            ownerId: okrs.ownerId,
             quarterYear: okrs.quarterYear,
             quarterQuarter: okrs.quarterQuarter,
             createdAt: okrs.createdAt,
@@ -540,9 +544,7 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
           ? await this.db
               .select()
               .from(keyResults)
-              .where(
-                sql`${keyResults.okrId} IN (${okrIds.map(() => "?").join(",")})`,
-              )
+              .where(inArray(keyResults.okrId, okrIds))
           : [];
 
       const searchResults: SearchOkrResult[] = items.map((item) => {
@@ -556,6 +558,7 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
           description: item.description || undefined,
           type: item.type as "team" | "personal",
           teamId: item.teamId as TeamId,
+          ownerId: item.ownerId ? (item.ownerId as UserId) : undefined,
           quarterYear: item.quarterYear,
           quarterQuarter: item.quarterQuarter,
           createdAt: item.createdAt,
@@ -563,6 +566,13 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
           teamName: item.teamName || "Unknown Team",
           ownerName: item.ownerName || "Unknown Owner",
           progress,
+          keyResults: keyResultsForOkr.map((kr) => ({
+            id: kr.id,
+            title: kr.title,
+            currentValue: kr.currentValue,
+            targetValue: kr.targetValue,
+            unit: kr.unit || "",
+          })),
         };
       });
 

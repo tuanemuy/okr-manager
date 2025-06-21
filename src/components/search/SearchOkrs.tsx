@@ -18,13 +18,19 @@ export async function SearchOkrs({ searchParams }: SearchOkrsProps) {
   const year = searchParams.year
     ? Number.parseInt(searchParams.year as string)
     : undefined;
-  const type = searchParams.type as "team" | "personal" | undefined;
-  const status = searchParams.status as
-    | "active"
-    | "completed"
-    | "overdue"
-    | "due_soon"
-    | undefined;
+  const type = Array.isArray(searchParams.type)
+    ? undefined
+    : searchParams.type === "team" || searchParams.type === "personal"
+      ? searchParams.type
+      : undefined;
+  const status = Array.isArray(searchParams.status)
+    ? undefined
+    : searchParams.status === "active" ||
+        searchParams.status === "completed" ||
+        searchParams.status === "overdue" ||
+        searchParams.status === "due_soon"
+      ? searchParams.status
+      : undefined;
   const page = Number.parseInt(searchParams.page as string) || 1;
 
   const result = await searchOkrsAction({
