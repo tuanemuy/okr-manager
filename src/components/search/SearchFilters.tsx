@@ -28,23 +28,23 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
   const searchParams = useSearchParams();
 
   const [query, setQuery] = useState(searchParams.get("query") || "");
-  const [teamId, setTeamId] = useState(searchParams.get("teamId") || "");
-  const [userId, setUserId] = useState(searchParams.get("userId") || "");
-  const [quarter, setQuarter] = useState(searchParams.get("quarter") || "");
-  const [year, setYear] = useState(searchParams.get("year") || "");
-  const [type, setType] = useState(searchParams.get("type") || "");
-  const [status, setStatus] = useState(searchParams.get("status") || "");
+  const [teamId, setTeamId] = useState(searchParams.get("teamId") || "all");
+  const [userId, setUserId] = useState(searchParams.get("userId") || "all");
+  const [quarter, setQuarter] = useState(searchParams.get("quarter") || "all");
+  const [year, setYear] = useState(searchParams.get("year") || "all");
+  const [type, setType] = useState(searchParams.get("type") || "all");
+  const [status, setStatus] = useState(searchParams.get("status") || "all");
 
   const handleSearch = () => {
     const params = new URLSearchParams();
 
     if (query.trim()) params.set("query", query.trim());
-    if (teamId) params.set("teamId", teamId);
-    if (userId) params.set("userId", userId);
-    if (quarter) params.set("quarter", quarter);
-    if (year) params.set("year", year);
-    if (type) params.set("type", type);
-    if (status) params.set("status", status);
+    if (teamId && teamId !== "all") params.set("teamId", teamId);
+    if (userId && userId !== "all") params.set("userId", userId);
+    if (quarter && quarter !== "all") params.set("quarter", quarter);
+    if (year && year !== "all") params.set("year", year);
+    if (type && type !== "all") params.set("type", type);
+    if (status && status !== "all") params.set("status", status);
 
     params.set("page", "1"); // Reset to first page when filtering
 
@@ -53,12 +53,12 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
 
   const handleClear = () => {
     setQuery("");
-    setTeamId("");
-    setUserId("");
-    setQuarter("");
-    setYear("");
-    setType("");
-    setStatus("");
+    setTeamId("all");
+    setUserId("all");
+    setQuarter("all");
+    setYear("all");
+    setType("all");
+    setStatus("all");
     router.push("/search");
   };
 
@@ -95,12 +95,14 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
             <SelectValue placeholder="すべてのチーム" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">すべてのチーム</SelectItem>
-            {filters.teams.map((team) => (
-              <SelectItem key={team.id} value={team.id}>
-                {team.name}
-              </SelectItem>
-            ))}
+            <SelectItem value="all">すべてのチーム</SelectItem>
+            {filters.teams
+              .filter((team) => team.id && team.id.trim() !== "")
+              .map((team) => (
+                <SelectItem key={team.id} value={team.id}>
+                  {team.name}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>
@@ -113,12 +115,14 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
             <SelectValue placeholder="すべてのメンバー" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">すべてのメンバー</SelectItem>
-            {filters.users.map((user) => (
-              <SelectItem key={user.id} value={user.id}>
-                {user.displayName}
-              </SelectItem>
-            ))}
+            <SelectItem value="all">すべてのメンバー</SelectItem>
+            {filters.users
+              .filter((user) => user.id && user.id.trim() !== "")
+              .map((user) => (
+                <SelectItem key={user.id} value={user.id}>
+                  {user.displayName}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>
@@ -131,12 +135,14 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
             <SelectValue placeholder="すべての四半期" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">すべての四半期</SelectItem>
-            {filters.quarters.map((q) => (
-              <SelectItem key={q} value={q}>
-                {q}
-              </SelectItem>
-            ))}
+            <SelectItem value="all">すべての四半期</SelectItem>
+            {filters.quarters
+              .filter((q) => q && q.trim() !== "")
+              .map((q) => (
+                <SelectItem key={q} value={q}>
+                  {q}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>
@@ -149,12 +155,14 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
             <SelectValue placeholder="すべての年" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">すべての年</SelectItem>
-            {filters.years.map((y) => (
-              <SelectItem key={y} value={y.toString()}>
-                {y}
-              </SelectItem>
-            ))}
+            <SelectItem value="all">すべての年</SelectItem>
+            {filters.years
+              .filter((y) => y && y > 0)
+              .map((y) => (
+                <SelectItem key={y} value={y.toString()}>
+                  {y}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>
@@ -167,7 +175,7 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
             <SelectValue placeholder="すべてのタイプ" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">すべてのタイプ</SelectItem>
+            <SelectItem value="all">すべてのタイプ</SelectItem>
             <SelectItem value="team">チームOKR</SelectItem>
             <SelectItem value="personal">個人OKR</SelectItem>
           </SelectContent>
@@ -182,7 +190,7 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
             <SelectValue placeholder="すべてのステータス" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">すべてのステータス</SelectItem>
+            <SelectItem value="all">すべてのステータス</SelectItem>
             <SelectItem value="active">進行中</SelectItem>
             <SelectItem value="completed">完了済み</SelectItem>
             <SelectItem value="overdue">期限切れ</SelectItem>
