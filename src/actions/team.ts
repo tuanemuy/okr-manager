@@ -15,7 +15,11 @@ import { removeMemberFromTeam } from "@/core/application/team/removeMemberFromTe
 import { updateMemberRole } from "@/core/application/team/updateMemberRole";
 import { updateTeam } from "@/core/application/team/updateTeam";
 import { updateTeamReviewFrequency } from "@/core/application/team/updateTeamReviewFrequency";
-import { invitationIdSchema, teamIdSchema } from "@/core/domain/team/types";
+import {
+  invitationIdSchema,
+  reviewFrequencySchema,
+  teamIdSchema,
+} from "@/core/domain/team/types";
 import { userIdSchema } from "@/core/domain/user/types";
 import { getUserIdFromSession } from "@/lib/session";
 import { requireAuth } from "./session";
@@ -23,6 +27,7 @@ import { requireAuth } from "./session";
 const createTeamInputSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().optional(),
+  reviewFrequency: reviewFrequencySchema.default("monthly"),
 });
 
 export type CreateTeamInput = z.infer<typeof createTeamInputSchema>;
@@ -35,6 +40,7 @@ export async function createTeamAction(input: CreateTeamInput) {
     const result = await createTeam(context, {
       name: validInput.name,
       description: validInput.description,
+      reviewFrequency: validInput.reviewFrequency,
       ownerId: getUserIdFromSession(session),
     });
 

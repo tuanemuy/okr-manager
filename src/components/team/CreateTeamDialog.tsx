@@ -13,6 +13,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 interface CreateTeamDialogProps {
@@ -36,7 +43,12 @@ export function CreateTeamDialog({ children }: CreateTeamDialogProps) {
           action={async (formData) => {
             const name = formData.get("name") as string;
             const description = formData.get("description") as string;
-            await createTeamAction({ name, description });
+            const reviewFrequency =
+              (formData.get("reviewFrequency") as
+                | "weekly"
+                | "biweekly"
+                | "monthly") || "monthly";
+            await createTeamAction({ name, description, reviewFrequency });
             setOpen(false);
           }}
           className="space-y-4"
@@ -58,6 +70,19 @@ export function CreateTeamDialog({ children }: CreateTeamDialogProps) {
               placeholder="チームの説明を入力"
               rows={3}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="reviewFrequency">レビュー頻度</Label>
+            <Select name="reviewFrequency" defaultValue="monthly">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="weekly">週次</SelectItem>
+                <SelectItem value="biweekly">隔週</SelectItem>
+                <SelectItem value="monthly">月次</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex justify-end space-x-2">
             <Button
