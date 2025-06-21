@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { updatePasswordAction, updateProfileAction } from "@/actions/profile";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,10 +11,88 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { context } from "@/context";
 import { userIdSchema } from "@/core/domain/user/types";
 
-export default async function ProfilePage() {
+function ProfileSkeleton() {
+  return (
+    <div className="grid gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile Information</CardTitle>
+          <CardDescription>
+            Update your personal information and display preferences.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-2">
+            <Label>Email</Label>
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div className="grid gap-2">
+            <Label>Display Name</Label>
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div className="flex justify-end">
+            <Skeleton className="h-10 w-24" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Separator />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Change Password</CardTitle>
+          <CardDescription>
+            Update your password to keep your account secure.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-2">
+            <Label>Current Password</Label>
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div className="grid gap-2">
+            <Label>New Password</Label>
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div className="grid gap-2">
+            <Label>Confirm New Password</Label>
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div className="flex justify-end">
+            <Skeleton className="h-10 w-32" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Separator />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Account Information</CardTitle>
+          <CardDescription>
+            View your account details and usage information.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-2">
+            <Label>Account Created</Label>
+            <Skeleton className="h-5 w-32" />
+          </div>
+          <div className="grid gap-2">
+            <Label>Last Updated</Label>
+            <Skeleton className="h-5 w-32" />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+async function ProfileContent() {
   const sessionResult = await context.sessionManager.get();
 
   if (sessionResult.isErr() || !sessionResult.value) {
@@ -31,6 +110,136 @@ export default async function ProfilePage() {
   const user = userResult.value;
 
   return (
+    <div className="grid gap-6">
+      {/* Profile Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile Information</CardTitle>
+          <CardDescription>
+            Update your personal information and display preferences.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={updateProfileAction} className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={user.email}
+                disabled
+                className="bg-muted"
+              />
+              <p className="text-sm text-muted-foreground">
+                Email address cannot be changed.
+              </p>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="displayName">Display Name</Label>
+              <Input
+                id="displayName"
+                name="displayName"
+                defaultValue={user.displayName}
+                placeholder="Enter your display name"
+                required
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <Button type="submit">Save Changes</Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Separator />
+
+      {/* Password Change */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Change Password</CardTitle>
+          <CardDescription>
+            Update your password to keep your account secure.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={updatePasswordAction} className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="currentPassword">Current Password</Label>
+              <Input
+                id="currentPassword"
+                name="currentPassword"
+                type="password"
+                placeholder="Enter your current password"
+                required
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="newPassword">New Password</Label>
+              <Input
+                id="newPassword"
+                name="newPassword"
+                type="password"
+                placeholder="Enter your new password"
+                required
+                minLength={8}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                placeholder="Confirm your new password"
+                required
+                minLength={8}
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <Button type="submit">Update Password</Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Separator />
+
+      {/* Account Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Account Information</CardTitle>
+          <CardDescription>
+            View your account details and usage information.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-2">
+            <Label>Account Created</Label>
+            <p className="text-sm text-muted-foreground">
+              {user.createdAt.toLocaleDateString()}
+            </p>
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Last Updated</Label>
+            <p className="text-sm text-muted-foreground">
+              {user.updatedAt.toLocaleDateString()}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
     <div className="container max-w-4xl mx-auto p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Profile Settings</h1>
@@ -39,131 +248,9 @@ export default async function ProfilePage() {
         </p>
       </div>
 
-      <div className="grid gap-6">
-        {/* Profile Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
-            <CardDescription>
-              Update your personal information and display preferences.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form action={updateProfileAction} className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={user.email}
-                  disabled
-                  className="bg-muted"
-                />
-                <p className="text-sm text-muted-foreground">
-                  Email address cannot be changed.
-                </p>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="displayName">Display Name</Label>
-                <Input
-                  id="displayName"
-                  name="displayName"
-                  defaultValue={user.displayName}
-                  placeholder="Enter your display name"
-                  required
-                />
-              </div>
-
-              <div className="flex justify-end">
-                <Button type="submit">Save Changes</Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Separator />
-
-        {/* Password Change */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Change Password</CardTitle>
-            <CardDescription>
-              Update your password to keep your account secure.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form action={updatePasswordAction} className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="currentPassword">Current Password</Label>
-                <Input
-                  id="currentPassword"
-                  name="currentPassword"
-                  type="password"
-                  placeholder="Enter your current password"
-                  required
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="newPassword">New Password</Label>
-                <Input
-                  id="newPassword"
-                  name="newPassword"
-                  type="password"
-                  placeholder="Enter your new password"
-                  required
-                  minLength={8}
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="Confirm your new password"
-                  required
-                  minLength={8}
-                />
-              </div>
-
-              <div className="flex justify-end">
-                <Button type="submit">Update Password</Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Separator />
-
-        {/* Account Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Information</CardTitle>
-            <CardDescription>
-              View your account details and usage information.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <Label>Account Created</Label>
-              <p className="text-sm text-muted-foreground">
-                {user.createdAt.toLocaleDateString()}
-              </p>
-            </div>
-
-            <div className="grid gap-2">
-              <Label>Last Updated</Label>
-              <p className="text-sm text-muted-foreground">
-                {user.updatedAt.toLocaleDateString()}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Suspense fallback={<ProfileSkeleton />}>
+        <ProfileContent />
+      </Suspense>
     </div>
   );
 }

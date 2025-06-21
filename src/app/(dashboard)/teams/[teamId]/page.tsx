@@ -84,12 +84,7 @@ function TeamCardSkeleton() {
   );
 }
 
-export default async function TeamDetailPage({
-  params,
-}: {
-  params: Promise<{ teamId: string }>;
-}) {
-  const { teamId } = await params;
+async function TeamDetailContent({ teamId }: { teamId: string }) {
   const teamResult = await getTeamAction(teamId);
 
   if (!teamResult.success) {
@@ -103,7 +98,7 @@ export default async function TeamDetailPage({
   const team = teamResult.data;
 
   return (
-    <div className="container mx-auto py-8">
+    <>
       <Suspense fallback={<TeamStatsSkeleton />}>
         <TeamStats
           teamId={team.id}
@@ -121,6 +116,34 @@ export default async function TeamDetailPage({
           <TeamRecentOkrs teamId={team.id} />
         </Suspense>
       </div>
+    </>
+  );
+}
+
+function TeamDetailSkeleton() {
+  return (
+    <div className="container mx-auto py-8">
+      <TeamStatsSkeleton />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <TeamCardSkeleton />
+        <TeamCardSkeleton />
+      </div>
+    </div>
+  );
+}
+
+export default async function TeamDetailPage({
+  params,
+}: {
+  params: Promise<{ teamId: string }>;
+}) {
+  const { teamId } = await params;
+
+  return (
+    <div className="container mx-auto py-8">
+      <Suspense fallback={<TeamDetailSkeleton />}>
+        <TeamDetailContent teamId={teamId} />
+      </Suspense>
     </div>
   );
 }

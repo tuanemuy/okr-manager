@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { getOkrAction } from "@/actions/okr";
 import { ProgressUpdateDialog } from "@/components/okr/ProgressUpdateDialog";
 import { Badge } from "@/components/ui/badge";
@@ -16,13 +17,113 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default async function OkrDetailPage({
-  params,
+function OkrDetailSkeleton() {
+  return (
+    <div className="container mx-auto py-8">
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Skeleton className="h-6 w-6 rounded" />
+              <Skeleton className="h-9 w-80" />
+            </div>
+            <Skeleton className="h-5 w-96" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-20" />
+            <Skeleton className="h-10 w-28" />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>キーリザルト</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i}>
+                  <div className="flex items-start justify-between mb-2">
+                    <Skeleton className="h-6 w-64" />
+                    <Skeleton className="h-6 w-12" />
+                  </div>
+                  <div className="flex items-center justify-between text-sm mb-2">
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-8 w-20" />
+                  </div>
+                  <Skeleton className="h-2 w-full" />
+                  {i < 3 && <Separator className="mt-6" />}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                レビュー
+                <Skeleton className="h-8 w-20" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <Skeleton className="h-8 w-8 mx-auto mb-2" />
+                <Skeleton className="h-4 w-48 mx-auto mb-2" />
+                <Skeleton className="h-8 w-24 mx-auto" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>OKR情報</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-4" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+              ))}
+              <Separator />
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-8" />
+                </div>
+                <Skeleton className="h-3 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>クイックアクション</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+async function OkrDetailContent({
+  teamId,
+  okrId,
 }: {
-  params: Promise<{ teamId: string; okrId: string }>;
+  teamId: string;
+  okrId: string;
 }) {
-  const { teamId, okrId } = await params;
   const okrData = await getOkrAction(okrId);
 
   if (!okrData.okr) {
@@ -49,7 +150,7 @@ export default async function OkrDetailPage({
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <>
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
@@ -231,6 +332,22 @@ export default async function OkrDetailPage({
           </Card>
         </div>
       </div>
+    </>
+  );
+}
+
+export default async function OkrDetailPage({
+  params,
+}: {
+  params: Promise<{ teamId: string; okrId: string }>;
+}) {
+  const { teamId, okrId } = await params;
+
+  return (
+    <div className="container mx-auto py-8">
+      <Suspense fallback={<OkrDetailSkeleton />}>
+        <OkrDetailContent teamId={teamId} okrId={okrId} />
+      </Suspense>
     </div>
   );
 }
