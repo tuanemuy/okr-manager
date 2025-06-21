@@ -36,9 +36,9 @@ export async function updateTeam(
     !memberResult.value ||
     memberResult.value.role !== "admin"
   ) {
-    return new ApplicationError(
-      "User is not authorized to update this team",
-    ).toErr();
+    return err(
+      new ApplicationError("User is not authorized to update this team"),
+    );
   }
 
   // Update team

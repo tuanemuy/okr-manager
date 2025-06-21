@@ -34,9 +34,9 @@ export async function deleteTeam(
     !memberResult.value ||
     memberResult.value.role !== "admin"
   ) {
-    return new ApplicationError(
-      "User is not authorized to delete this team",
-    ).toErr();
+    return err(
+      new ApplicationError("User is not authorized to delete this team"),
+    );
   }
 
   // Check if team has other members
@@ -52,9 +52,7 @@ export async function deleteTeam(
   }
 
   if (membersResult.value.items.length > 1) {
-    return new ApplicationError(
-      "Cannot delete team with other members",
-    ).toErr();
+    return err(new ApplicationError("Cannot delete team with other members"));
   }
 
   // Delete team
