@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { userIdSchema } from "../user/types";
 
 export const notificationIdSchema = z.string().uuid().brand("notificationId");
 export type NotificationId = z.infer<typeof notificationIdSchema>;
@@ -13,6 +14,7 @@ export type NotificationType = z.infer<typeof notificationTypeSchema>;
 
 export const notificationSchema = z.object({
   id: notificationIdSchema,
+  userId: userIdSchema,
   type: notificationTypeSchema,
   title: z.string(),
   message: z.string(),
