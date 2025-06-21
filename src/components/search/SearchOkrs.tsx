@@ -18,6 +18,13 @@ export async function SearchOkrs({ searchParams }: SearchOkrsProps) {
   const year = searchParams.year
     ? Number.parseInt(searchParams.year as string)
     : undefined;
+  const type = searchParams.type as "team" | "personal" | undefined;
+  const status = searchParams.status as
+    | "active"
+    | "completed"
+    | "overdue"
+    | "due_soon"
+    | undefined;
   const page = Number.parseInt(searchParams.page as string) || 1;
 
   const result = await searchOkrsAction({
@@ -26,6 +33,8 @@ export async function SearchOkrs({ searchParams }: SearchOkrsProps) {
     userId,
     quarter,
     year,
+    type,
+    status,
     page,
     limit: 10,
   });

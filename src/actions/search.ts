@@ -16,6 +16,8 @@ const searchOkrsInputSchema = z.object({
   userId: z.string().optional(),
   quarter: z.string().optional(),
   year: z.number().optional(),
+  type: z.enum(["team", "personal"]).optional(),
+  status: z.enum(["active", "completed", "overdue", "due_soon"]).optional(),
   page: z.number().min(1).default(1),
   limit: z.number().min(1).max(50).default(10),
 });
@@ -38,6 +40,8 @@ export async function searchOkrsAction(input: SearchOkrsInput) {
         : undefined,
       quarter: validInput.quarter,
       year: validInput.year,
+      type: validInput.type,
+      status: validInput.status,
       pagination: {
         page: validInput.page,
         limit: validInput.limit,
