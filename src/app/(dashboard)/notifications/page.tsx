@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export default async function NotificationsPage({
+async function NotificationsContent({
   searchParams,
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -33,14 +33,11 @@ export default async function NotificationsPage({
 
   if (hasError) {
     return (
-      <div className="container mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6">通知</h1>
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-red-600">通知の読み込みエラー: {error}</p>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <p className="text-red-600">通知の読み込みエラー: {error}</p>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -57,7 +54,7 @@ export default async function NotificationsPage({
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">通知</h1>
         <NotificationActions unreadCount={notifications.unreadCount} />
@@ -84,14 +81,12 @@ export default async function NotificationsPage({
         </TabsList>
 
         <TabsContent value="notifications">
-          <Suspense fallback={<NotificationsListSkeleton />}>
-            <NotificationsList
-              notifications={notifications.items}
-              totalCount={notifications.totalCount}
-              currentPage={page}
-              tab={tab}
-            />
-          </Suspense>
+          <NotificationsList
+            notifications={notifications.items}
+            totalCount={notifications.totalCount}
+            currentPage={page}
+            tab={tab}
+          />
         </TabsContent>
 
         <TabsContent value="settings">
@@ -105,11 +100,66 @@ export default async function NotificationsPage({
           </Card>
         </TabsContent>
       </Tabs>
+    </>
+  );
+}
+
+function NotificationsContentSkeleton() {
+  return (
+    <>
+      <div className="flex items-center justify-between mb-6">
+        <Skeleton className="h-9 w-16" />
+        <Skeleton className="h-10 w-32" />
+      </div>
+
+      <div className="space-y-6">
+        <div className="flex space-x-1 border rounded-lg p-1">
+          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-10 w-20" />
+        </div>
+
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Array.from({ length: 5 }, (_, i) => i).map((index) => (
+                <div
+                  key={`notification-skeleton-${index}`}
+                  className="flex items-start space-x-4 p-4 border rounded-lg"
+                >
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+}
+
+export default function NotificationsPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
+  return (
+    <div className="container mx-auto p-6">
+      <Suspense fallback={<NotificationsContentSkeleton />}>
+        <NotificationsContent searchParams={searchParams} />
+      </Suspense>
     </div>
   );
 }
 
-function NotificationsListSkeleton() {
+function _NotificationsListSkeleton() {
   return (
     <Card>
       <CardHeader>
