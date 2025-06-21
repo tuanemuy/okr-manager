@@ -8,6 +8,7 @@ import { getUserNotificationSettings } from "@/core/application/notification/get
 import { markAllNotificationsAsRead } from "@/core/application/notification/markAllNotificationsAsRead";
 import { markNotificationAsRead } from "@/core/application/notification/markNotificationAsRead";
 import { updateUserNotificationSettings } from "@/core/application/notification/updateUserNotificationSettings";
+import { notificationIdSchema } from "@/core/domain/notification/types";
 import { getUserIdFromSession } from "@/lib/session";
 import { requireAuth } from "./session";
 
@@ -59,8 +60,16 @@ export async function markNotificationAsReadAction(notificationId: string) {
   try {
     const session = await requireAuth();
 
+    const parseResult = notificationIdSchema.safeParse(notificationId);
+    if (!parseResult.success) {
+      return {
+        success: false,
+        message: "Invalid notification ID format",
+      };
+    }
+
     const result = await markNotificationAsRead(context, {
-      notificationId,
+      notificationId: parseResult.data,
       userId: getUserIdFromSession(session),
     });
 
