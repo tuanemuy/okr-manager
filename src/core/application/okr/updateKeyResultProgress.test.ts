@@ -27,7 +27,7 @@ describe("updateKeyResultProgress", () => {
   let regularMember: TeamMember;
   let viewer: TeamMember;
   let teamOkr: Okr;
-  let individualOkr: Okr;
+  let personalOkr: Okr;
   let keyResult1: KeyResult;
   let keyResult2: KeyResult;
   let validInput: UpdateKeyResultProgressInput;
@@ -97,7 +97,7 @@ describe("updateKeyResultProgress", () => {
       updatedAt: new Date("2024-01-01T00:00:00Z"),
     };
 
-    individualOkr = {
+    personalOkr = {
       id: okrIdSchema.parse("550e8400-e29b-41d4-a716-446655440201"),
       title: "Personal Development OKR",
       description: "Personal skill enhancement",
@@ -124,7 +124,7 @@ describe("updateKeyResultProgress", () => {
 
     keyResult2 = {
       id: keyResultIdSchema.parse("550e8400-e29b-41d4-a716-446655440301"),
-      okrId: individualOkr.id,
+      okrId: personalOkr.id,
       title: "Complete training courses",
       targetValue: 5,
       currentValue: 2,
@@ -140,7 +140,7 @@ describe("updateKeyResultProgress", () => {
       regularMember,
       viewer,
     ]);
-    mockOkrRepository.seed([teamOkr, individualOkr]);
+    mockOkrRepository.seed([teamOkr, personalOkr]);
     mockKeyResultRepository.seed([keyResult1, keyResult2]);
 
     validInput = {
@@ -482,7 +482,9 @@ describe("updateKeyResultProgress", () => {
       // Assert
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
-        expect(result.error.message).toBe("Update failed");
+        expect(result.error.message).toBe(
+          "Failed to update key result progress",
+        );
       }
     });
   });
@@ -536,7 +538,7 @@ describe("updateKeyResultProgress", () => {
         okrId: teamOkrWithoutOwner.id,
       };
 
-      mockOkrRepository.seed([teamOkr, individualOkr, teamOkrWithoutOwner]);
+      mockOkrRepository.seed([teamOkr, personalOkr, teamOkrWithoutOwner]);
       mockKeyResultRepository.seed([
         keyResult1,
         keyResult2,

@@ -24,6 +24,11 @@ export const teams = sqliteTable("teams", {
     .$defaultFn(() => uuidv7()),
   name: text("name").notNull(),
   description: text("description"),
+  reviewFrequency: text("review_frequency", {
+    enum: ["weekly", "biweekly", "monthly"],
+  })
+    .notNull()
+    .default("monthly"),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),
@@ -76,7 +81,7 @@ export const okrs = sqliteTable("okrs", {
     .$defaultFn(() => uuidv7()),
   title: text("title").notNull(),
   description: text("description"),
-  type: text("type", { enum: ["team", "individual"] }).notNull(),
+  type: text("type", { enum: ["team", "personal"] }).notNull(),
   teamId: text("team_id")
     .notNull()
     .references(() => teams.id, { onDelete: "cascade" }),

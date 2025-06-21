@@ -38,28 +38,49 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
     return Math.round(totalProgress / keyResults.length);
   }
 
+  private determineOkrStatus(
+    okr: { quarterYear: number; quarterQuarter: number; progress: number },
+    currentYear: number,
+    currentQuarter: number,
+  ): "active" | "completed" | "overdue" | "due_soon" {
+    const { quarterYear, quarterQuarter, progress } = okr;
+
+    // Completed if progress is 100%
+    if (progress >= 100) return "completed";
+
+    // Compare quarters
+    if (
+      quarterYear < currentYear ||
+      (quarterYear === currentYear && quarterQuarter < currentQuarter)
+    ) {
+      return "overdue";
+    }
+
+    if (quarterYear === currentYear && quarterQuarter === currentQuarter) {
+      // Due soon if in current quarter and less than 30 days left
+      const now = new Date();
+      const quarterEndMonth = quarterQuarter * 3;
+      const quarterEndDate = new Date(quarterYear, quarterEndMonth - 1, 0); // Last day of quarter
+      const daysLeft = Math.ceil(
+        (quarterEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      if (daysLeft <= 30) return "due_soon";
+    }
+
+    return "active";
+  }
+
   async create(params: CreateOkrParams): Promise<Result<Okr, RepositoryError>> {
     try {
-      // Map "personal" type to "individual" for database storage
-      const dbParams = {
-        ...params,
-        type:
-          params.type === "personal" ? ("individual" as const) : params.type,
-      };
-      const result = await this.db.insert(okrs).values(dbParams).returning();
+      const result = await this.db.insert(okrs).values(params).returning();
 
       const okr = result[0];
       if (!okr) {
         return err(new RepositoryError("Failed to create OKR"));
       }
 
-      // Map "individual" type back to "personal" for domain layer
-      const domainOkr = {
-        ...okr,
-        type: okr.type === "individual" ? ("personal" as const) : okr.type,
-      };
-
-      return validate(okrSchema, domainOkr).mapErr((error) => {
+      return validate(okrSchema, okr).mapErr((error) => {
         return new RepositoryError("Invalid OKR data", error);
       });
     } catch (error) {
@@ -92,7 +113,6 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
       const okr = okrResult[0];
       const okrWithKeyResults = {
         ...okr,
-        type: okr.type === "individual" ? ("personal" as const) : okr.type,
         keyResults: keyResultsResult,
         owner: ownerResult.length > 0 ? ownerResult[0] : undefined,
       };
@@ -119,9 +139,7 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
     const filters = [
       filter?.teamId ? eq(okrs.teamId, filter.teamId) : undefined,
       filter?.ownerId ? eq(okrs.ownerId, filter.ownerId) : undefined,
-      filter?.type
-        ? eq(okrs.type, filter.type === "personal" ? "individual" : filter.type)
-        : undefined,
+      filter?.type ? eq(okrs.type, filter.type) : undefined,
       filter?.quarter ? eq(okrs.quarterQuarter, filter.quarter) : undefined,
       filter?.year ? eq(okrs.quarterYear, filter.year) : undefined,
     ].filter((filter) => filter !== undefined);
@@ -169,7 +187,6 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
         );
         return {
           ...okr,
-          type: okr.type === "individual" ? ("personal" as const) : okr.type,
           keyResults: keyResultsForOkr,
           progress: this.calculateProgress(keyResultsForOkr),
           owner: owner
@@ -208,13 +225,7 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
         return err(new RepositoryError("OKR not found"));
       }
 
-      // Map "individual" type back to "personal" for domain layer
-      const domainOkr = {
-        ...okr,
-        type: okr.type === "individual" ? ("personal" as const) : okr.type,
-      };
-
-      return validate(okrSchema, domainOkr).mapErr((error) => {
+      return validate(okrSchema, okr).mapErr((error) => {
         return new RepositoryError("Invalid OKR data", error);
       });
     } catch (error) {
@@ -284,7 +295,6 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
         );
         return {
           ...okr,
-          type: okr.type === "individual" ? ("personal" as const) : okr.type,
           keyResults: keyResultsForOkr,
           progress: this.calculateProgress(keyResultsForOkr),
           owner: owner
@@ -351,7 +361,6 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
         );
         return {
           ...okr,
-          type: okr.type === "individual" ? ("personal" as const) : okr.type,
           keyResults: keyResultsForOkr,
           progress: this.calculateProgress(keyResultsForOkr),
           owner: owner
@@ -436,7 +445,6 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
         );
         return {
           ...okr,
-          type: okr.type === "individual" ? ("personal" as const) : okr.type,
           keyResults: keyResultsForOkr,
           progress: this.calculateProgress(keyResultsForOkr),
           owner: owner
@@ -475,10 +483,10 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
       const limit = pagination.limit;
       const offset = (pagination.page - 1) * pagination.limit;
 
-      // Calculate current quarter for status filtering (disabled for now)
-      // const now = new Date();
-      // const currentQuarter = Math.ceil((now.getMonth() + 1) / 3);
-      // const currentYear = now.getFullYear();
+      // Calculate current quarter for status filtering
+      const now = new Date();
+      const currentQuarter = Math.ceil((now.getMonth() + 1) / 3);
+      const currentYear = now.getFullYear();
 
       const filters = [
         query
@@ -491,19 +499,12 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
         userId ? eq(okrs.ownerId, userId) : undefined,
         quarter ? eq(okrs.quarterQuarter, Number(quarter)) : undefined,
         year ? eq(okrs.quarterYear, year) : undefined,
-        type
-          ? eq(okrs.type, type === "personal" ? "individual" : type)
-          : undefined,
+        type ? eq(okrs.type, type) : undefined,
       ].filter((filter) => filter !== undefined);
 
-      // TODO: Add status filtering logic if status is specified
-      // Complex SQL subqueries for status filtering are commented out for now
-      // Status filtering will be handled in the application layer instead
+      // Status filtering is handled after the query since it depends on progress calculation
 
-      // Note: Status filtering is temporarily disabled due to complexity
-      // It will be handled in the application layer by filtering results after query
-
-      const [items, countResult] = await Promise.all([
+      const [items, _countResult] = await Promise.all([
         this.db
           .select({
             id: okrs.id,
@@ -548,11 +549,12 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
         const keyResultsForOkr = keyResultsForSearch.filter(
           (kr) => kr.okrId === item.id,
         );
+        const progress = this.calculateProgress(keyResultsForOkr);
         return {
           id: item.id as OkrId,
           title: item.title,
           description: item.description || undefined,
-          type: item.type === "individual" ? ("personal" as const) : item.type,
+          type: item.type as "team" | "personal",
           teamId: item.teamId as TeamId,
           quarterYear: item.quarterYear,
           quarterQuarter: item.quarterQuarter,
@@ -560,13 +562,29 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
           updatedAt: item.updatedAt,
           teamName: item.teamName || "Unknown Team",
           ownerName: item.ownerName || "Unknown Owner",
-          progress: this.calculateProgress(keyResultsForOkr),
+          progress,
         };
       });
 
+      // Apply status filtering if specified
+      const filteredResults = status
+        ? searchResults.filter((result) => {
+            const resultStatus = this.determineOkrStatus(
+              {
+                quarterYear: result.quarterYear,
+                quarterQuarter: result.quarterQuarter,
+                progress: result.progress,
+              },
+              currentYear,
+              currentQuarter,
+            );
+            return resultStatus === status;
+          })
+        : searchResults;
+
       return ok({
-        items: searchResults,
-        totalCount: Number(countResult[0]?.count || 0),
+        items: filteredResults,
+        totalCount: filteredResults.length,
       });
     } catch (error) {
       return err(new RepositoryError("Failed to search OKRs", error));
