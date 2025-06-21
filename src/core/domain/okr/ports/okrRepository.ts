@@ -61,6 +61,8 @@ export interface OkrRepository {
     userId?: UserId;
     quarter?: string;
     year?: number;
+    type?: "team" | "personal";
+    status?: "active" | "completed" | "overdue" | "due_soon";
     pagination: { page: number; limit: number };
   }): Promise<
     Result<{ items: SearchOkrResult[]; totalCount: number }, RepositoryError>

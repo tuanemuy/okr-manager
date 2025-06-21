@@ -32,6 +32,8 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
   const [userId, setUserId] = useState(searchParams.get("userId") || "");
   const [quarter, setQuarter] = useState(searchParams.get("quarter") || "");
   const [year, setYear] = useState(searchParams.get("year") || "");
+  const [type, setType] = useState(searchParams.get("type") || "");
+  const [status, setStatus] = useState(searchParams.get("status") || "");
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -41,6 +43,8 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
     if (userId) params.set("userId", userId);
     if (quarter) params.set("quarter", quarter);
     if (year) params.set("year", year);
+    if (type) params.set("type", type);
+    if (status) params.set("status", status);
 
     params.set("page", "1"); // Reset to first page when filtering
 
@@ -53,6 +57,8 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
     setUserId("");
     setQuarter("");
     setYear("");
+    setType("");
+    setStatus("");
     router.push("/search");
   };
 
@@ -149,6 +155,38 @@ export function SearchFilters({ filters }: SearchFiltersProps) {
                 {y}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Type Filter */}
+      <div>
+        <Label htmlFor="type">OKRタイプ</Label>
+        <Select value={type} onValueChange={setType}>
+          <SelectTrigger>
+            <SelectValue placeholder="すべてのタイプ" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">すべてのタイプ</SelectItem>
+            <SelectItem value="team">チームOKR</SelectItem>
+            <SelectItem value="personal">個人OKR</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Status Filter */}
+      <div>
+        <Label htmlFor="status">ステータス</Label>
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger>
+            <SelectValue placeholder="すべてのステータス" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">すべてのステータス</SelectItem>
+            <SelectItem value="active">進行中</SelectItem>
+            <SelectItem value="completed">完了済み</SelectItem>
+            <SelectItem value="overdue">期限切れ</SelectItem>
+            <SelectItem value="due_soon">期限間近</SelectItem>
           </SelectContent>
         </Select>
       </div>

@@ -15,6 +15,8 @@ export const searchOkrsInputSchema = z.object({
   userId: userIdSchema.optional(),
   quarter: z.string().optional(),
   year: z.number().optional(),
+  type: z.enum(["team", "personal"]).optional(),
+  status: z.enum(["active", "completed", "overdue", "due_soon"]).optional(),
   pagination: paginationSchema,
 });
 
@@ -39,6 +41,8 @@ export async function searchOkrs(
     userId: _userId,
     quarter: _quarter,
     year,
+    type,
+    status,
     pagination,
   } = parseResult.value;
 
@@ -49,6 +53,8 @@ export async function searchOkrs(
       userId: _userId,
       quarter: _quarter,
       year,
+      type,
+      status,
       pagination,
     });
 
