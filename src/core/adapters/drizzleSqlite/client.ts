@@ -6,10 +6,11 @@ export * from "./schema";
 
 export type Database = ReturnType<typeof drizzle<typeof schema>>;
 
-export function getDatabase(path: string) {
+export function getDatabase(url: string, authToken: string) {
   return drizzle({
     client: createClient({
-      url: `file:${path}`,
+      url,
+      authToken,
     }),
     schema,
   });

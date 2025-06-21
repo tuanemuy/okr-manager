@@ -17,9 +17,9 @@ import type { Context } from "@/core/application/context";
 
 export const envSchema = z.object({
   NEXT_PUBLIC_URL: z.string().url(),
-  // TURSO_DATABASE_URL: z.string().min(1),
-  // TURSO_AUTH_TOKEN: z.string().min(1),
-  SQLITE_FILEPATH: z.string().min(1),
+  TURSO_DATABASE_URL: z.string().min(1),
+  TURSO_AUTH_TOKEN: z.string().min(1),
+  // SQLITE_FILEPATH: z.string().min(1),
   AUTH_SECRET: z.string().min(32),
 });
 
@@ -33,7 +33,7 @@ if (!env.success) {
   throw new Error(`Environment validation failed: ${errors}`);
 }
 
-const db = getDatabase(env.data.SQLITE_FILEPATH);
+const db = getDatabase(env.data.TURSO_DATABASE_URL, env.data.TURSO_AUTH_TOKEN);
 const userRepository = new DrizzleSqliteUserRepository(db);
 const passwordHasher = new BcryptPasswordHasher();
 const authService = new NextAuthService(userRepository, passwordHasher, db);
