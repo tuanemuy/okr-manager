@@ -9,7 +9,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getUserEmailFromSession, getUserNameFromSession } from "@/lib/session";
+import { context } from "@/context";
+import {
+  getUserEmailFromSession,
+  getUserIdFromSession,
+  getUserNameFromSession,
+} from "@/lib/session";
 
 export async function Navbar() {
   const session = await getSession();
@@ -17,6 +22,16 @@ export async function Navbar() {
   if (!session) {
     return null;
   }
+
+  // Get fresh user data from database to ensure we show the latest information
+  const userId = getUserIdFromSession(session);
+  const userResult = await context.userRepository.getById(userId);
+  const currentUser = userResult.isOk() ? userResult.value : null;
+
+  // Use fresh data if available, fallback to session data
+  const displayName =
+    currentUser?.displayName ?? getUserNameFromSession(session);
+  const email = currentUser?.email ?? getUserEmailFromSession(session);
 
   return (
     <nav className="border-b">
@@ -53,22 +68,16 @@ export async function Navbar() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
-                    {getUserNameFromSession(session).charAt(0).toUpperCase()}
+                    {displayName.charAt(0).toUpperCase()}
                   </div>
-                  <span className="hidden md:inline">
-                    {getUserNameFromSession(session)}
-                  </span>
+                  <span className="hidden md:inline">{displayName}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">
-                      {getUserNameFromSession(session)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {getUserEmailFromSession(session)}
-                    </p>
+                    <p className="font-medium">{displayName}</p>
+                    <p className="text-xs text-muted-foreground">{email}</p>
                   </div>
                 </div>
                 <DropdownMenuSeparator />

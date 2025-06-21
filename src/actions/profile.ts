@@ -23,9 +23,14 @@ export async function updateProfileAction(formData: FormData) {
     throw new Error(result.error.message);
   }
 
-  // Session is managed by Auth.js, no need to manually update
+  // Update session to reflect the latest user data immediately
+  const updateSessionResult = await context.sessionManager.update();
+  if (updateSessionResult.isErr()) {
+    console.error("Failed to update session:", updateSessionResult.error);
+  }
 
-  revalidatePath("/profile");
+  // Revalidate all pages to refresh session data everywhere
+  revalidatePath("/", "layout");
 }
 
 export async function updatePasswordAction(formData: FormData) {
@@ -77,5 +82,6 @@ export async function updatePasswordAction(formData: FormData) {
     throw new Error(updateResult.error.message);
   }
 
-  revalidatePath("/profile");
+  // Revalidate all pages to refresh session data everywhere
+  revalidatePath("/", "layout");
 }
