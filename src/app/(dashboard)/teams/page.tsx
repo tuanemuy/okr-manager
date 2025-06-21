@@ -12,10 +12,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Team } from "@/core/domain/team/types";
 
 async function TeamsList() {
   const teamsResult = await getTeamsAction();
-  const teams = teamsResult.success ? teamsResult.data?.teams || [] : [];
+  const teams: Team[] = teamsResult.success
+    ? teamsResult.data?.teams || []
+    : [];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
