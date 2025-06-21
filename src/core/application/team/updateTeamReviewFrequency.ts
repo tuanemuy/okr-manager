@@ -1,14 +1,19 @@
 import { err, ok, type Result } from "neverthrow";
 import { z } from "zod/v4";
-import { type Team, teamIdSchema } from "@/core/domain/team/types";
+import {
+  reviewFrequencySchema,
+  type Team,
+  teamIdSchema,
+} from "@/core/domain/team/types";
 import { userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
+import { validate } from "@/lib/validation";
 import type { Context } from "../context";
 
 export const updateTeamReviewFrequencyInputSchema = z.object({
   teamId: teamIdSchema,
   userId: userIdSchema,
-  reviewFrequency: z.enum(["weekly", "biweekly", "monthly"]),
+  reviewFrequency: reviewFrequencySchema,
 });
 
 export type UpdateTeamReviewFrequencyInput = z.infer<
@@ -19,16 +24,12 @@ export async function updateTeamReviewFrequency(
   context: Context,
   input: UpdateTeamReviewFrequencyInput,
 ): Promise<Result<Team, ApplicationError>> {
-  const parseResult = updateTeamReviewFrequencyInputSchema.safeParse(input);
-  if (!parseResult.success) {
+  const parseResult = validate(updateTeamReviewFrequencyInputSchema, input);
+  if (parseResult.isErr()) {
     return err(new ApplicationError("Invalid input", parseResult.error));
   }
 
-  const {
-    teamId,
-    userId,
-    reviewFrequency: _reviewFrequency,
-  } = parseResult.data;
+  const { teamId, userId, reviewFrequency } = parseResult.value;
 
   // Check if user is admin of the team
   const memberResult = await context.teamMemberRepository.getByTeamAndUser(
@@ -46,19 +47,24 @@ export async function updateTeamReviewFrequency(
     );
   }
 
-  // TODO: Add reviewFrequency field to team schema and update types
-  // For now, return the team unchanged since reviewFrequency is not implemented in the schema
-  const teamResult = await context.teamRepository.getById(teamId);
+  // Update team review frequency
+  const updateResult = await context.teamRepository.update(teamId, {
+    reviewFrequency,
+  });
 
-  if (teamResult.isErr()) {
-    return err(new ApplicationError("Failed to get team", teamResult.error));
+  if (updateResult.isErr()) {
+    return err(
+      new ApplicationError(
+        "Failed to update team review frequency",
+        updateResult.error,
+      ),
+    );
   }
 
-  const team = teamResult.value;
+  const team = updateResult.value;
   if (!team) {
     return err(new ApplicationError("Team not found"));
   }
 
-  // TODO: Implement actual review frequency update when schema is updated
   return ok(team);
 }

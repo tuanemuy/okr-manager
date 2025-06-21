@@ -22,6 +22,7 @@ describe("createTeam", () => {
     validInput = {
       name: "Development Team",
       description: "A team for software development",
+      reviewFrequency: "monthly" as const,
       ownerId: userIdSchema.parse("550e8400-e29b-41d4-a716-446655440000"),
     };
   });
@@ -69,6 +70,7 @@ describe("createTeam", () => {
       // Arrange
       const inputWithoutDescription = {
         name: "Simple Team",
+        reviewFrequency: "weekly" as const,
         ownerId: validInput.ownerId,
       };
 

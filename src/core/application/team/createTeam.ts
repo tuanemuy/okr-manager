@@ -1,6 +1,7 @@
 import { err, ok, type Result } from "neverthrow";
 import { z } from "zod/v4";
 import type { Team } from "@/core/domain/team/types";
+import { reviewFrequencySchema } from "@/core/domain/team/types";
 import { userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
 import type { Context } from "../context";
@@ -8,6 +9,7 @@ import type { Context } from "../context";
 export const createTeamInputSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
+  reviewFrequency: reviewFrequencySchema.default("monthly"),
   ownerId: userIdSchema,
 });
 export type CreateTeamInput = z.infer<typeof createTeamInputSchema>;
@@ -28,6 +30,7 @@ export async function createTeam(
     name: params.name,
     creatorId: params.ownerId,
     description: params.description,
+    reviewFrequency: params.reviewFrequency,
   });
 
   if (teamResult.isErr()) {
