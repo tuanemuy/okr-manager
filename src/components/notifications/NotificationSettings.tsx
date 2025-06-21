@@ -58,10 +58,9 @@ export function NotificationSettings({ settings }: NotificationSettingsProps) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Team Invitations</CardTitle>
+          <CardTitle>チーム招待</CardTitle>
           <CardDescription>
-            Get notified when you're invited to join a team or when invitation
-            status changes.
+            チームに招待された時や招待状況が変更された時に通知を受け取ります。
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -71,19 +70,16 @@ export function NotificationSettings({ settings }: NotificationSettingsProps) {
               checked={formData.invitations}
               onCheckedChange={() => handleToggle("invitations")}
             />
-            <Label htmlFor="invitations">
-              Receive invitation notifications
-            </Label>
+            <Label htmlFor="invitations">招待通知を受け取る</Label>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Review Reminders</CardTitle>
+          <CardTitle>レビューリマインダー</CardTitle>
           <CardDescription>
-            Get reminded when it's time to review your OKRs or when reviews are
-            due.
+            OKRをレビューする時期やレビューの期限が近づいた時にお知らせします。
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -94,7 +90,7 @@ export function NotificationSettings({ settings }: NotificationSettingsProps) {
               onCheckedChange={() => handleToggle("reviewReminders")}
             />
             <Label htmlFor="reviewReminders">
-              Receive review reminder notifications
+              レビューリマインダー通知を受け取る
             </Label>
           </div>
         </CardContent>
@@ -102,10 +98,9 @@ export function NotificationSettings({ settings }: NotificationSettingsProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Progress Updates</CardTitle>
+          <CardTitle>進捗更新</CardTitle>
           <CardDescription>
-            Get notified when team members update their OKR progress or key
-            results.
+            チームメンバーがOKRの進捗やキーリザルトを更新した時に通知を受け取ります。
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -115,19 +110,16 @@ export function NotificationSettings({ settings }: NotificationSettingsProps) {
               checked={formData.progressUpdates}
               onCheckedChange={() => handleToggle("progressUpdates")}
             />
-            <Label htmlFor="progressUpdates">
-              Receive progress update notifications
-            </Label>
+            <Label htmlFor="progressUpdates">進捗更新通知を受け取る</Label>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Team Updates</CardTitle>
+          <CardTitle>チーム更新</CardTitle>
           <CardDescription>
-            Get notified about team changes, new OKRs, and other team-related
-            activities.
+            チームの変更、新しいOKR、その他チームに関する活動について通知を受け取ります。
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -137,9 +129,7 @@ export function NotificationSettings({ settings }: NotificationSettingsProps) {
               checked={formData.teamUpdates}
               onCheckedChange={() => handleToggle("teamUpdates")}
             />
-            <Label htmlFor="teamUpdates">
-              Receive team update notifications
-            </Label>
+            <Label htmlFor="teamUpdates">チーム更新通知を受け取る</Label>
           </div>
         </CardContent>
       </Card>
@@ -151,7 +141,7 @@ export function NotificationSettings({ settings }: NotificationSettingsProps) {
           className="flex items-center gap-2"
         >
           <Save className="h-4 w-4" />
-          {isSaving ? "Saving..." : "Save Settings"}
+          {isSaving ? "保存中..." : "設定を保存"}
         </Button>
       </div>
     </div>

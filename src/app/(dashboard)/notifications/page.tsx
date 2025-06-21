@@ -34,10 +34,10 @@ export default async function NotificationsPage({
   if (hasError) {
     return (
       <div className="container mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6">Notifications</h1>
+        <h1 className="text-3xl font-bold mb-6">通知</h1>
         <Card>
           <CardContent className="p-6">
-            <p className="text-red-600">Error loading notifications: {error}</p>
+            <p className="text-red-600">通知の読み込みエラー: {error}</p>
           </CardContent>
         </Card>
       </div>
@@ -59,7 +59,7 @@ export default async function NotificationsPage({
   return (
     <div className="container mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Notifications</h1>
+        <h1 className="text-3xl font-bold">通知</h1>
         <NotificationActions unreadCount={notifications.unreadCount} />
       </div>
 
@@ -70,7 +70,7 @@ export default async function NotificationsPage({
             className="flex items-center gap-2"
           >
             <Bell className="h-4 w-4" />
-            Notifications
+            通知
             {notifications.unreadCount > 0 && (
               <span className="bg-red-500 text-white rounded-full px-2 py-0.5 text-xs">
                 {notifications.unreadCount}
@@ -79,7 +79,7 @@ export default async function NotificationsPage({
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Settings
+            設定
           </TabsTrigger>
         </TabsList>
 
@@ -97,7 +97,7 @@ export default async function NotificationsPage({
         <TabsContent value="settings">
           <Card>
             <CardHeader>
-              <CardTitle>Notification Settings</CardTitle>
+              <CardTitle>通知設定</CardTitle>
             </CardHeader>
             <CardContent>
               <NotificationSettings settings={settings} />
@@ -113,7 +113,7 @@ function NotificationsListSkeleton() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Notifications</CardTitle>
+        <CardTitle>最近の通知</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
