@@ -1,3 +1,7 @@
-- [x] "personal" と "individual" が混在している
-    - マッピングするのではなく、いずれかのみを使用する
-- [x] OKRのフィルタリングが未実装
+- 英語UIが残っている
+- ヘッダーのプロフィールが仮のデータ
+- フロントエンドのバリデーションが不十分
+- メール送信機能が未実装
+- 通知機能が未実装
+- `/search` ページでエラー
+    - `Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.`
