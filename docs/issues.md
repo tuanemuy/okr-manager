@@ -1,4 +1,3 @@
-- [] ページコンポーネントのトップレベルでデータフェッチを行っているため、First Contentful Paint (FCP) が遅い
-- [] "personal" と "individual" が混在している
+- [x] "personal" と "individual" が混在している
     - マッピングするのではなく、いずれかのみを使用する
-- [] OKRのフィルタリングが未実装
+- [x] OKRのフィルタリングが未実装
