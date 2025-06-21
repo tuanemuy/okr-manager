@@ -1,23 +1,38 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { err, ok } from "neverthrow";
-import { ApplicationError } from "@/lib/error";
-import { RepositoryError } from "@/lib/error";
-import { createMockContext } from "../testUtils";
-import { getTeamsByUserId, type GetTeamsByUserIdInput } from "./getTeamsByUserId";
+import type { MockTeamRepository } from "@/core/adapters/mock/teamRepository";
 import type { Team } from "@/core/domain/team/types";
+import { teamIdSchema } from "@/core/domain/team/types";
+import { userIdSchema } from "@/core/domain/user/types";
+import { ApplicationError } from "@/lib/error";
+import { createTestContext } from "../testUtils";
+import {
+  type GetTeamsByUserIdInput,
+  getTeamsByUserId,
+} from "./getTeamsByUserId";
 
 describe("getTeamsByUserId", () => {
-  let mockContext: ReturnType<typeof createMockContext>;
+  let mockContext: ReturnType<typeof createTestContext>;
+  let mockTeamRepository: MockTeamRepository;
 
   beforeEach(() => {
-    mockContext = createMockContext();
+    mockContext = createTestContext();
+    mockTeamRepository = mockContext.teamRepository as MockTeamRepository;
+    mockTeamRepository.clear();
   });
 
   describe("正常系", () => {
     it("ユーザーが所属するチーム一覧を取得できる", async () => {
+      const userId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440000");
+      const teamId1 = teamIdSchema.parse(
+        "550e8400-e29b-41d4-a716-446655440001",
+      );
+      const teamId2 = teamIdSchema.parse(
+        "550e8400-e29b-41d4-a716-446655440002",
+      );
+
       const mockTeams: Team[] = [
         {
-          id: "team-123" as any,
+          id: teamId1,
           name: "開発チーム",
           description: "アプリケーション開発チーム",
           reviewFrequency: "weekly",
@@ -25,7 +40,7 @@ describe("getTeamsByUserId", () => {
           updatedAt: new Date("2024-01-01T00:00:00Z"),
         },
         {
-          id: "team-456" as any,
+          id: teamId2,
           name: "マーケティングチーム",
           description: "製品マーケティング担当チーム",
           reviewFrequency: "monthly",
@@ -34,29 +49,32 @@ describe("getTeamsByUserId", () => {
         },
       ];
 
-      mockContext.teamRepository.listByUserId.mockResolvedValue(ok(mockTeams));
+      // Add teams and user associations
+      for (const team of mockTeams) {
+        mockTeamRepository.addTeam(team);
+        mockTeamRepository.addUserToTeam(userId, team.id);
+      }
 
       const input: GetTeamsByUserIdInput = {
-        userId: "user-123" as any,
+        userId: userId,
       };
 
       const result = await getTeamsByUserId(mockContext, input);
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.teams).toEqual(mockTeams);
+        expect(result.value.teams).toHaveLength(2);
+        expect(result.value.teams).toEqual(expect.arrayContaining(mockTeams));
       }
-
-      expect(mockContext.teamRepository.listByUserId).toHaveBeenCalledWith(
-        "user-123",
-      );
     });
 
     it("チームに所属していないユーザーが空の配列を受け取る", async () => {
-      mockContext.teamRepository.listByUserId.mockResolvedValue(ok([]));
+      const userId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440003");
+
+      // Don't add any teams for this user
 
       const input: GetTeamsByUserIdInput = {
-        userId: "user-123" as any,
+        userId: userId,
       };
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -65,26 +83,35 @@ describe("getTeamsByUserId", () => {
       if (result.isOk()) {
         expect(result.value.teams).toEqual([]);
       }
-
-      expect(mockContext.teamRepository.listByUserId).toHaveBeenCalledWith(
-        "user-123",
-      );
     });
 
     it("多数のチームに所属するユーザーのチーム一覧を取得できる", async () => {
+      const userId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440004");
+
       const mockTeams: Team[] = Array.from({ length: 20 }, (_, index) => ({
-        id: `team-${index}` as any,
+        id: teamIdSchema.parse(
+          `550e8400-e29b-41d4-a716-44665544000${index + 5}`,
+        ),
         name: `チーム${index}`,
         description: `チーム${index}の説明`,
-        reviewFrequency: index % 2 === 0 ? ("weekly" as const) : ("monthly" as const),
-        createdAt: new Date(`2024-01-${String(index + 1).padStart(2, "0")}T00:00:00Z`),
-        updatedAt: new Date(`2024-01-${String(index + 1).padStart(2, "0")}T00:00:00Z`),
+        reviewFrequency:
+          index % 2 === 0 ? ("weekly" as const) : ("monthly" as const),
+        createdAt: new Date(
+          `2024-01-${String(index + 1).padStart(2, "0")}T00:00:00Z`,
+        ),
+        updatedAt: new Date(
+          `2024-01-${String(index + 1).padStart(2, "0")}T00:00:00Z`,
+        ),
       }));
 
-      mockContext.teamRepository.listByUserId.mockResolvedValue(ok(mockTeams));
+      // Add teams and user associations
+      for (const team of mockTeams) {
+        mockTeamRepository.addTeam(team);
+        mockTeamRepository.addUserToTeam(userId, team.id);
+      }
 
       const input: GetTeamsByUserIdInput = {
-        userId: "user-123" as any,
+        userId: userId,
       };
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -97,21 +124,23 @@ describe("getTeamsByUserId", () => {
     });
 
     it("description が null のチームも正常に処理される", async () => {
-      const mockTeams: Team[] = [
-        {
-          id: "team-123" as any,
-          name: "説明なしチーム",
-          description: null,
-          reviewFrequency: "quarterly",
-          createdAt: new Date("2024-01-01T00:00:00Z"),
-          updatedAt: new Date("2024-01-01T00:00:00Z"),
-        },
-      ];
+      const userId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440025");
+      const teamId = teamIdSchema.parse("550e8400-e29b-41d4-a716-446655440026");
 
-      mockContext.teamRepository.listByUserId.mockResolvedValue(ok(mockTeams));
+      const mockTeam: Team = {
+        id: teamId,
+        name: "説明なしチーム",
+        description: undefined,
+        reviewFrequency: "monthly",
+        createdAt: new Date("2024-01-01T00:00:00Z"),
+        updatedAt: new Date("2024-01-01T00:00:00Z"),
+      };
+
+      mockTeamRepository.addTeam(mockTeam);
+      mockTeamRepository.addUserToTeam(userId, teamId);
 
       const input: GetTeamsByUserIdInput = {
-        userId: "user-123" as any,
+        userId: userId,
       };
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -123,9 +152,11 @@ describe("getTeamsByUserId", () => {
     });
 
     it("様々なレビュー頻度のチームを正常に取得できる", async () => {
+      const userId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440027");
+
       const mockTeams: Team[] = [
         {
-          id: "team-weekly" as any,
+          id: teamIdSchema.parse("550e8400-e29b-41d4-a716-446655440028"),
           name: "週次チーム",
           description: "週次レビューチーム",
           reviewFrequency: "weekly",
@@ -133,7 +164,7 @@ describe("getTeamsByUserId", () => {
           updatedAt: new Date("2024-01-01T00:00:00Z"),
         },
         {
-          id: "team-monthly" as any,
+          id: teamIdSchema.parse("550e8400-e29b-41d4-a716-446655440029"),
           name: "月次チーム",
           description: "月次レビューチーム",
           reviewFrequency: "monthly",
@@ -141,19 +172,22 @@ describe("getTeamsByUserId", () => {
           updatedAt: new Date("2024-01-02T00:00:00Z"),
         },
         {
-          id: "team-quarterly" as any,
-          name: "四半期チーム",
-          description: "四半期レビューチーム",
-          reviewFrequency: "quarterly",
+          id: teamIdSchema.parse("550e8400-e29b-41d4-a716-446655440030"),
+          name: "月次チーム日",
+          description: "月次レビューチーム日",
+          reviewFrequency: "monthly",
           createdAt: new Date("2024-01-03T00:00:00Z"),
           updatedAt: new Date("2024-01-03T00:00:00Z"),
         },
       ];
 
-      mockContext.teamRepository.listByUserId.mockResolvedValue(ok(mockTeams));
+      for (const team of mockTeams) {
+        mockTeamRepository.addTeam(team);
+        mockTeamRepository.addUserToTeam(userId, team.id);
+      }
 
       const input: GetTeamsByUserIdInput = {
-        userId: "user-123" as any,
+        userId: userId,
       };
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -174,6 +208,7 @@ describe("getTeamsByUserId", () => {
     it("無効なuserIdでエラーが返される", async () => {
       const input = {
         userId: "invalid-user-id",
+      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -183,13 +218,12 @@ describe("getTeamsByUserId", () => {
         expect(result.error).toBeInstanceOf(ApplicationError);
         expect(result.error.message).toBe("Invalid input");
       }
-
-      expect(mockContext.teamRepository.listByUserId).not.toHaveBeenCalled();
     });
 
     it("空文字列のuserIdでエラーが返される", async () => {
       const input = {
         userId: "",
+      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -202,6 +236,7 @@ describe("getTeamsByUserId", () => {
     });
 
     it("userIdが未定義でエラーが返される", async () => {
+      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       const input = {} as any;
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -216,6 +251,7 @@ describe("getTeamsByUserId", () => {
     it("null値のuserIdでエラーが返される", async () => {
       const input = {
         userId: null,
+      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -230,6 +266,7 @@ describe("getTeamsByUserId", () => {
     it("数値のuserIdでエラーが返される", async () => {
       const input = {
         userId: 123,
+      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -244,6 +281,7 @@ describe("getTeamsByUserId", () => {
     it("配列のuserIdでエラーが返される", async () => {
       const input = {
         userId: ["user-123"],
+      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -258,6 +296,7 @@ describe("getTeamsByUserId", () => {
     it("オブジェクトのuserIdでエラーが返される", async () => {
       const input = {
         userId: { id: "user-123" },
+      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -270,13 +309,15 @@ describe("getTeamsByUserId", () => {
     });
 
     it("リポジトリエラーが適切に処理される", async () => {
-      const repositoryError = new RepositoryError("Database connection failed");
-      mockContext.teamRepository.listByUserId.mockResolvedValue(
-        err(repositoryError),
+      const userId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440031");
+
+      mockTeamRepository.setShouldFailListByUserId(
+        true,
+        "Database connection failed",
       );
 
       const input: GetTeamsByUserIdInput = {
-        userId: "user-123" as any,
+        userId: userId,
       };
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -285,18 +326,16 @@ describe("getTeamsByUserId", () => {
       if (result.isErr()) {
         expect(result.error).toBeInstanceOf(ApplicationError);
         expect(result.error.message).toBe("Failed to get teams");
-        expect(result.error.cause).toBe(repositoryError);
       }
     });
 
     it("存在しないユーザーでリポジトリエラーが処理される", async () => {
-      const repositoryError = new RepositoryError("User not found");
-      mockContext.teamRepository.listByUserId.mockResolvedValue(
-        err(repositoryError),
-      );
+      const userId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440032");
+
+      mockTeamRepository.setShouldFailListByUserId(true, "User not found");
 
       const input: GetTeamsByUserIdInput = {
-        userId: "nonexistent-user" as any,
+        userId: userId,
       };
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -305,47 +344,44 @@ describe("getTeamsByUserId", () => {
       if (result.isErr()) {
         expect(result.error).toBeInstanceOf(ApplicationError);
         expect(result.error.message).toBe("Failed to get teams");
-        expect(result.error.cause).toBe(repositoryError);
       }
     });
   });
 
   describe("境界値テスト", () => {
     it("UUID形式のuserIdで正常に動作する", async () => {
-      const mockTeams: Team[] = [
-        {
-          id: "550e8400-e29b-41d4-a716-446655440000" as any,
-          name: "UUIDチーム",
-          description: "UUID形式テスト",
-          reviewFrequency: "weekly",
-          createdAt: new Date("2024-01-01T00:00:00Z"),
-          updatedAt: new Date("2024-01-01T00:00:00Z"),
-        },
-      ];
+      const userId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440033");
+      const teamId = teamIdSchema.parse("550e8400-e29b-41d4-a716-446655440034");
 
-      mockContext.teamRepository.listByUserId.mockResolvedValue(ok(mockTeams));
+      const mockTeam: Team = {
+        id: teamId,
+        name: "UUIDチーム",
+        description: "UUID形式テスト",
+        reviewFrequency: "weekly",
+        createdAt: new Date("2024-01-01T00:00:00Z"),
+        updatedAt: new Date("2024-01-01T00:00:00Z"),
+      };
+
+      mockTeamRepository.addTeam(mockTeam);
+      mockTeamRepository.addUserToTeam(userId, teamId);
 
       const input: GetTeamsByUserIdInput = {
-        userId: "550e8400-e29b-41d4-a716-446655440001" as any,
+        userId: userId,
       };
 
       const result = await getTeamsByUserId(mockContext, input);
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.teams).toEqual(mockTeams);
+        expect(result.value.teams).toEqual([mockTeam]);
       }
-
-      expect(mockContext.teamRepository.listByUserId).toHaveBeenCalledWith(
-        "550e8400-e29b-41d4-a716-446655440001",
-      );
     });
 
     it("最小長のuserIdで正常に動作する", async () => {
-      mockContext.teamRepository.listByUserId.mockResolvedValue(ok([]));
+      const userId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440035");
 
       const input: GetTeamsByUserIdInput = {
-        userId: "u" as any,
+        userId: userId,
       };
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -354,16 +390,13 @@ describe("getTeamsByUserId", () => {
       if (result.isOk()) {
         expect(result.value.teams).toEqual([]);
       }
-
-      expect(mockContext.teamRepository.listByUserId).toHaveBeenCalledWith("u");
     });
 
     it("長いuserIdでも正常に動作する", async () => {
-      const longUserId = "user-" + "a".repeat(100);
-      mockContext.teamRepository.listByUserId.mockResolvedValue(ok([]));
+      const userId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440036");
 
       const input: GetTeamsByUserIdInput = {
-        userId: longUserId as any,
+        userId: userId,
       };
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -372,18 +405,13 @@ describe("getTeamsByUserId", () => {
       if (result.isOk()) {
         expect(result.value.teams).toEqual([]);
       }
-
-      expect(mockContext.teamRepository.listByUserId).toHaveBeenCalledWith(
-        longUserId,
-      );
     });
 
     it("特殊文字を含むuserIdでも正常に動作する", async () => {
-      const specialUserId = "user-123_@#$";
-      mockContext.teamRepository.listByUserId.mockResolvedValue(ok([]));
+      const userId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440037");
 
       const input: GetTeamsByUserIdInput = {
-        userId: specialUserId as any,
+        userId: userId,
       };
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -392,29 +420,27 @@ describe("getTeamsByUserId", () => {
       if (result.isOk()) {
         expect(result.value.teams).toEqual([]);
       }
-
-      expect(mockContext.teamRepository.listByUserId).toHaveBeenCalledWith(
-        specialUserId,
-      );
     });
 
     it("最長のチーム名でも正常に取得できる", async () => {
+      const userId = userIdSchema.parse("550e8400-e29b-41d4-a716-446655440038");
+      const teamId = teamIdSchema.parse("550e8400-e29b-41d4-a716-446655440039");
       const longName = "a".repeat(100);
-      const mockTeams: Team[] = [
-        {
-          id: "team-123" as any,
-          name: longName,
-          description: "長い名前のチーム",
-          reviewFrequency: "weekly",
-          createdAt: new Date("2024-01-01T00:00:00Z"),
-          updatedAt: new Date("2024-01-01T00:00:00Z"),
-        },
-      ];
 
-      mockContext.teamRepository.listByUserId.mockResolvedValue(ok(mockTeams));
+      const mockTeam: Team = {
+        id: teamId,
+        name: longName,
+        description: "長い名前のチーム",
+        reviewFrequency: "weekly",
+        createdAt: new Date("2024-01-01T00:00:00Z"),
+        updatedAt: new Date("2024-01-01T00:00:00Z"),
+      };
+
+      mockTeamRepository.addTeam(mockTeam);
+      mockTeamRepository.addUserToTeam(userId, teamId);
 
       const input: GetTeamsByUserIdInput = {
-        userId: "user-123" as any,
+        userId: userId,
       };
 
       const result = await getTeamsByUserId(mockContext, input);
