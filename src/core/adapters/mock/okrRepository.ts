@@ -554,6 +554,13 @@ export class MockOkrRepository implements OkrRepository {
     this.userProfiles.set(userId, profile);
   }
 
+  addOkr(okr: Okr): void {
+    this.okrs.set(okr.id, okr);
+    if (!this.keyResults.has(okr.id)) {
+      this.keyResults.set(okr.id, []);
+    }
+  }
+
   setShouldFailCreate(shouldFail: boolean, errorMessage?: string): void {
     this.shouldFailCreate = shouldFail;
     if (errorMessage) {

@@ -222,6 +222,10 @@ export class MockReviewRepository implements ReviewRepository {
     this.userProfiles.set(userId, profile);
   }
 
+  addReview(review: Review): void {
+    this.reviews.set(review.id, review);
+  }
+
   getByOkrId(okrId: OkrId): Review[] {
     return Array.from(this.reviews.values()).filter(
       (review) => review.okrId === okrId,

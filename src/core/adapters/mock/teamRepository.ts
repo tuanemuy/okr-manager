@@ -220,6 +220,10 @@ export class MockTeamRepository implements TeamRepository {
     }
   }
 
+  addTeam(team: Team): void {
+    this.teams.set(team.id, team);
+  }
+
   setShouldFailCreate(shouldFail: boolean, errorMessage?: string): void {
     this.shouldFailCreate = shouldFail;
     if (errorMessage) {

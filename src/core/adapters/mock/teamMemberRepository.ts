@@ -214,6 +214,17 @@ export class MockTeamMemberRepository implements TeamMemberRepository {
     this.shouldFailGetUserRole = false;
   }
 
+  // Test utility methods
+  addMember(member: TeamMember): void {
+    const key = this.getKey(member.teamId, member.userId);
+    this.members.set(key, member);
+  }
+
+  removeMember(teamId: TeamId, userId: UserId): void {
+    const key = this.getKey(teamId, userId);
+    this.members.delete(key);
+  }
+
   seed(members: TeamMember[]): void {
     this.clear();
     for (const member of members) {

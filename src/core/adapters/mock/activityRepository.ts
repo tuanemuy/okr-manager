@@ -5,11 +5,26 @@ import type { UserId } from "@/core/domain/user/types";
 import type { RepositoryError } from "@/lib/error";
 
 export class MockActivityRepository implements ActivityRepository {
+  private activities: Activity[] = [];
+
   async getRecentActivity(
-    _userId: UserId,
-    _limit: number,
+    userId: UserId,
+    limit: number,
   ): Promise<Result<Activity[], RepositoryError>> {
-    // Mock implementation
-    return ok([]);
+    const userActivities = this.activities
+      .filter((activity) => activity.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, limit);
+
+    return ok(userActivities);
+  }
+
+  // Helper methods for testing
+  clear(): void {
+    this.activities = [];
+  }
+
+  addActivity(activity: Activity): void {
+    this.activities.push(activity);
   }
 }
