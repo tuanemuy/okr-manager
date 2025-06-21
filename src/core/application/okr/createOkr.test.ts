@@ -89,7 +89,7 @@ describe("createOkr", () => {
     validIndividualOkrInput = {
       title: "Personal Skill Development",
       description: "Enhance technical skills and knowledge",
-      type: "individual",
+      type: "personal",
       teamId,
       ownerId: memberUserId,
       quarter: {
@@ -312,7 +312,7 @@ describe("createOkr", () => {
       // Arrange
       const invalidInput = {
         ...validTeamOkrInput,
-        type: "invalid" as "team" | "individual",
+        type: "invalid" as "team" | "personal",
       };
 
       // Act

@@ -92,7 +92,7 @@ describe("createReview", () => {
       id: okrIdSchema.parse("550e8400-e29b-41d4-a716-446655440201"),
       title: "Personal Development OKR",
       description: "Personal skill enhancement",
-      type: "individual",
+      type: "personal",
       teamId,
       ownerId: ownerUserId,
       quarterYear: 2024,
