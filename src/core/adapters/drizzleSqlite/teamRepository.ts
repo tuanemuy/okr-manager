@@ -144,6 +144,7 @@ export class DrizzleSqliteTeamRepository implements TeamRepository {
           id: teams.id,
           name: teams.name,
           description: teams.description,
+          reviewFrequency: teams.reviewFrequency,
           createdAt: teams.createdAt,
           updatedAt: teams.updatedAt,
         })

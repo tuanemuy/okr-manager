@@ -39,6 +39,7 @@ export class MockTeamRepository implements TeamRepository {
       id,
       name: params.name,
       description: params.description,
+      reviewFrequency: params.reviewFrequency,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
