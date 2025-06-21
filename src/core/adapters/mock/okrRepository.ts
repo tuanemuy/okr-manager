@@ -389,11 +389,14 @@ export class MockOkrRepository implements OkrRepository {
     userId?: UserId;
     quarter?: string;
     year?: number;
+    type?: "team" | "personal";
+    status?: "active" | "completed" | "overdue" | "due_soon";
     pagination: { page: number; limit: number };
   }): Promise<
     Result<{ items: SearchOkrResult[]; totalCount: number }, RepositoryError>
   > {
-    const { query, teamId, pagination } = params;
+    const { query, teamId, userId, quarter, year, type, status, pagination } =
+      params;
 
     let filteredOkrs = Array.from(this.okrs.values());
 
@@ -407,6 +410,71 @@ export class MockOkrRepository implements OkrRepository {
 
     if (teamId) {
       filteredOkrs = filteredOkrs.filter((okr) => okr.teamId === teamId);
+    }
+
+    if (userId) {
+      filteredOkrs = filteredOkrs.filter((okr) => okr.ownerId === userId);
+    }
+
+    if (quarter) {
+      filteredOkrs = filteredOkrs.filter(
+        (okr) => okr.quarterQuarter === Number(quarter),
+      );
+    }
+
+    if (year) {
+      filteredOkrs = filteredOkrs.filter((okr) => okr.quarterYear === year);
+    }
+
+    if (type) {
+      filteredOkrs = filteredOkrs.filter((okr) => okr.type === type);
+    }
+
+    if (status) {
+      const now = new Date();
+      const currentQuarter = Math.ceil((now.getMonth() + 1) / 3);
+      const currentYear = now.getFullYear();
+
+      filteredOkrs = filteredOkrs.filter((okr) => {
+        const keyResults = this.keyResults.get(okr.id) || [];
+        const progress =
+          keyResults.length > 0
+            ? Math.round(
+                keyResults.reduce((sum, kr) => {
+                  const krProgress =
+                    kr.targetValue > 0
+                      ? (kr.currentValue / kr.targetValue) * 100
+                      : 0;
+                  return sum + Math.min(krProgress, 100);
+                }, 0) / keyResults.length,
+              )
+            : 0;
+
+        switch (status) {
+          case "overdue":
+            return (
+              (okr.quarterYear < currentYear ||
+                (okr.quarterYear === currentYear &&
+                  okr.quarterQuarter < currentQuarter)) &&
+              progress < 100
+            );
+          case "completed":
+            return progress >= 100;
+          case "active":
+            return (
+              okr.quarterYear === currentYear &&
+              okr.quarterQuarter === currentQuarter &&
+              progress < 100
+            );
+          case "due_soon":
+            return (
+              okr.quarterYear === currentYear &&
+              okr.quarterQuarter === currentQuarter
+            );
+          default:
+            return true;
+        }
+      });
     }
 
     const offset = (pagination.page - 1) * pagination.limit;

@@ -59,7 +59,7 @@ export async function createOkrAction(teamId: string, formData: FormData) {
   const result = await createOkr(context, {
     title,
     description: description || undefined,
-    type: type === "team" ? "team" : "individual",
+    type: type === "team" ? "team" : "personal",
     quarter: {
       year,
       quarter: Number(quarter),

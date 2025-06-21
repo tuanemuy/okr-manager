@@ -40,14 +40,26 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
 
   async create(params: CreateOkrParams): Promise<Result<Okr, RepositoryError>> {
     try {
-      const result = await this.db.insert(okrs).values(params).returning();
+      // Map "personal" type to "individual" for database storage
+      const dbParams = {
+        ...params,
+        type:
+          params.type === "personal" ? ("individual" as const) : params.type,
+      };
+      const result = await this.db.insert(okrs).values(dbParams).returning();
 
       const okr = result[0];
       if (!okr) {
         return err(new RepositoryError("Failed to create OKR"));
       }
 
-      return validate(okrSchema, okr).mapErr((error) => {
+      // Map "individual" type back to "personal" for domain layer
+      const domainOkr = {
+        ...okr,
+        type: okr.type === "individual" ? ("personal" as const) : okr.type,
+      };
+
+      return validate(okrSchema, domainOkr).mapErr((error) => {
         return new RepositoryError("Invalid OKR data", error);
       });
     } catch (error) {
@@ -80,6 +92,7 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
       const okr = okrResult[0];
       const okrWithKeyResults = {
         ...okr,
+        type: okr.type === "individual" ? ("personal" as const) : okr.type,
         keyResults: keyResultsResult,
         owner: ownerResult.length > 0 ? ownerResult[0] : undefined,
       };
@@ -106,7 +119,9 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
     const filters = [
       filter?.teamId ? eq(okrs.teamId, filter.teamId) : undefined,
       filter?.ownerId ? eq(okrs.ownerId, filter.ownerId) : undefined,
-      filter?.type ? eq(okrs.type, filter.type) : undefined,
+      filter?.type
+        ? eq(okrs.type, filter.type === "personal" ? "individual" : filter.type)
+        : undefined,
       filter?.quarter ? eq(okrs.quarterQuarter, filter.quarter) : undefined,
       filter?.year ? eq(okrs.quarterYear, filter.year) : undefined,
     ].filter((filter) => filter !== undefined);
@@ -154,6 +169,7 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
         );
         return {
           ...okr,
+          type: okr.type === "individual" ? ("personal" as const) : okr.type,
           keyResults: keyResultsForOkr,
           progress: this.calculateProgress(keyResultsForOkr),
           owner: owner
@@ -192,7 +208,13 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
         return err(new RepositoryError("OKR not found"));
       }
 
-      return validate(okrSchema, okr).mapErr((error) => {
+      // Map "individual" type back to "personal" for domain layer
+      const domainOkr = {
+        ...okr,
+        type: okr.type === "individual" ? ("personal" as const) : okr.type,
+      };
+
+      return validate(okrSchema, domainOkr).mapErr((error) => {
         return new RepositoryError("Invalid OKR data", error);
       });
     } catch (error) {
@@ -262,6 +284,7 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
         );
         return {
           ...okr,
+          type: okr.type === "individual" ? ("personal" as const) : okr.type,
           keyResults: keyResultsForOkr,
           progress: this.calculateProgress(keyResultsForOkr),
           owner: owner
@@ -328,6 +351,7 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
         );
         return {
           ...okr,
+          type: okr.type === "individual" ? ("personal" as const) : okr.type,
           keyResults: keyResultsForOkr,
           progress: this.calculateProgress(keyResultsForOkr),
           owner: owner
@@ -412,6 +436,7 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
         );
         return {
           ...okr,
+          type: okr.type === "individual" ? ("personal" as const) : okr.type,
           keyResults: keyResultsForOkr,
           progress: this.calculateProgress(keyResultsForOkr),
           owner: owner
@@ -439,14 +464,21 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
     userId?: UserId;
     quarter?: string;
     year?: number;
+    type?: "team" | "personal";
+    status?: "active" | "completed" | "overdue" | "due_soon";
     pagination: { page: number; limit: number };
   }): Promise<
     Result<{ items: SearchOkrResult[]; totalCount: number }, RepositoryError>
   > {
     try {
-      const { query, teamId, pagination } = params;
+      const { query, teamId, userId, quarter, year, type, pagination } = params;
       const limit = pagination.limit;
       const offset = (pagination.page - 1) * pagination.limit;
+
+      // Calculate current quarter for status filtering (disabled for now)
+      // const now = new Date();
+      // const currentQuarter = Math.ceil((now.getMonth() + 1) / 3);
+      // const currentYear = now.getFullYear();
 
       const filters = [
         query
@@ -456,7 +488,20 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
             )
           : undefined,
         teamId ? eq(okrs.teamId, teamId) : undefined,
+        userId ? eq(okrs.ownerId, userId) : undefined,
+        quarter ? eq(okrs.quarterQuarter, Number(quarter)) : undefined,
+        year ? eq(okrs.quarterYear, year) : undefined,
+        type
+          ? eq(okrs.type, type === "personal" ? "individual" : type)
+          : undefined,
       ].filter((filter) => filter !== undefined);
+
+      // TODO: Add status filtering logic if status is specified
+      // Complex SQL subqueries for status filtering are commented out for now
+      // Status filtering will be handled in the application layer instead
+
+      // Note: Status filtering is temporarily disabled due to complexity
+      // It will be handled in the application layer by filtering results after query
 
       const [items, countResult] = await Promise.all([
         this.db
@@ -507,7 +552,7 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
           id: item.id as OkrId,
           title: item.title,
           description: item.description || undefined,
-          type: item.type,
+          type: item.type === "individual" ? ("personal" as const) : item.type,
           teamId: item.teamId as TeamId,
           quarterYear: item.quarterYear,
           quarterQuarter: item.quarterQuarter,

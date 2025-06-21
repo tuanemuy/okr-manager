@@ -9,7 +9,7 @@ import type { Context } from "../context";
 export const createOkrInputSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(1000).optional(),
-  type: z.enum(["team", "individual"]),
+  type: z.enum(["team", "personal"]),
   teamId: teamIdSchema,
   ownerId: userIdSchema,
   quarter: z.object({
@@ -62,8 +62,8 @@ export async function createOkr(
     }
   }
 
-  // For individual OKRs, members and admins can create
-  if (params.type === "individual") {
+  // For personal OKRs, members and admins can create
+  if (params.type === "personal") {
     if (
       !memberResult.value ||
       (memberResult.value.role !== "admin" &&
@@ -71,7 +71,7 @@ export async function createOkr(
     ) {
       return err(
         new ApplicationError(
-          "Only team admins and members can create individual OKRs",
+          "Only team admins and members can create personal OKRs",
         ),
       );
     }
