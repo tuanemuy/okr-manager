@@ -23,6 +23,8 @@ import {
   teamIdSchema,
 } from "@/core/domain/team/types";
 import { type UserId, userIdSchema } from "@/core/domain/user/types";
+import { ApplicationError } from "@/lib/error";
+import type { FormState } from "@/lib/formState";
 import { getUserIdFromSession } from "@/lib/session";
 import { validate } from "@/lib/validation";
 import { requireAuth } from "./session";
@@ -79,49 +81,70 @@ const inviteToTeamFormSchema = z.object({
   email: z.string().email(),
 });
 
-export async function inviteToTeamAction(teamId: string, formData: FormData) {
-  try {
-    const email = formData.get("email");
+type InviteToTeamFormData = {
+  email: FormDataEntryValue | null;
+  teamId: string;
+};
 
-    // Validate input
-    const validationResult = validate(inviteToTeamFormSchema, {
-      email,
-    });
-    if (validationResult.isErr()) {
-      throw new Error(validationResult.error.message);
-    }
-    const validInput = validationResult.value;
+export async function inviteToTeamAction(
+  _prevState: FormState<InviteToTeamFormData, { success: boolean }>,
+  formData: FormData,
+): Promise<FormState<InviteToTeamFormData, { success: boolean }>> {
+  const teamId = formData.get("teamId") as string;
+  const rawData = {
+    email: formData.get("email"),
+    teamId,
+  };
 
-    const sessionResult = await context.sessionManager.get();
-    if (sessionResult.isErr() || !sessionResult.value) {
-      throw new Error("Not authenticated");
-    }
-
-    const session = sessionResult.value;
-
-    const teamIdResult = validate(teamIdSchema, teamId);
-    if (teamIdResult.isErr()) {
-      throw new Error(teamIdResult.error.message);
-    }
-
-    const result = await inviteToTeam(context, {
-      teamId: teamIdResult.value as TeamId,
-      invitedEmail: validInput.email,
-      invitedById: getUserIdFromSession(session),
-      role: "member", // Default role for invited users
-    });
-
-    if (result.isErr()) {
-      throw new Error(result.error.message);
-    }
-
-    revalidatePath(`/teams/${teamId}/members`);
-  } catch (error) {
-    console.error("Error in inviteToTeamAction:", error);
-    throw new Error(
-      error instanceof Error ? error.message : "Unknown error occurred",
-    );
+  const validation = validate(inviteToTeamFormSchema, {
+    email: rawData.email,
+  });
+  if (validation.isErr()) {
+    return {
+      input: rawData,
+      error: validation.error,
+    };
   }
+
+  const sessionResult = await context.sessionManager.get();
+  if (sessionResult.isErr() || !sessionResult.value) {
+    return {
+      input: rawData,
+      error: new ApplicationError("Not authenticated"),
+    };
+  }
+
+  const session = sessionResult.value;
+
+  const teamIdResult = validate(teamIdSchema, teamId);
+  if (teamIdResult.isErr()) {
+    return {
+      input: rawData,
+      error: teamIdResult.error,
+    };
+  }
+
+  const result = await inviteToTeam(context, {
+    teamId: teamIdResult.value as TeamId,
+    invitedEmail: validation.value.email,
+    invitedById: getUserIdFromSession(session),
+    role: "member", // Default role for invited users
+  });
+
+  if (result.isErr()) {
+    return {
+      input: rawData,
+      error: result.error,
+    };
+  }
+
+  revalidatePath(`/teams/${teamId}/members`);
+
+  return {
+    input: rawData,
+    result: { success: true },
+    error: null,
+  };
 }
 
 export async function acceptInvitationAction(invitationId: string) {

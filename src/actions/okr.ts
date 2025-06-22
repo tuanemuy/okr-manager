@@ -20,6 +20,8 @@ import {
   reviewIdSchema,
 } from "@/core/domain/okr/types";
 import { type TeamId, teamIdSchema } from "@/core/domain/team/types";
+import { ApplicationError } from "@/lib/error";
+import type { FormState } from "@/lib/formState";
 import { getUserIdFromSession } from "@/lib/session";
 import { validate } from "@/lib/validation";
 import { requireAuth } from "./session";
@@ -42,89 +44,118 @@ const createOkrFormSchema = z.object({
     .max(5),
 });
 
-export async function createOkrAction(teamId: string, formData: FormData) {
-  try {
-    const title = formData.get("title");
-    const description = formData.get("description");
-    const type = formData.get("type");
-    const quarter = formData.get("quarter");
-    const year = Number(formData.get("year"));
+type KeyResultFormData = {
+  title: string;
+  targetValue: number;
+  unit?: string;
+};
 
-    // Parse key results from form data
-    const keyResults = [];
-    let keyResultIndex = 1;
+type CreateOkrFormData = {
+  teamId: string;
+  title: FormDataEntryValue | null;
+  description: FormDataEntryValue | null;
+  type: FormDataEntryValue | null;
+  quarter: FormDataEntryValue | null;
+  year: number;
+  keyResults: KeyResultFormData[];
+};
 
-    while (formData.get(`keyResult-${keyResultIndex}-title`)) {
-      const krTitle = formData.get(`keyResult-${keyResultIndex}-title`);
-      const krTargetValue = Number(
-        formData.get(`keyResult-${keyResultIndex}-targetValue`),
-      );
-      const krUnit = formData.get(`keyResult-${keyResultIndex}-unit`);
+export async function createOkrAction(
+  _prevState: FormState<CreateOkrFormData, { id: string }>,
+  formData: FormData,
+): Promise<FormState<CreateOkrFormData, { id: string }>> {
+  const teamId = formData.get("teamId") as string;
+  const rawData = {
+    teamId,
+    title: formData.get("title"),
+    description: formData.get("description"),
+    type: formData.get("type"),
+    quarter: formData.get("quarter"),
+    year: Number(formData.get("year")),
+    keyResults: [] as KeyResultFormData[],
+  };
 
-      if (krTitle && !Number.isNaN(krTargetValue)) {
-        keyResults.push({
-          title: krTitle,
-          targetValue: krTargetValue,
-          unit: krUnit || undefined,
-        });
-      }
-      keyResultIndex++;
-    }
-
-    // Validate input
-    const validationResult = validate(createOkrFormSchema, {
-      title,
-      description: description || undefined,
-      type,
-      quarter,
-      year,
-      keyResults,
-    });
-
-    if (validationResult.isErr()) {
-      throw new Error(validationResult.error.message);
-    }
-
-    const validInput = validationResult.value;
-
-    const sessionResult = await context.sessionManager.get();
-    if (sessionResult.isErr() || !sessionResult.value) {
-      throw new Error("Not authenticated");
-    }
-
-    const session = sessionResult.value;
-
-    const teamIdResult = validate(teamIdSchema, teamId);
-    if (teamIdResult.isErr()) {
-      throw new Error(teamIdResult.error.message);
-    }
-    const validatedTeamId = teamIdResult.value as TeamId;
-
-    const result = await createOkr(context, {
-      title: validInput.title,
-      description: validInput.description,
-      type: validInput.type,
-      quarter: {
-        year: validInput.year,
-        quarter: Number(validInput.quarter),
-      },
-      teamId: validatedTeamId,
-      ownerId: getUserIdFromSession(session),
-      keyResults: validInput.keyResults,
-    });
-
-    if (result.isErr()) {
-      throw new Error(result.error.message);
-    }
-
-    revalidatePath(`/teams/${teamId}/okrs`);
-    redirect(`/teams/${teamId}/okrs/${result.value.id}`);
-  } catch (error) {
-    console.error("Error in createOkrAction:", error);
-    throw new Error(
-      error instanceof Error ? error.message : "Unknown error occurred",
+  // Parse key results from form data
+  let keyResultIndex = 1;
+  while (formData.get(`keyResult-${keyResultIndex}-title`)) {
+    const krTitle = formData.get(`keyResult-${keyResultIndex}-title`);
+    const krTargetValue = Number(
+      formData.get(`keyResult-${keyResultIndex}-targetValue`),
     );
+    const krUnit = formData.get(`keyResult-${keyResultIndex}-unit`);
+
+    if (
+      krTitle &&
+      typeof krTitle === "string" &&
+      !Number.isNaN(krTargetValue)
+    ) {
+      const keyResult: KeyResultFormData = {
+        title: krTitle,
+        targetValue: krTargetValue,
+        unit: krUnit && typeof krUnit === "string" ? krUnit : undefined,
+      };
+      rawData.keyResults.push(keyResult);
+    }
+    keyResultIndex++;
   }
+
+  // Validate input
+  const validation = validate(createOkrFormSchema, {
+    title: rawData.title,
+    description: rawData.description || undefined,
+    type: rawData.type,
+    quarter: rawData.quarter,
+    year: rawData.year,
+    keyResults: rawData.keyResults,
+  });
+
+  if (validation.isErr()) {
+    return {
+      input: rawData,
+      error: validation.error,
+    };
+  }
+
+  const sessionResult = await context.sessionManager.get();
+  if (sessionResult.isErr() || !sessionResult.value) {
+    return {
+      input: rawData,
+      error: new ApplicationError("Not authenticated"),
+    };
+  }
+
+  const session = sessionResult.value;
+
+  const teamIdResult = validate(teamIdSchema, teamId);
+  if (teamIdResult.isErr()) {
+    return {
+      input: rawData,
+      error: teamIdResult.error,
+    };
+  }
+
+  const result = await createOkr(context, {
+    title: validation.value.title,
+    description: validation.value.description,
+    type: validation.value.type,
+    quarter: {
+      year: validation.value.year,
+      quarter: Number(validation.value.quarter),
+    },
+    teamId: teamIdResult.value as TeamId,
+    ownerId: getUserIdFromSession(session),
+    keyResults: validation.value.keyResults,
+  });
+
+  if (result.isErr()) {
+    return {
+      input: rawData,
+      error: result.error,
+    };
+  }
+
+  revalidatePath(`/teams/${teamId}/okrs`);
+  redirect(`/teams/${teamId}/okrs/${result.value.id}`);
 }
 
 const updateKeyResultProgressFormSchema = z.object({
