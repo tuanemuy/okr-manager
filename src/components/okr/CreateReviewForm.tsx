@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, MessageSquare } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
@@ -51,6 +52,7 @@ export function CreateReviewForm({
   okrId,
   okrTitle,
 }: CreateReviewFormProps) {
+  const router = useRouter();
   const form = useForm<CreateReviewFormValues>({
     resolver: zodResolver(createReviewFormSchema),
     defaultValues: {
@@ -69,8 +71,11 @@ export function CreateReviewForm({
         const formData = new FormData();
         formData.append("content", values.content);
         formData.append("reviewType", values.type);
+
         await createReviewAction(okrId, formData);
-        // The action will redirect on success
+
+        // Navigate back to reviews page on success
+        router.push(`/teams/${teamId}/okrs/${okrId}/reviews`);
       } catch (error) {
         setError(
           error instanceof Error
