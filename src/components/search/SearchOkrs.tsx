@@ -89,7 +89,7 @@ export async function SearchOkrs({ searchParams }: SearchOkrsProps) {
                 href={`/teams/${okr.teamId}/okrs/${okr.id}`}
                 className="block"
               >
-                <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                <div className="border rounded-lg p-4 hover:bg-background transition-colors">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg mb-1">

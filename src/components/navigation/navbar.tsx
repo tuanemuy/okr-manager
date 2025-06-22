@@ -34,7 +34,7 @@ export async function Navbar() {
   const email = currentUser?.email ?? getUserEmailFromSession(session);
 
   return (
-    <nav className="border-b">
+    <nav className="border-b bg-background shadow">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
