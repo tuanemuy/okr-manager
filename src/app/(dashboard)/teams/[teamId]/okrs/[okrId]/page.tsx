@@ -10,7 +10,7 @@ import {
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getOkrAction } from "@/actions/okr";
+import { getOkrAction, getOkrReviewsAction } from "@/actions/okr";
 import { ProgressUpdateDialog } from "@/components/okr/ProgressUpdateDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -124,7 +124,10 @@ async function OkrDetailContent({
   teamId: string;
   okrId: string;
 }) {
-  const okrData = await getOkrAction(okrId);
+  const [okrData, reviews] = await Promise.all([
+    getOkrAction(okrId),
+    getOkrReviewsAction(okrId),
+  ]);
 
   if (!okrData.okr) {
     notFound();
@@ -241,18 +244,49 @@ async function OkrDetailContent({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8">
-                <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground">
-                  レビュー機能は近日実装予定です
-                </p>
-                <Button size="sm" className="mt-2" asChild>
-                  <Link href={`/teams/${teamId}/okrs/${okrId}/reviews/new`}>
-                    <Plus className="h-3 w-3 mr-1" />
-                    レビューを作成
-                  </Link>
-                </Button>
-              </div>
+              {reviews.length > 0 ? (
+                <div className="space-y-4">
+                  {reviews.slice(0, 3).map((review) => (
+                    <div key={review.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          {review.type === "progress" ? (
+                            <Badge variant="secondary">進捗</Badge>
+                          ) : (
+                            <Badge variant="default">最終</Badge>
+                          )}
+                          <span className="text-sm text-muted-foreground">
+                            {new Date(review.createdAt).toLocaleDateString(
+                              "ja-JP",
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {review.content}
+                      </p>
+                    </div>
+                  ))}
+                  {reviews.length > 3 && (
+                    <p className="text-sm text-muted-foreground text-center">
+                      他 {reviews.length - 3} 件のレビュー
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground mb-4">
+                    まだレビューがありません
+                  </p>
+                  <Button size="sm" asChild>
+                    <Link href={`/teams/${teamId}/okrs/${okrId}/reviews/new`}>
+                      <Plus className="h-3 w-3 mr-1" />
+                      レビューを作成
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
