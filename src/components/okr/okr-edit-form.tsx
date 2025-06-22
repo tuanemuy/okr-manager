@@ -1,8 +1,11 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Edit2, Plus, Save, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod/v4";
 import {
   addKeyResultAction,
   deleteKeyResultAction,
@@ -27,10 +30,60 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { KeyResult, OkrWithKeyResults } from "@/core/domain/okr/types";
+
+const updateOkrFormSchema = z.object({
+  title: z
+    .string()
+    .min(1, "タイトルは必須です")
+    .max(200, "タイトルは200文字以内で入力してください"),
+  description: z
+    .string()
+    .max(1000, "説明は1000文字以内で入力してください")
+    .optional(),
+});
+
+const updateKeyResultFormSchema = z.object({
+  title: z
+    .string()
+    .min(1, "タイトルは必須です")
+    .max(200, "タイトルは200文字以内で入力してください"),
+  targetValue: z
+    .number()
+    .min(0.01, "目標値は0より大きい値を入力してください")
+    .max(999999, "目標値が大きすぎます"),
+  currentValue: z
+    .number()
+    .min(0, "現在値は0以上の値を入力してください")
+    .max(999999, "現在値が大きすぎます"),
+  unit: z.string().max(20, "単位は20文字以内で入力してください").optional(),
+});
+
+const addKeyResultFormSchema = z.object({
+  title: z
+    .string()
+    .min(1, "タイトルは必須です")
+    .max(200, "タイトルは200文字以内で入力してください"),
+  targetValue: z
+    .number()
+    .min(0.01, "目標値は0より大きい値を入力してください")
+    .max(999999, "目標値が大きすぎます"),
+  unit: z.string().max(20, "単位は20文字以内で入力してください").optional(),
+});
+
+type UpdateOkrFormValues = z.infer<typeof updateOkrFormSchema>;
+type UpdateKeyResultFormValues = z.infer<typeof updateKeyResultFormSchema>;
+type AddKeyResultFormValues = z.infer<typeof addKeyResultFormSchema>;
 
 interface OkrEditFormProps {
   teamId: string;
@@ -43,8 +96,6 @@ export function OkrEditForm({
   okr,
   keyResults: initialKeyResults,
 }: OkrEditFormProps) {
-  const [title, setTitle] = useState(okr.title);
-  const [description, setDescription] = useState(okr.description || "");
   const [keyResults, setKeyResults] = useState(initialKeyResults);
   const [editingKeyResult, setEditingKeyResult] = useState<KeyResult | null>(
     null,
@@ -53,38 +104,49 @@ export function OkrEditForm({
   const [deletingKeyResult, setDeletingKeyResult] = useState<KeyResult | null>(
     null,
   );
-  const [newKeyResult, setNewKeyResult] = useState({
-    title: "",
-    targetValue: 0,
-    unit: "",
-  });
-  const [editingKeyResultData, setEditingKeyResultData] = useState<{
-    title: string;
-    targetValue: number;
-    currentValue: number;
-    unit: string;
-  }>({
-    title: "",
-    targetValue: 0,
-    currentValue: 0,
-    unit: "",
-  });
 
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleOkrUpdate = () => {
+  const okrForm = useForm<UpdateOkrFormValues>({
+    resolver: zodResolver(updateOkrFormSchema),
+    defaultValues: {
+      title: okr.title,
+      description: okr.description || "",
+    },
+  });
+
+  const keyResultForm = useForm<UpdateKeyResultFormValues>({
+    resolver: zodResolver(updateKeyResultFormSchema),
+    defaultValues: {
+      title: "",
+      targetValue: 0,
+      currentValue: 0,
+      unit: "",
+    },
+  });
+
+  const addKeyResultForm = useForm<AddKeyResultFormValues>({
+    resolver: zodResolver(addKeyResultFormSchema),
+    defaultValues: {
+      title: "",
+      targetValue: 1,
+      unit: "",
+    },
+  });
+
+  const handleOkrUpdate = (values: UpdateOkrFormValues) => {
     startTransition(async () => {
       setError(null);
       setSuccess(null);
 
       try {
         const updateData: UpdateOkrInput = {};
-        if (title !== okr.title) updateData.title = title;
-        if (description !== (okr.description || "")) {
-          updateData.description = description || undefined;
+        if (values.title !== okr.title) updateData.title = values.title;
+        if (values.description !== (okr.description || "")) {
+          updateData.description = values.description || undefined;
         }
 
         if (Object.keys(updateData).length === 0) {
@@ -107,7 +169,7 @@ export function OkrEditForm({
 
   const handleKeyResultEdit = (keyResult: KeyResult) => {
     setEditingKeyResult(keyResult);
-    setEditingKeyResultData({
+    keyResultForm.reset({
       title: keyResult.title,
       targetValue: keyResult.targetValue,
       currentValue: keyResult.currentValue,
@@ -115,7 +177,7 @@ export function OkrEditForm({
     });
   };
 
-  const handleKeyResultUpdate = () => {
+  const handleKeyResultUpdate = (values: UpdateKeyResultFormValues) => {
     if (!editingKeyResult) return;
 
     startTransition(async () => {
@@ -123,19 +185,17 @@ export function OkrEditForm({
 
       try {
         const updateData: UpdateKeyResultInput = {};
-        if (editingKeyResultData.title !== editingKeyResult.title) {
-          updateData.title = editingKeyResultData.title;
+        if (values.title !== editingKeyResult.title) {
+          updateData.title = values.title;
         }
-        if (editingKeyResultData.targetValue !== editingKeyResult.targetValue) {
-          updateData.targetValue = editingKeyResultData.targetValue;
+        if (values.targetValue !== editingKeyResult.targetValue) {
+          updateData.targetValue = values.targetValue;
         }
-        if (
-          editingKeyResultData.currentValue !== editingKeyResult.currentValue
-        ) {
-          updateData.currentValue = editingKeyResultData.currentValue;
+        if (values.currentValue !== editingKeyResult.currentValue) {
+          updateData.currentValue = values.currentValue;
         }
-        if (editingKeyResultData.unit !== (editingKeyResult.unit || "")) {
-          updateData.unit = editingKeyResultData.unit || undefined;
+        if (values.unit !== (editingKeyResult.unit || "")) {
+          updateData.unit = values.unit || undefined;
         }
 
         if (Object.keys(updateData).length === 0) {
@@ -190,20 +250,20 @@ export function OkrEditForm({
     });
   };
 
-  const handleAddKeyResult = () => {
+  const handleAddKeyResult = (values: AddKeyResultFormValues) => {
     startTransition(async () => {
       setError(null);
 
       try {
         const formData = new FormData();
-        formData.set("title", newKeyResult.title);
-        formData.set("targetValue", newKeyResult.targetValue.toString());
-        formData.set("unit", newKeyResult.unit);
+        formData.set("title", values.title);
+        formData.set("targetValue", values.targetValue.toString());
+        formData.set("unit", values.unit || "");
 
         await addKeyResultAction(okr.id, formData);
 
         // Reset form
-        setNewKeyResult({ title: "", targetValue: 0, unit: "" });
+        addKeyResultForm.reset();
         setIsAddingKeyResult(false);
         router.refresh();
       } catch (error) {
@@ -231,33 +291,52 @@ export function OkrEditForm({
           <CardTitle>基本情報</CardTitle>
           <CardDescription>OKRのタイトルと説明を編集できます。</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="title">タイトル</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="OKRのタイトル"
-              className="mt-1"
-              disabled={isPending}
-            />
-          </div>
-          <div>
-            <Label htmlFor="description">説明</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="OKRの詳細説明（任意）"
-              className="mt-1"
-              disabled={isPending}
-            />
-          </div>
-          <Button onClick={handleOkrUpdate} disabled={isPending}>
-            <Save className="h-4 w-4 mr-2" />
-            {isPending ? "更新中..." : "基本情報を更新"}
-          </Button>
+        <CardContent>
+          <Form {...okrForm}>
+            <form
+              onSubmit={okrForm.handleSubmit(handleOkrUpdate)}
+              className="space-y-4"
+            >
+              <FormField
+                control={okrForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>タイトル</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="OKRのタイトル"
+                        disabled={isPending}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={okrForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>説明</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="OKRの詳細説明（任意）"
+                        disabled={isPending}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" disabled={isPending}>
+                <Save className="h-4 w-4 mr-2" />
+                {isPending ? "更新中..." : "基本情報を更新"}
+              </Button>
+            </form>
+          </Form>
         </CardContent>
       </Card>
 
@@ -340,70 +419,81 @@ export function OkrEditForm({
               Key Resultの内容を編集してください。
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="kr-title">タイトル</Label>
-              <Input
-                id="kr-title"
-                value={editingKeyResultData.title}
-                onChange={(e) =>
-                  setEditingKeyResultData((prev) => ({
-                    ...prev,
-                    title: e.target.value,
-                  }))
-                }
-                placeholder="Key Resultのタイトル"
-                className="mt-1"
+          <Form {...keyResultForm}>
+            <form
+              onSubmit={keyResultForm.handleSubmit(handleKeyResultUpdate)}
+              className="space-y-4"
+            >
+              <FormField
+                control={keyResultForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>タイトル</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Key Resultのタイトル" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="kr-current">現在値</Label>
-                <Input
-                  id="kr-current"
-                  type="number"
-                  value={editingKeyResultData.currentValue}
-                  onChange={(e) =>
-                    setEditingKeyResultData((prev) => ({
-                      ...prev,
-                      currentValue: Number(e.target.value),
-                    }))
-                  }
-                  className="mt-1"
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={keyResultForm.control}
+                  name="currentValue"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>現在値</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={keyResultForm.control}
+                  name="targetValue"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>目標値</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-              <div>
-                <Label htmlFor="kr-target">目標値</Label>
-                <Input
-                  id="kr-target"
-                  type="number"
-                  value={editingKeyResultData.targetValue}
-                  onChange={(e) =>
-                    setEditingKeyResultData((prev) => ({
-                      ...prev,
-                      targetValue: Number(e.target.value),
-                    }))
-                  }
-                  className="mt-1"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="kr-unit">単位（任意）</Label>
-              <Input
-                id="kr-unit"
-                value={editingKeyResultData.unit}
-                onChange={(e) =>
-                  setEditingKeyResultData((prev) => ({
-                    ...prev,
-                    unit: e.target.value,
-                  }))
-                }
-                placeholder="例：件、%、時間"
-                className="mt-1"
+              <FormField
+                control={keyResultForm.control}
+                name="unit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>単位（任意）</FormLabel>
+                    <FormControl>
+                      <Input placeholder="例：件、%、時間" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-          </div>
+            </form>
+          </Form>
           <DialogFooter>
             <Button
               variant="outline"
@@ -412,7 +502,13 @@ export function OkrEditForm({
             >
               キャンセル
             </Button>
-            <Button onClick={handleKeyResultUpdate} disabled={isPending}>
+            <Button
+              type="submit"
+              onClick={() =>
+                keyResultForm.handleSubmit(handleKeyResultUpdate)()
+              }
+              disabled={isPending}
+            >
               {isPending ? "更新中..." : "更新"}
             </Button>
           </DialogFooter>
@@ -428,50 +524,57 @@ export function OkrEditForm({
               新しいKey Resultを作成してください。
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="new-kr-title">タイトル</Label>
-              <Input
-                id="new-kr-title"
-                value={newKeyResult.title}
-                onChange={(e) =>
-                  setNewKeyResult((prev) => ({
-                    ...prev,
-                    title: e.target.value,
-                  }))
-                }
-                placeholder="Key Resultのタイトル"
-                className="mt-1"
+          <Form {...addKeyResultForm}>
+            <form
+              onSubmit={addKeyResultForm.handleSubmit(handleAddKeyResult)}
+              className="space-y-4"
+            >
+              <FormField
+                control={addKeyResultForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>タイトル</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Key Resultのタイトル" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div>
-              <Label htmlFor="new-kr-target">目標値</Label>
-              <Input
-                id="new-kr-target"
-                type="number"
-                value={newKeyResult.targetValue}
-                onChange={(e) =>
-                  setNewKeyResult((prev) => ({
-                    ...prev,
-                    targetValue: Number(e.target.value),
-                  }))
-                }
-                className="mt-1"
+              <FormField
+                control={addKeyResultForm.control}
+                name="targetValue"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>目標値</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div>
-              <Label htmlFor="new-kr-unit">単位（任意）</Label>
-              <Input
-                id="new-kr-unit"
-                value={newKeyResult.unit}
-                onChange={(e) =>
-                  setNewKeyResult((prev) => ({ ...prev, unit: e.target.value }))
-                }
-                placeholder="例：件、%、時間"
-                className="mt-1"
+              <FormField
+                control={addKeyResultForm.control}
+                name="unit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>単位（任意）</FormLabel>
+                    <FormControl>
+                      <Input placeholder="例：件、%、時間" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-          </div>
+            </form>
+          </Form>
           <DialogFooter>
             <Button
               variant="outline"
@@ -481,12 +584,11 @@ export function OkrEditForm({
               キャンセル
             </Button>
             <Button
-              onClick={handleAddKeyResult}
-              disabled={
-                isPending ||
-                !newKeyResult.title.trim() ||
-                newKeyResult.targetValue <= 0
+              type="submit"
+              onClick={() =>
+                addKeyResultForm.handleSubmit(handleAddKeyResult)()
               }
+              disabled={isPending}
             >
               {isPending ? "追加中..." : "追加"}
             </Button>
