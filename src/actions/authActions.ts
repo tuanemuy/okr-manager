@@ -1,22 +1,32 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { z } from "zod/v4";
 import { context } from "@/context";
 import * as getSessionUseCase from "@/core/application/auth/getSession";
 import * as signInUseCase from "@/core/application/auth/signIn";
 import * as signOutUseCase from "@/core/application/auth/signOut";
+import { validate } from "@/lib/validation";
+
+const signInFormSchema = z.object({
+  email: z.string().email("有効なメールアドレスを入力してください"),
+  password: z.string().min(1, "パスワードは必須です"),
+});
 
 export async function signInAction(formData: FormData) {
-  const email = formData.get("email");
-  const password = formData.get("password");
+  const rawData = {
+    email: formData.get("email"),
+    password: formData.get("password"),
+  };
 
-  if (!email || !password) {
-    throw new Error("Email and password are required");
+  const validation = validate(signInFormSchema, rawData);
+  if (validation.isErr()) {
+    throw new Error(validation.error.message);
   }
 
   const result = await signInUseCase.signIn(context, {
-    email: String(email),
-    password: String(password),
+    email: validation.value.email,
+    password: validation.value.password,
   });
 
   if (result.isErr()) {
