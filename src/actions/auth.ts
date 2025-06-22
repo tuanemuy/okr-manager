@@ -2,22 +2,43 @@
 
 import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
+import { z } from "zod/v4";
 import { context } from "@/context";
 import { createUser } from "@/core/application/user/createUser";
+import { validate } from "@/lib/validation";
+
+const signupFormSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8).max(100),
+  displayName: z.string().min(1).max(100),
+});
+
+const loginFormSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
 
 export async function signupAction(formData: FormData) {
   const email = formData.get("email");
   const password = formData.get("password");
   const displayName = formData.get("displayName");
 
-  if (!email || !password || !displayName) {
-    throw new Error("All fields are required");
+  const validationResult = validate(signupFormSchema, {
+    email,
+    password,
+    displayName,
+  });
+
+  if (validationResult.isErr()) {
+    throw new Error(validationResult.error.message);
   }
 
+  const validInput = validationResult.value;
+
   const result = await createUser(context, {
-    email: String(email),
-    password: String(password),
-    displayName: String(displayName),
+    email: validInput.email,
+    password: validInput.password,
+    displayName: validInput.displayName,
   });
 
   if (result.isErr()) {
@@ -31,15 +52,22 @@ export async function loginAction(formData: FormData) {
   const email = formData.get("email");
   const password = formData.get("password");
 
-  if (!email || !password) {
-    throw new Error("Email and password are required");
+  const validationResult = validate(loginFormSchema, {
+    email,
+    password,
+  });
+
+  if (validationResult.isErr()) {
+    throw new Error(validationResult.error.message);
   }
+
+  const validInput = validationResult.value;
 
   try {
     const authResult = context.authService.getHandlers();
     await authResult.signIn("credentials", {
-      email: String(email),
-      password: String(password),
+      email: validInput.email,
+      password: validInput.password,
       redirectTo: "/dashboard",
     });
   } catch (error) {
