@@ -202,7 +202,7 @@ describe("updateOkr", () => {
         okrId: "invalid-okr-id",
         userId: userIdSchema.parse("550e8400-e29b-41d4-a716-446655440012"),
         title: "新しいタイトル",
-      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
+        // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await updateOkr(mockContext, input);
@@ -219,7 +219,7 @@ describe("updateOkr", () => {
         okrId: okrIdSchema.parse("550e8400-e29b-41d4-a716-446655440013"),
         userId: "invalid-user-id",
         title: "新しいタイトル",
-      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
+        // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await updateOkr(mockContext, input);
@@ -441,7 +441,7 @@ describe("updateOkr", () => {
         okrId: okrIdSchema.parse("550e8400-e29b-41d4-a716-446655440031"),
         userId: userIdSchema.parse("550e8400-e29b-41d4-a716-446655440032"),
         title: "",
-      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
+        // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await updateOkr(mockContext, input);
@@ -459,7 +459,7 @@ describe("updateOkr", () => {
         okrId: okrIdSchema.parse("550e8400-e29b-41d4-a716-446655440033"),
         userId: userIdSchema.parse("550e8400-e29b-41d4-a716-446655440034"),
         title: longTitle,
-      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
+        // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await updateOkr(mockContext, input);
@@ -476,7 +476,7 @@ describe("updateOkr", () => {
         okrId: okrIdSchema.parse("550e8400-e29b-41d4-a716-446655440035"),
         // userId missing
         title: "新しいタイトル",
-      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
+        // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await updateOkr(mockContext, input);

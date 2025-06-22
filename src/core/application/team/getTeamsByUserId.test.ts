@@ -90,7 +90,7 @@ describe("getTeamsByUserId", () => {
 
       const mockTeams: Team[] = Array.from({ length: 20 }, (_, index) => ({
         id: teamIdSchema.parse(
-          `550e8400-e29b-41d4-a716-44665544000${index + 5}`,
+          `550e8400-e29b-41d4-a716-446655440${String(index + 5).padStart(3, "0")}`,
         ),
         name: `チーム${index}`,
         description: `チーム${index}の説明`,
@@ -147,7 +147,7 @@ describe("getTeamsByUserId", () => {
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.teams[0].description).toBeNull();
+        expect(result.value.teams[0].description).toBeUndefined();
       }
     });
 
@@ -173,9 +173,9 @@ describe("getTeamsByUserId", () => {
         },
         {
           id: teamIdSchema.parse("550e8400-e29b-41d4-a716-446655440030"),
-          name: "月次チーム日",
-          description: "月次レビューチーム日",
-          reviewFrequency: "monthly",
+          name: "隔週チーム",
+          description: "隔週レビューチーム",
+          reviewFrequency: "biweekly",
           createdAt: new Date("2024-01-03T00:00:00Z"),
           updatedAt: new Date("2024-01-03T00:00:00Z"),
         },
@@ -198,7 +198,7 @@ describe("getTeamsByUserId", () => {
         expect(result.value.teams.map((t) => t.reviewFrequency)).toEqual([
           "weekly",
           "monthly",
-          "quarterly",
+          "biweekly",
         ]);
       }
     });
@@ -208,7 +208,7 @@ describe("getTeamsByUserId", () => {
     it("無効なuserIdでエラーが返される", async () => {
       const input = {
         userId: "invalid-user-id",
-      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
+        // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -223,7 +223,7 @@ describe("getTeamsByUserId", () => {
     it("空文字列のuserIdでエラーが返される", async () => {
       const input = {
         userId: "",
-      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
+        // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -251,7 +251,7 @@ describe("getTeamsByUserId", () => {
     it("null値のuserIdでエラーが返される", async () => {
       const input = {
         userId: null,
-      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
+        // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -266,7 +266,7 @@ describe("getTeamsByUserId", () => {
     it("数値のuserIdでエラーが返される", async () => {
       const input = {
         userId: 123,
-      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
+        // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -280,8 +280,8 @@ describe("getTeamsByUserId", () => {
 
     it("配列のuserIdでエラーが返される", async () => {
       const input = {
-        userId: ["user-123"],
-      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
+        userId: [userIdSchema.parse("550e8400-e29b-41d4-a716-446655440019")],
+        // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await getTeamsByUserId(mockContext, input);
@@ -295,8 +295,10 @@ describe("getTeamsByUserId", () => {
 
     it("オブジェクトのuserIdでエラーが返される", async () => {
       const input = {
-        userId: { id: "user-123" },
-      // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
+        userId: {
+          id: userIdSchema.parse("550e8400-e29b-41d4-a716-446655440019"),
+        },
+        // biome-ignore lint/suspicious/noExplicitAny: テスト用の型キャスト
       } as any;
 
       const result = await getTeamsByUserId(mockContext, input);

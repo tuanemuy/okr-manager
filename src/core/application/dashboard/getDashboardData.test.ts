@@ -70,6 +70,10 @@ describe("getDashboardData", () => {
       ];
 
       mockTeamRepository.seed(teams);
+      mockTeamRepository.addUserToTeam(
+        testUserId,
+        teamIdSchema.parse("550e8400-e29b-41d4-a716-446655440001"),
+      );
       mockOkrRepository.seed(okrs);
       for (const activity of activities) {
         mockActivityRepository.addActivity(activity);
@@ -149,6 +153,10 @@ describe("getDashboardData", () => {
       ];
 
       mockTeamRepository.seed(teams);
+      mockTeamRepository.addUserToTeam(
+        testUserId,
+        teamIdSchema.parse("550e8400-e29b-41d4-a716-446655440001"),
+      );
       mockOkrRepository.setShouldFailListByUser(true, "OKR fetch failed");
       // Note: MockActivityRepository doesn't have setShouldFail method
 
@@ -201,6 +209,10 @@ describe("getDashboardData", () => {
       ];
 
       mockTeamRepository.seed(teams);
+      mockTeamRepository.addUserToTeam(
+        testUserId,
+        teamIdSchema.parse("550e8400-e29b-41d4-a716-446655440001"),
+      );
       mockOkrRepository.seed([]);
       mockActivityRepository.clear();
 
@@ -211,7 +223,7 @@ describe("getDashboardData", () => {
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
         const data = result.value;
-        expect(data.teams[0].memberCount).toBe(0);
+        expect(data.teams[0].memberCount).toBe(1);
       }
     });
   });
