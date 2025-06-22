@@ -8,94 +8,112 @@ import { getUserEmailFromSession, getUserIdFromSession } from "@/lib/session";
 import { requireAuth } from "./session";
 
 export async function acceptInvitationAction(invitationId: string) {
-  const sessionResult = await context.sessionManager.get();
-  if (sessionResult.isErr() || !sessionResult.value) {
-    throw new Error("Not authenticated");
+  try {
+    // Validate invitation ID format
+    const validInvitationId = invitationIdSchema.parse(invitationId);
+
+    const sessionResult = await context.sessionManager.get();
+    if (sessionResult.isErr() || !sessionResult.value) {
+      throw new Error("Not authenticated");
+    }
+
+    const session = sessionResult.value;
+
+    // Get invitation details
+    const invitationResult =
+      await context.invitationRepository.getById(validInvitationId);
+    if (invitationResult.isErr() || !invitationResult.value) {
+      throw new Error("Invitation not found");
+    }
+
+    const invitation = invitationResult.value;
+
+    // Verify the invitation is for this user
+    if (invitation.invitedEmail !== getUserEmailFromSession(session)) {
+      throw new Error("This invitation is not for you");
+    }
+
+    if (invitation.status !== "pending") {
+      throw new Error("This invitation has already been processed");
+    }
+
+    // Create team membership
+    const memberResult = await context.teamMemberRepository.create(
+      invitation.teamId,
+      getUserIdFromSession(session),
+      invitation.role,
+    );
+
+    if (memberResult.isErr()) {
+      throw new Error(memberResult.error.message);
+    }
+
+    // Update invitation status
+    const updateResult = await context.invitationRepository.updateStatus(
+      validInvitationId,
+      "accepted",
+    );
+    if (updateResult.isErr()) {
+      throw new Error(updateResult.error.message);
+    }
+
+    revalidatePath("/invitations");
+    revalidatePath("/teams");
+    redirect("/teams");
+  } catch (error) {
+    console.error("Error in acceptInvitationAction:", error);
+    throw new Error(
+      error instanceof Error ? error.message : "Unknown error occurred",
+    );
   }
-
-  const session = sessionResult.value;
-
-  // Get invitation details
-  const invitationResult = await context.invitationRepository.getById(
-    invitationIdSchema.parse(invitationId),
-  );
-  if (invitationResult.isErr() || !invitationResult.value) {
-    throw new Error("Invitation not found");
-  }
-
-  const invitation = invitationResult.value;
-
-  // Verify the invitation is for this user
-  if (invitation.invitedEmail !== getUserEmailFromSession(session)) {
-    throw new Error("This invitation is not for you");
-  }
-
-  if (invitation.status !== "pending") {
-    throw new Error("This invitation has already been processed");
-  }
-
-  // Create team membership
-  const memberResult = await context.teamMemberRepository.create(
-    invitation.teamId,
-    getUserIdFromSession(session),
-    invitation.role,
-  );
-
-  if (memberResult.isErr()) {
-    throw new Error(memberResult.error.message);
-  }
-
-  // Update invitation status
-  const updateResult = await context.invitationRepository.updateStatus(
-    invitationIdSchema.parse(invitationId),
-    "accepted",
-  );
-  if (updateResult.isErr()) {
-    throw new Error(updateResult.error.message);
-  }
-
-  revalidatePath("/invitations");
-  revalidatePath("/teams");
-  redirect("/teams");
 }
 
 export async function rejectInvitationAction(invitationId: string) {
-  const sessionResult = await context.sessionManager.get();
-  if (sessionResult.isErr() || !sessionResult.value) {
-    throw new Error("Not authenticated");
+  try {
+    // Validate invitation ID format
+    const validInvitationId = invitationIdSchema.parse(invitationId);
+
+    const sessionResult = await context.sessionManager.get();
+    if (sessionResult.isErr() || !sessionResult.value) {
+      throw new Error("Not authenticated");
+    }
+
+    const session = sessionResult.value;
+
+    // Get invitation details
+    const invitationResult =
+      await context.invitationRepository.getById(validInvitationId);
+    if (invitationResult.isErr() || !invitationResult.value) {
+      throw new Error("Invitation not found");
+    }
+
+    const invitation = invitationResult.value;
+
+    // Verify the invitation is for this user
+    if (invitation.invitedEmail !== getUserEmailFromSession(session)) {
+      throw new Error("This invitation is not for you");
+    }
+
+    if (invitation.status !== "pending") {
+      throw new Error("This invitation has already been processed");
+    }
+
+    // Update invitation status
+    const updateResult = await context.invitationRepository.updateStatus(
+      validInvitationId,
+      "rejected",
+    );
+    if (updateResult.isErr()) {
+      throw new Error(updateResult.error.message);
+    }
+
+    revalidatePath("/invitations");
+  } catch (error) {
+    console.error("Error in rejectInvitationAction:", error);
+    throw new Error(
+      error instanceof Error ? error.message : "Unknown error occurred",
+    );
   }
-
-  const session = sessionResult.value;
-
-  // Get invitation details
-  const invitationResult = await context.invitationRepository.getById(
-    invitationIdSchema.parse(invitationId),
-  );
-  if (invitationResult.isErr() || !invitationResult.value) {
-    throw new Error("Invitation not found");
-  }
-
-  const invitation = invitationResult.value;
-
-  // Verify the invitation is for this user
-  if (invitation.invitedEmail !== getUserEmailFromSession(session)) {
-    throw new Error("This invitation is not for you");
-  }
-
-  if (invitation.status !== "pending") {
-    throw new Error("This invitation has already been processed");
-  }
-
-  // Update invitation status
-  const updateResult = await context.invitationRepository.updateStatus(
-    invitationIdSchema.parse(invitationId),
-    "rejected",
-  );
-  if (updateResult.isErr()) {
-    throw new Error(updateResult.error.message);
-  }
-
-  revalidatePath("/invitations");
 }
 
 export async function getInvitationsAction() {

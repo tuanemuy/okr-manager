@@ -6,14 +6,18 @@ import { context } from "@/context";
 import { createUser } from "@/core/application/user/createUser";
 
 export async function signupAction(formData: FormData) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-  const displayName = formData.get("displayName") as string;
+  const email = formData.get("email");
+  const password = formData.get("password");
+  const displayName = formData.get("displayName");
+
+  if (!email || !password || !displayName) {
+    throw new Error("All fields are required");
+  }
 
   const result = await createUser(context, {
-    email,
-    password,
-    displayName,
+    email: String(email),
+    password: String(password),
+    displayName: String(displayName),
   });
 
   if (result.isErr()) {
@@ -24,14 +28,18 @@ export async function signupAction(formData: FormData) {
 }
 
 export async function loginAction(formData: FormData) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const email = formData.get("email");
+  const password = formData.get("password");
+
+  if (!email || !password) {
+    throw new Error("Email and password are required");
+  }
 
   try {
     const authResult = context.authService.getHandlers();
     await authResult.signIn("credentials", {
-      email,
-      password,
+      email: String(email),
+      password: String(password),
       redirectTo: "/dashboard",
     });
   } catch (error) {

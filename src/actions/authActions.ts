@@ -7,10 +7,17 @@ import * as signInUseCase from "@/core/application/auth/signIn";
 import * as signOutUseCase from "@/core/application/auth/signOut";
 
 export async function signInAction(formData: FormData) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const email = formData.get("email");
+  const password = formData.get("password");
 
-  const result = await signInUseCase.signIn(context, { email, password });
+  if (!email || !password) {
+    throw new Error("Email and password are required");
+  }
+
+  const result = await signInUseCase.signIn(context, {
+    email: String(email),
+    password: String(password),
+  });
 
   if (result.isErr()) {
     throw new Error(result.error.message);

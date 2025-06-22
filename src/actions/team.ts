@@ -65,28 +65,44 @@ export async function createTeamAction(input: CreateTeamInput) {
   }
 }
 
+const inviteToTeamFormSchema = z.object({
+  email: z.string().email(),
+});
+
 export async function inviteToTeamAction(teamId: string, formData: FormData) {
-  const email = formData.get("email") as string;
+  try {
+    const email = formData.get("email");
 
-  const sessionResult = await context.sessionManager.get();
-  if (sessionResult.isErr() || !sessionResult.value) {
-    throw new Error("Not authenticated");
+    // Validate input
+    const validInput = inviteToTeamFormSchema.parse({
+      email,
+    });
+
+    const sessionResult = await context.sessionManager.get();
+    if (sessionResult.isErr() || !sessionResult.value) {
+      throw new Error("Not authenticated");
+    }
+
+    const session = sessionResult.value;
+
+    const result = await inviteToTeam(context, {
+      teamId: teamIdSchema.parse(teamId),
+      invitedEmail: validInput.email,
+      invitedById: getUserIdFromSession(session),
+      role: "member", // Default role for invited users
+    });
+
+    if (result.isErr()) {
+      throw new Error(result.error.message);
+    }
+
+    revalidatePath(`/teams/${teamId}/members`);
+  } catch (error) {
+    console.error("Error in inviteToTeamAction:", error);
+    throw new Error(
+      error instanceof Error ? error.message : "Unknown error occurred",
+    );
   }
-
-  const session = sessionResult.value;
-
-  const result = await inviteToTeam(context, {
-    teamId: teamIdSchema.parse(teamId),
-    invitedEmail: email,
-    invitedById: getUserIdFromSession(session),
-    role: "member", // Default role for invited users
-  });
-
-  if (result.isErr()) {
-    throw new Error(result.error.message);
-  }
-
-  revalidatePath(`/teams/${teamId}/members`);
 }
 
 export async function acceptInvitationAction(invitationId: string) {

@@ -13,7 +13,6 @@ import { updateOkr } from "@/core/application/okr/updateOkr";
 import { updateReview } from "@/core/application/okr/updateReview";
 import {
   keyResultIdSchema,
-  type OkrType,
   okrIdSchema,
   reviewIdSchema,
 } from "@/core/domain/okr/types";
@@ -21,121 +20,192 @@ import { teamIdSchema } from "@/core/domain/team/types";
 import { getUserIdFromSession } from "@/lib/session";
 import { requireAuth } from "./session";
 
+const createOkrFormSchema = z.object({
+  title: z.string().min(1).max(200),
+  description: z.string().max(1000).optional(),
+  type: z.enum(["team", "personal"]),
+  quarter: z.string().regex(/^[1-4]$/),
+  year: z.number().min(2000).max(3000),
+  keyResults: z
+    .array(
+      z.object({
+        title: z.string().min(1).max(200),
+        targetValue: z.number().min(0),
+        unit: z.string().max(50).optional(),
+      }),
+    )
+    .min(1)
+    .max(5),
+});
+
 export async function createOkrAction(teamId: string, formData: FormData) {
-  const title = formData.get("title") as string;
-  const description = formData.get("description") as string;
-  const type = formData.get("type") as OkrType;
-  const quarter = formData.get("quarter") as string;
-  const year = Number(formData.get("year"));
+  try {
+    const title = formData.get("title");
+    const description = formData.get("description");
+    const type = formData.get("type");
+    const quarter = formData.get("quarter");
+    const year = Number(formData.get("year"));
 
-  // Parse key results from form data
-  const keyResults = [];
-  let keyResultIndex = 1;
+    // Parse key results from form data
+    const keyResults = [];
+    let keyResultIndex = 1;
 
-  while (formData.get(`keyResult-${keyResultIndex}-title`)) {
-    const krTitle = formData.get(`keyResult-${keyResultIndex}-title`) as string;
-    const krTargetValue = Number(
-      formData.get(`keyResult-${keyResultIndex}-targetValue`),
-    );
-    const krUnit = formData.get(`keyResult-${keyResultIndex}-unit`) as string;
+    while (formData.get(`keyResult-${keyResultIndex}-title`)) {
+      const krTitle = formData.get(`keyResult-${keyResultIndex}-title`);
+      const krTargetValue = Number(
+        formData.get(`keyResult-${keyResultIndex}-targetValue`),
+      );
+      const krUnit = formData.get(`keyResult-${keyResultIndex}-unit`);
 
-    if (krTitle && krTargetValue) {
-      keyResults.push({
-        title: krTitle,
-        targetValue: krTargetValue,
-        unit: krUnit || undefined,
-      });
+      if (krTitle && !Number.isNaN(krTargetValue)) {
+        keyResults.push({
+          title: krTitle,
+          targetValue: krTargetValue,
+          unit: krUnit || undefined,
+        });
+      }
+      keyResultIndex++;
     }
-    keyResultIndex++;
-  }
 
-  const sessionResult = await context.sessionManager.get();
-  if (sessionResult.isErr() || !sessionResult.value) {
-    throw new Error("Not authenticated");
-  }
-
-  const session = sessionResult.value;
-
-  const result = await createOkr(context, {
-    title,
-    description: description || undefined,
-    type: type === "team" ? "team" : "personal",
-    quarter: {
+    // Validate input
+    const validInput = createOkrFormSchema.parse({
+      title,
+      description: description || undefined,
+      type,
+      quarter,
       year,
-      quarter: Number(quarter),
-    },
-    teamId: teamIdSchema.parse(teamId),
-    ownerId: getUserIdFromSession(session),
-    keyResults,
-  });
+      keyResults,
+    });
 
-  if (result.isErr()) {
-    throw new Error(result.error.message);
+    const sessionResult = await context.sessionManager.get();
+    if (sessionResult.isErr() || !sessionResult.value) {
+      throw new Error("Not authenticated");
+    }
+
+    const session = sessionResult.value;
+
+    const result = await createOkr(context, {
+      title: validInput.title,
+      description: validInput.description,
+      type: validInput.type,
+      quarter: {
+        year: validInput.year,
+        quarter: Number(validInput.quarter),
+      },
+      teamId: teamIdSchema.parse(teamId),
+      ownerId: getUserIdFromSession(session),
+      keyResults: validInput.keyResults,
+    });
+
+    if (result.isErr()) {
+      throw new Error(result.error.message);
+    }
+
+    revalidatePath(`/teams/${teamId}/okrs`);
+    redirect(`/teams/${teamId}/okrs/${result.value.id}`);
+  } catch (error) {
+    console.error("Error in createOkrAction:", error);
+    throw new Error(
+      error instanceof Error ? error.message : "Unknown error occurred",
+    );
   }
-
-  revalidatePath(`/teams/${teamId}/okrs`);
-  redirect(`/teams/${teamId}/okrs/${result.value.id}`);
 }
+
+const updateKeyResultProgressFormSchema = z.object({
+  currentValue: z.number().min(0),
+});
 
 export async function updateKeyResultProgressAction(
   keyResultId: string,
   formData: FormData,
 ) {
-  const currentValue = Number(formData.get("currentValue"));
+  try {
+    const currentValue = Number(formData.get("currentValue"));
 
-  const sessionResult = await context.sessionManager.get();
-  if (sessionResult.isErr() || !sessionResult.value) {
-    throw new Error("Not authenticated");
-  }
+    // Validate input
+    const validInput = updateKeyResultProgressFormSchema.parse({
+      currentValue,
+    });
 
-  const session = sessionResult.value;
+    const sessionResult = await context.sessionManager.get();
+    if (sessionResult.isErr() || !sessionResult.value) {
+      throw new Error("Not authenticated");
+    }
 
-  const result = await updateKeyResultProgress(context, {
-    keyResultId: keyResultIdSchema.parse(keyResultId),
-    currentValue,
-    userId: getUserIdFromSession(session),
-  });
+    const session = sessionResult.value;
 
-  if (result.isErr()) {
-    throw new Error(result.error.message);
-  }
+    const result = await updateKeyResultProgress(context, {
+      keyResultId: keyResultIdSchema.parse(keyResultId),
+      currentValue: validInput.currentValue,
+      userId: getUserIdFromSession(session),
+    });
 
-  // Revalidate the OKR page
-  const keyResult = result.value;
-  const okrResult = await context.okrRepository.getById(keyResult.okrId);
-  if (okrResult.isOk() && okrResult.value) {
-    revalidatePath(`/teams/${okrResult.value.teamId}/okrs/${keyResult.okrId}`);
+    if (result.isErr()) {
+      throw new Error(result.error.message);
+    }
+
+    // Revalidate the OKR page
+    const keyResult = result.value;
+    const okrResult = await context.okrRepository.getById(keyResult.okrId);
+    if (okrResult.isOk() && okrResult.value) {
+      revalidatePath(
+        `/teams/${okrResult.value.teamId}/okrs/${keyResult.okrId}`,
+      );
+    }
+  } catch (error) {
+    console.error("Error in updateKeyResultProgressAction:", error);
+    throw new Error(
+      error instanceof Error ? error.message : "Unknown error occurred",
+    );
   }
 }
 
+const createReviewFormSchema = z.object({
+  content: z.string().min(1).max(2000),
+  type: z.enum(["progress", "final"]),
+});
+
 export async function createReviewAction(okrId: string, formData: FormData) {
-  const content = formData.get("content") as string;
-  const reviewType = formData.get("reviewType") as "mid" | "final";
+  try {
+    const content = formData.get("content");
+    const reviewType = formData.get("reviewType");
 
-  const sessionResult = await context.sessionManager.get();
-  if (sessionResult.isErr() || !sessionResult.value) {
-    throw new Error("Not authenticated");
-  }
+    // Validate input
+    const validInput = createReviewFormSchema.parse({
+      content,
+      type: reviewType,
+    });
 
-  const session = sessionResult.value;
+    const sessionResult = await context.sessionManager.get();
+    if (sessionResult.isErr() || !sessionResult.value) {
+      throw new Error("Not authenticated");
+    }
 
-  const result = await createReview(context, {
-    okrId: okrIdSchema.parse(okrId),
-    content,
-    type: reviewType as "progress" | "final",
-    reviewerId: getUserIdFromSession(session),
-  });
+    const session = sessionResult.value;
 
-  if (result.isErr()) {
-    throw new Error(result.error.message);
-  }
+    const result = await createReview(context, {
+      okrId: okrIdSchema.parse(okrId),
+      content: validInput.content,
+      type: validInput.type,
+      reviewerId: getUserIdFromSession(session),
+    });
 
-  // Get team ID for revalidation
-  const okrResult = await context.okrRepository.getById(
-    okrIdSchema.parse(okrId),
-  );
-  if (okrResult.isOk() && okrResult.value) {
-    revalidatePath(`/teams/${okrResult.value.teamId}/okrs/${okrId}/reviews`);
+    if (result.isErr()) {
+      throw new Error(result.error.message);
+    }
+
+    // Get team ID for revalidation
+    const okrResult = await context.okrRepository.getById(
+      okrIdSchema.parse(okrId),
+    );
+    if (okrResult.isOk() && okrResult.value) {
+      revalidatePath(`/teams/${okrResult.value.teamId}/okrs/${okrId}/reviews`);
+    }
+  } catch (error) {
+    console.error("Error in createReviewAction:", error);
+    throw new Error(
+      error instanceof Error ? error.message : "Unknown error occurred",
+    );
   }
 }
 
@@ -243,34 +313,54 @@ export async function deleteOkrAction(okrId: string) {
   redirect(`/teams/${okr.teamId}/okrs`);
 }
 
+const addKeyResultFormSchema = z.object({
+  title: z.string().min(1).max(200),
+  targetValue: z.number().min(0),
+  unit: z.string().optional(),
+});
+
 export async function addKeyResultAction(okrId: string, formData: FormData) {
-  const title = formData.get("title") as string;
-  const targetValue = Number(formData.get("targetValue"));
-  const unit = formData.get("unit") as string;
+  try {
+    const title = formData.get("title");
+    const targetValue = Number(formData.get("targetValue"));
+    const unit = formData.get("unit");
 
-  const sessionResult = await context.sessionManager.get();
-  if (sessionResult.isErr() || !sessionResult.value) {
-    throw new Error("Not authenticated");
-  }
+    // Validate input
+    const validInput = addKeyResultFormSchema.parse({
+      title,
+      targetValue,
+      unit: unit || undefined,
+    });
 
-  const result = await context.keyResultRepository.create({
-    okrId: okrIdSchema.parse(okrId),
-    title,
-    targetValue,
-    currentValue: 0,
-    unit: unit || undefined,
-  });
+    const sessionResult = await context.sessionManager.get();
+    if (sessionResult.isErr() || !sessionResult.value) {
+      throw new Error("Not authenticated");
+    }
 
-  if (result.isErr()) {
-    throw new Error(result.error.message);
-  }
+    const result = await context.keyResultRepository.create({
+      okrId: okrIdSchema.parse(okrId),
+      title: validInput.title,
+      targetValue: validInput.targetValue,
+      currentValue: 0,
+      unit: validInput.unit,
+    });
 
-  // Get team ID for revalidation
-  const okrResult = await context.okrRepository.getById(
-    okrIdSchema.parse(okrId),
-  );
-  if (okrResult.isOk() && okrResult.value) {
-    revalidatePath(`/teams/${okrResult.value.teamId}/okrs/${okrId}`);
+    if (result.isErr()) {
+      throw new Error(result.error.message);
+    }
+
+    // Get team ID for revalidation
+    const okrResult = await context.okrRepository.getById(
+      okrIdSchema.parse(okrId),
+    );
+    if (okrResult.isOk() && okrResult.value) {
+      revalidatePath(`/teams/${okrResult.value.teamId}/okrs/${okrId}`);
+    }
+  } catch (error) {
+    console.error("Error in addKeyResultAction:", error);
+    throw new Error(
+      error instanceof Error ? error.message : "Unknown error occurred",
+    );
   }
 }
 
