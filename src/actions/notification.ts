@@ -8,8 +8,12 @@ import { getUserNotificationSettings } from "@/core/application/notification/get
 import { markAllNotificationsAsRead } from "@/core/application/notification/markAllNotificationsAsRead";
 import { markNotificationAsRead } from "@/core/application/notification/markNotificationAsRead";
 import { updateUserNotificationSettings } from "@/core/application/notification/updateUserNotificationSettings";
-import { notificationIdSchema } from "@/core/domain/notification/types";
+import {
+  type NotificationId,
+  notificationIdSchema,
+} from "@/core/domain/notification/types";
 import { getUserIdFromSession } from "@/lib/session";
+import { validate } from "@/lib/validation";
 import { requireAuth } from "./session";
 
 const getNotificationsInputSchema = z.object({
@@ -23,7 +27,14 @@ export type GetNotificationsInput = z.infer<typeof getNotificationsInputSchema>;
 export async function getNotificationsAction(input: GetNotificationsInput) {
   try {
     const session = await requireAuth();
-    const validInput = getNotificationsInputSchema.parse(input);
+    const validationResult = validate(getNotificationsInputSchema, input);
+    if (validationResult.isErr()) {
+      return {
+        success: false,
+        error: "Invalid input data",
+      };
+    }
+    const validInput = validationResult.value;
 
     const result = await getNotificationsByUserId(context, {
       userId: getUserIdFromSession(session),
@@ -60,16 +71,16 @@ export async function markNotificationAsReadAction(notificationId: string) {
   try {
     const session = await requireAuth();
 
-    const parseResult = notificationIdSchema.safeParse(notificationId);
-    if (!parseResult.success) {
+    const validationResult = validate(notificationIdSchema, notificationId);
+    if (validationResult.isErr()) {
       return {
         success: false,
-        message: "Invalid notification ID format",
+        error: "Invalid notification ID format",
       };
     }
 
     const result = await markNotificationAsRead(context, {
-      notificationId: parseResult.data,
+      notificationId: validationResult.value as NotificationId,
       userId: getUserIdFromSession(session),
     });
 
@@ -167,7 +178,17 @@ export async function updateNotificationSettingsAction(
 ) {
   try {
     const session = await requireAuth();
-    const validInput = updateNotificationSettingsInputSchema.parse(input);
+    const validationResult = validate(
+      updateNotificationSettingsInputSchema,
+      input,
+    );
+    if (validationResult.isErr()) {
+      return {
+        success: false,
+        error: "Invalid input data",
+      };
+    }
+    const validInput = validationResult.value;
 
     const result = await updateUserNotificationSettings(context, {
       userId: getUserIdFromSession(session),

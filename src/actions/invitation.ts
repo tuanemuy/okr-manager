@@ -3,14 +3,22 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { context } from "@/context";
-import { invitationIdSchema } from "@/core/domain/team/types";
+import {
+  type InvitationId,
+  invitationIdSchema,
+} from "@/core/domain/team/types";
 import { getUserEmailFromSession, getUserIdFromSession } from "@/lib/session";
+import { validate } from "@/lib/validation";
 import { requireAuth } from "./session";
 
 export async function acceptInvitationAction(invitationId: string) {
   try {
     // Validate invitation ID format
-    const validInvitationId = invitationIdSchema.parse(invitationId);
+    const validationResult = validate(invitationIdSchema, invitationId);
+    if (validationResult.isErr()) {
+      throw new Error("Invalid invitation ID format");
+    }
+    const validInvitationId = validationResult.value as InvitationId;
 
     const sessionResult = await context.sessionManager.get();
     if (sessionResult.isErr() || !sessionResult.value) {
@@ -71,7 +79,11 @@ export async function acceptInvitationAction(invitationId: string) {
 export async function rejectInvitationAction(invitationId: string) {
   try {
     // Validate invitation ID format
-    const validInvitationId = invitationIdSchema.parse(invitationId);
+    const validationResult = validate(invitationIdSchema, invitationId);
+    if (validationResult.isErr()) {
+      throw new Error("Invalid invitation ID format");
+    }
+    const validInvitationId = validationResult.value as InvitationId;
 
     const sessionResult = await context.sessionManager.get();
     if (sessionResult.isErr() || !sessionResult.value) {
@@ -153,8 +165,16 @@ export async function getInvitationAction(invitationId: string) {
   try {
     const session = await requireAuth();
 
+    const validationResult = validate(invitationIdSchema, invitationId);
+    if (validationResult.isErr()) {
+      return {
+        success: false,
+        error: "Invalid invitation ID format",
+      };
+    }
+
     const result = await context.invitationRepository.getById(
-      invitationIdSchema.parse(invitationId),
+      validationResult.value as InvitationId,
     );
 
     if (result.isErr() || !result.value) {

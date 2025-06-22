@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod/v4";
 import { context } from "@/context";
 import { getUserIdFromSession } from "@/lib/session";
+import { validate } from "@/lib/validation";
 
 const updateProfileFormSchema = z.object({
   displayName: z.string().min(1).max(100),
@@ -14,9 +15,13 @@ export async function updateProfileAction(formData: FormData) {
     const displayName = formData.get("displayName");
 
     // Validate input
-    const validInput = updateProfileFormSchema.parse({
+    const validationResult = validate(updateProfileFormSchema, {
       displayName,
     });
+    if (validationResult.isErr()) {
+      throw new Error("Invalid input data");
+    }
+    const validInput = validationResult.value;
 
     const sessionResult = await context.sessionManager.get();
     if (sessionResult.isErr() || !sessionResult.value) {
@@ -68,11 +73,15 @@ export async function updatePasswordAction(formData: FormData) {
     const confirmPassword = formData.get("confirmPassword");
 
     // Validate input
-    const validInput = updatePasswordFormSchema.parse({
+    const validationResult = validate(updatePasswordFormSchema, {
       currentPassword,
       newPassword,
       confirmPassword,
     });
+    if (validationResult.isErr()) {
+      throw new Error("Invalid input data");
+    }
+    const validInput = validationResult.value;
 
     const sessionResult = await context.sessionManager.get();
     if (sessionResult.isErr() || !sessionResult.value) {
