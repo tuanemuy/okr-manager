@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Plus, X } from "lucide-react";
 import Link from "next/link";
-import { useTransition } from "react";
+import { startTransition, useActionState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -78,7 +78,18 @@ interface CreateOkrFormProps {
 }
 
 export function CreateOkrForm({ teamId }: CreateOkrFormProps) {
-  const [isPending, startTransition] = useTransition();
+  const [formState, formAction, isPending] = useActionState(createOkrAction, {
+    input: {
+      teamId: teamId,
+      title: null,
+      description: null,
+      type: null,
+      quarter: null,
+      year: 0,
+      keyResults: [],
+    },
+    error: null,
+  } as const);
 
   const form = useForm<CreateOkrFormValues>({
     resolver: zodResolver(createOkrFormSchema),
@@ -129,37 +140,32 @@ export function CreateOkrForm({ teamId }: CreateOkrFormProps) {
     }
   };
 
-  const onSubmit = async (values: CreateOkrFormValues) => {
-    startTransition(async () => {
-      try {
-        // Create FormData to match existing action signature
-        const formData = new FormData();
-        formData.append("title", values.title);
-        formData.append("description", values.description || "");
-        formData.append("type", values.type);
-        formData.append("year", values.year.toString());
-        formData.append("quarter", values.quarter);
+  const onSubmit = (values: CreateOkrFormValues) => {
+    startTransition(() => {
+      const formData = new FormData();
+      formData.append("teamId", teamId);
+      formData.append("title", values.title);
+      formData.append("description", values.description || "");
+      formData.append("type", values.type);
+      formData.append("year", values.year.toString());
+      formData.append("quarter", values.quarter);
 
-        // Add key results as JSON
-        values.keyResults.forEach((kr, index) => {
-          formData.append(`keyResult-${index}-title`, kr.title);
-          formData.append(
-            `keyResult-${index}-description`,
-            kr.description || "",
-          );
-          formData.append(
-            `keyResult-${index}-targetValue`,
-            kr.targetValue.toString(),
-          );
-          formData.append(`keyResult-${index}-unit`, kr.unit || "");
-        });
+      // Add key results
+      values.keyResults.forEach((kr, index) => {
+        const keyResultIndex = index + 1;
+        formData.append(`keyResult-${keyResultIndex}-title`, kr.title);
+        formData.append(
+          `keyResult-${keyResultIndex}-description`,
+          kr.description || "",
+        );
+        formData.append(
+          `keyResult-${keyResultIndex}-targetValue`,
+          kr.targetValue.toString(),
+        );
+        formData.append(`keyResult-${keyResultIndex}-unit`, kr.unit || "");
+      });
 
-        await createOkrAction(teamId, formData);
-        toast.success("OKRを作成しました");
-      } catch (error) {
-        console.error("OKRの作成に失敗しました:", error);
-        toast.error("OKRの作成に失敗しました");
-      }
+      formAction(formData);
     });
   };
 
@@ -183,7 +189,21 @@ export function CreateOkrForm({ teamId }: CreateOkrFormProps) {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form
+          action={formAction}
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-8"
+        >
+          {formState.error && (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="pt-6">
+                <p className="text-sm text-red-600">
+                  {formState.error.message || "エラーが発生しました"}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>基本情報</CardTitle>

@@ -3,9 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useActionState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { signupAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +20,15 @@ import { PasswordStrength } from "@/components/ui/password-strength";
 import { type SignupInput, signupSchema } from "@/lib/auth-schemas";
 
 export default function SignupPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [formState, formAction, isPending] = useActionState(signupAction, {
+    input: {
+      email: null,
+      password: null,
+      displayName: null,
+      confirmPassword: null,
+    },
+    error: null,
+  } as const);
 
   const {
     register,
@@ -34,21 +41,14 @@ export default function SignupPage() {
 
   const passwordValue = watch("password");
 
-  const onSubmit = async (data: SignupInput) => {
-    setIsLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append("email", data.email);
-      formData.append("displayName", data.displayName);
-      formData.append("password", data.password);
+  const onSubmit = (data: SignupInput) => {
+    const formData = new FormData();
+    formData.append("email", data.email);
+    formData.append("displayName", data.displayName);
+    formData.append("password", data.password);
+    formData.append("confirmPassword", data.confirmPassword);
 
-      await signupAction(formData);
-      toast.success("アカウントが作成されました。ログインしてください。");
-    } catch {
-      toast.error("アカウント作成に失敗しました。もう一度お試しください。");
-    } finally {
-      setIsLoading(false);
-    }
+    formAction(formData);
   };
 
   return (
@@ -61,7 +61,16 @@ export default function SignupPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {formState.error && (
+            <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded">
+              {formState.error.message || "エラーが発生しました"}
+            </div>
+          )}
+          <form
+            action={formAction}
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="email">メールアドレス</Label>
               <Input
@@ -69,7 +78,7 @@ export default function SignupPage() {
                 type="email"
                 {...register("email")}
                 className={errors.email ? "border-red-500" : ""}
-                disabled={isLoading}
+                disabled={isPending}
               />
               {errors.email && (
                 <p className="text-sm text-red-500">{errors.email.message}</p>
@@ -82,7 +91,7 @@ export default function SignupPage() {
                 type="text"
                 {...register("displayName")}
                 className={errors.displayName ? "border-red-500" : ""}
-                disabled={isLoading}
+                disabled={isPending}
               />
               {errors.displayName && (
                 <p className="text-sm text-red-500">
@@ -97,7 +106,7 @@ export default function SignupPage() {
                 type="password"
                 {...register("password")}
                 className={errors.password ? "border-red-500" : ""}
-                disabled={isLoading}
+                disabled={isPending}
               />
               {errors.password && (
                 <p className="text-sm text-red-500">
@@ -113,7 +122,7 @@ export default function SignupPage() {
                 type="password"
                 {...register("confirmPassword")}
                 className={errors.confirmPassword ? "border-red-500" : ""}
-                disabled={isLoading}
+                disabled={isPending}
               />
               {errors.confirmPassword && (
                 <p className="text-sm text-red-500">
@@ -121,8 +130,8 @@ export default function SignupPage() {
                 </p>
               )}
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               アカウント作成
             </Button>
           </form>

@@ -1,11 +1,30 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod/v4";
 import { type UpdateReviewInput, updateReviewAction } from "@/actions/okr";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+
+const updateReviewFormSchema = z.object({
+  content: z
+    .string()
+    .min(1, "レビュー内容は必須です")
+    .max(2000, "レビュー内容は2000文字以内で入力してください"),
+});
+
+type UpdateReviewFormValues = z.infer<typeof updateReviewFormSchema>;
 
 interface ReviewEditFormProps {
   reviewId: string;
@@ -20,23 +39,19 @@ export function ReviewEditForm({
   okrId,
   initialContent,
 }: ReviewEditFormProps) {
-  const [content, setContent] = useState(initialContent);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<UpdateReviewFormValues>({
+    resolver: zodResolver(updateReviewFormSchema),
+    defaultValues: {
+      content: initialContent,
+    },
+  });
 
-    if (content.trim() === "") {
-      toast.error("レビュー内容は必須です");
-      return;
-    }
-
+  const onSubmit = async (values: UpdateReviewFormValues) => {
     try {
-      setIsSubmitting(true);
-
       const input: UpdateReviewInput = {
-        content: content.trim(),
+        content: values.content.trim(),
       };
 
       const result = await updateReviewAction(reviewId, input);
@@ -49,42 +64,46 @@ export function ReviewEditForm({
       }
     } catch (_error) {
       toast.error("レビューの更新に失敗しました");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="content" className="block text-sm font-medium mb-2">
-          レビュー内容 *
-        </label>
-        <Textarea
-          id="content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="レビュー内容を入力してください..."
-          rows={8}
-          className="resize-none"
-          required
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="content"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>レビュー内容 *</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="レビュー内容を入力してください..."
+                  rows={8}
+                  className="resize-none"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      <div className="flex items-center gap-2 pt-4">
-        <Button type="submit" disabled={isSubmitting || content.trim() === ""}>
-          {isSubmitting ? "更新中..." : "更新"}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() =>
-            router.push(`/teams/${teamId}/okrs/${okrId}/reviews/${reviewId}`)
-          }
-        >
-          キャンセル
-        </Button>
-      </div>
-    </form>
+        <div className="flex items-center gap-2 pt-4">
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? "更新中..." : "更新"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() =>
+              router.push(`/teams/${teamId}/okrs/${okrId}/reviews/${reviewId}`)
+            }
+          >
+            キャンセル
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }
