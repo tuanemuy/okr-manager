@@ -1,6 +1,5 @@
 import { Suspense } from "react";
-import { updatePasswordAction, updateProfileAction } from "@/actions/profile";
-import { Button } from "@/components/ui/button";
+import { ProfileForms } from "@/components/profile/ProfileForms";
 import {
   Card,
   CardContent,
@@ -8,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -111,102 +109,7 @@ async function ProfileContent() {
 
   return (
     <div className="grid gap-6">
-      {/* Profile Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile Information</CardTitle>
-          <CardDescription>
-            Update your personal information and display preferences.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action={updateProfileAction} className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={user.email}
-                disabled
-                className="bg-muted"
-              />
-              <p className="text-sm text-muted-foreground">
-                Email address cannot be changed.
-              </p>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="displayName">Display Name</Label>
-              <Input
-                id="displayName"
-                name="displayName"
-                defaultValue={user.displayName}
-                placeholder="Enter your display name"
-                required
-              />
-            </div>
-
-            <div className="flex justify-end">
-              <Button type="submit">Save Changes</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Separator />
-
-      {/* Password Change */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Change Password</CardTitle>
-          <CardDescription>
-            Update your password to keep your account secure.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action={updatePasswordAction} className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="currentPassword">Current Password</Label>
-              <Input
-                id="currentPassword"
-                name="currentPassword"
-                type="password"
-                placeholder="Enter your current password"
-                required
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="newPassword">New Password</Label>
-              <Input
-                id="newPassword"
-                name="newPassword"
-                type="password"
-                placeholder="Enter your new password"
-                required
-                minLength={8}
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                placeholder="Confirm your new password"
-                required
-                minLength={8}
-              />
-            </div>
-
-            <div className="flex justify-end">
-              <Button type="submit">Update Password</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      <ProfileForms user={user} />
 
       <Separator />
 
