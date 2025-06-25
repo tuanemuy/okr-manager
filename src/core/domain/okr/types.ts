@@ -12,7 +12,7 @@ export type KeyResultId = z.infer<typeof keyResultIdSchema>;
 export const reviewIdSchema = z.string().uuid().brand("reviewId");
 export type ReviewId = z.infer<typeof reviewIdSchema>;
 
-export const okrTypeSchema = z.enum(["team", "individual"]);
+export const okrTypeSchema = z.enum(["team", "personal"]);
 export type OkrType = z.infer<typeof okrTypeSchema>;
 
 export const quarterSchema = z.object({
@@ -120,6 +120,7 @@ export const okrWithKeyResultsSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
   keyResults: z.array(keyResultSchema),
+  progress: z.number().min(0).max(100).optional(),
   owner: z
     .object({
       displayName: z.string(),

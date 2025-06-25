@@ -1,5 +1,6 @@
 import { Plus, Target, User, Users } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
 import { getOkrsAction } from "@/actions/okr";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,46 +13,150 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const _getStatusBadge = (status: string) => {
+  switch (status) {
+    case "active":
+      return <Badge variant="default">進行中</Badge>;
+    case "completed":
+      return <Badge variant="secondary">完了</Badge>;
+    case "paused":
+      return <Badge variant="outline">一時停止</Badge>;
+    default:
+      return <Badge variant="outline">{status}</Badge>;
+  }
+};
+
+const getTypeBadge = (type: string) => {
+  return type === "team" ? (
+    <Badge variant="outline" className="flex items-center gap-1">
+      <Users className="h-3 w-3" />
+      チーム
+    </Badge>
+  ) : (
+    <Badge variant="outline" className="flex items-center gap-1">
+      <User className="h-3 w-3" />
+      個人
+    </Badge>
+  );
+};
+
+const _getProgressColor = (progress: number) => {
+  if (progress >= 80) return "bg-green-500";
+  if (progress >= 50) return "bg-yellow-500";
+  return "bg-red-500";
+};
+
+async function OkrsList({ teamId }: { teamId: string }) {
+  const okrs = await getOkrsAction(teamId);
+
+  return (
+    <div className="grid gap-6">
+      {okrs.map((okr) => (
+        <Card key={okr.id} className="hover:shadow-md transition-shadow">
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Target className="h-5 w-5 text-primary" />
+                  <h3 className="text-xl font-semibold">{okr.title}</h3>
+                  {getTypeBadge(okr.type)}
+                  <Badge variant="default">進行中</Badge>
+                </div>
+                <p className="text-muted-foreground">
+                  {okr.description || "説明がありません"}
+                </p>
+                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                  <span>
+                    期間: {okr.quarterYear} Q{okr.quarterQuarter}
+                  </span>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/teams/${teamId}/okrs/${okr.id}`}>詳細を見る</Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">進捗</span>
+              <span className="text-sm font-medium">-</span>
+            </div>
+            <div className="w-full bg-secondary rounded-full h-2 mt-2">
+              <div
+                className="h-2 rounded-full transition-all duration-300 bg-gray-400"
+                style={{ width: "0%" }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+
+      {okrs.length === 0 && (
+        <Card>
+          <CardContent className="text-center py-12">
+            <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">OKRがありません</h3>
+            <p className="text-muted-foreground mb-4">
+              最初のOKRを作成して目標管理を始めましょう
+            </p>
+            <Button asChild>
+              <Link href={`/teams/${teamId}/okrs/new`}>
+                <Plus className="h-4 w-4 mr-2" />
+                新しいOKR
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function OkrsListSkeleton() {
+  const skeletonIds = ["okr-skeleton-1", "okr-skeleton-2", "okr-skeleton-3"];
+
+  return (
+    <div className="grid gap-6">
+      {skeletonIds.map((id) => (
+        <Card key={id}>
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div className="flex-1 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-5" />
+                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-6 w-16" />
+                  <Skeleton className="h-6 w-16" />
+                </div>
+                <Skeleton className="h-4 w-64" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+              <Skeleton className="h-8 w-20" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-4 w-8" />
+              </div>
+              <Skeleton className="h-2 w-full rounded-full" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 export default async function TeamOkrsPage({
   params,
 }: {
-  params: { teamId: string };
+  params: Promise<{ teamId: string }>;
 }) {
-  const okrs = await getOkrsAction(params.teamId);
-
-  const _getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge variant="default">進行中</Badge>;
-      case "completed":
-        return <Badge variant="secondary">完了</Badge>;
-      case "paused":
-        return <Badge variant="outline">一時停止</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const getTypeBadge = (type: string) => {
-    return type === "team" ? (
-      <Badge variant="outline" className="flex items-center gap-1">
-        <Users className="h-3 w-3" />
-        チーム
-      </Badge>
-    ) : (
-      <Badge variant="outline" className="flex items-center gap-1">
-        <User className="h-3 w-3" />
-        個人
-      </Badge>
-    );
-  };
-
-  const _getProgressColor = (progress: number) => {
-    if (progress >= 80) return "bg-green-500";
-    if (progress >= 50) return "bg-yellow-500";
-    return "bg-red-500";
-  };
+  const { teamId } = await params;
 
   return (
     <div className="container mx-auto py-8">
@@ -64,7 +169,7 @@ export default async function TeamOkrsPage({
             </p>
           </div>
           <Button asChild>
-            <Link href={`/teams/${params.teamId}/okrs/new`}>
+            <Link href={`/teams/${teamId}/okrs/new`}>
               <Plus className="h-4 w-4 mr-2" />
               新しいOKR
             </Link>
@@ -103,67 +208,9 @@ export default async function TeamOkrsPage({
         </CardContent>
       </Card>
 
-      <div className="grid gap-6">
-        {okrs.map((okr) => (
-          <Card key={okr.id} className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Target className="h-5 w-5 text-primary" />
-                    <h3 className="text-xl font-semibold">{okr.title}</h3>
-                    {getTypeBadge(okr.type)}
-                    <Badge variant="default">進行中</Badge>
-                  </div>
-                  <p className="text-muted-foreground">
-                    {okr.description || "説明がありません"}
-                  </p>
-                  <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                    <span>
-                      期間: {okr.quarterYear} Q{okr.quarterQuarter}
-                    </span>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/teams/${params.teamId}/okrs/${okr.id}`}>
-                    詳細を見る
-                  </Link>
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">進捗</span>
-                <span className="text-sm font-medium">-</span>
-              </div>
-              <div className="w-full bg-secondary rounded-full h-2 mt-2">
-                <div
-                  className="h-2 rounded-full transition-all duration-300 bg-gray-400"
-                  style={{ width: "0%" }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {okrs.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">OKRがありません</h3>
-            <p className="text-muted-foreground mb-4">
-              最初のOKRを作成して目標管理を始めましょう
-            </p>
-            <Button asChild>
-              <Link href={`/teams/${params.teamId}/okrs/new`}>
-                <Plus className="h-4 w-4 mr-2" />
-                新しいOKR
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+      <Suspense fallback={<OkrsListSkeleton />}>
+        <OkrsList teamId={teamId} />
+      </Suspense>
     </div>
   );
 }

@@ -90,7 +90,7 @@ export class NextAuthService implements AuthService<NextAuthResult> {
           }
           return token;
         },
-        async session({ session, token }) {
+        session: ({ session, token }) => {
           if (token.id) {
             session.user.id = token.id as string;
           }
@@ -139,6 +139,17 @@ export class NextAuthService implements AuthService<NextAuthResult> {
       );
     } catch (error) {
       return err(new SessionError("Failed to get session", error));
+    }
+  }
+
+  async updateSession(): Promise<Result<void, SessionError>> {
+    try {
+      const handlers = this.getHandlers();
+      // NextAuth unstable_update doesn't take parameters in this context
+      await handlers.unstable_update({});
+      return ok(undefined);
+    } catch (error) {
+      return err(new SessionError("Failed to update session", error));
     }
   }
 

@@ -1,10 +1,7 @@
-import { Mail, } from "lucide-react";
+import { Mail } from "lucide-react";
 import { getInvitationsAction } from "@/actions/invitation";
 import { InvitationCard } from "@/components/invitation/invitation-card";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default async function InvitationsPage() {
   const invitationsResult = await getInvitationsAction();
@@ -15,7 +12,7 @@ export default async function InvitationsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-destructive">
-              {invitationsResult.error || "Error loading invitations"}
+              {invitationsResult.error || "招待状の読み込みエラー"}
             </p>
           </CardContent>
         </Card>

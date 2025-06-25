@@ -43,4 +43,8 @@ export class NextAuthSessionManager implements SessionManager {
       return err(new SessionError("Failed to destroy session", error));
     }
   }
+
+  async update(): Promise<Result<void, SessionError>> {
+    return this.authService.updateSession();
+  }
 }

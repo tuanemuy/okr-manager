@@ -1,10 +1,12 @@
 import { UserPlus } from "lucide-react";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { getTeamAction, getTeamMembersAction } from "@/actions/team";
 import { InviteMemberForm } from "@/components/team/invite-member-form";
 import { MemberActionsMenu } from "@/components/team/member-actions-menu";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -14,14 +16,83 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export default async function TeamMembersPage({
-  params,
-}: {
-  params: { teamId: string };
-}) {
+function TeamMembersSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            新しいメンバーを招待
+            <UserPlus className="h-5 w-5" />
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </div>
+          <Skeleton className="h-10 w-20" />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <Skeleton className="h-6 w-40" />
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>名前</TableHead>
+                <TableHead>メールアドレス</TableHead>
+                <TableHead>役割</TableHead>
+                <TableHead>参加日</TableHead>
+                <TableHead className="text-right">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[1, 2, 3].map((i) => (
+                <TableRow key={i}>
+                  <TableCell>
+                    <div className="flex items-center space-x-3">
+                      <Skeleton className="w-8 h-8 rounded-full" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-48" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-6 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-20" />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Skeleton className="h-8 w-8" />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+async function TeamMembersContent({ teamId }: { teamId: string }) {
   const [teamResult, teamMembersResult] = await Promise.all([
-    getTeamAction(params.teamId),
-    getTeamMembersAction(params.teamId),
+    getTeamAction(teamId),
+    getTeamMembersAction(teamId),
   ]);
 
   if (!teamResult.success) {
@@ -51,13 +122,8 @@ export default async function TeamMembersPage({
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">メンバー管理</h1>
-        <p className="text-muted-foreground mt-2">チームメンバーの一覧と管理</p>
-      </div>
-
-      <Card className="mb-6">
+    <div className="space-y-6">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             新しいメンバーを招待
@@ -65,7 +131,7 @@ export default async function TeamMembersPage({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <InviteMemberForm teamId={params.teamId} />
+          <InviteMemberForm teamId={teamId} />
         </CardContent>
       </Card>
 
@@ -112,10 +178,7 @@ export default async function TeamMembersPage({
                       {member.joinedAt.toLocaleDateString("ja-JP")}
                     </TableCell>
                     <TableCell className="text-right">
-                      <MemberActionsMenu
-                        teamId={params.teamId}
-                        member={member}
-                      />
+                      <MemberActionsMenu teamId={teamId} member={member} />
                     </TableCell>
                   </TableRow>
                 );
@@ -134,6 +197,27 @@ export default async function TeamMembersPage({
           </Table>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+export default async function TeamMembersPage({
+  params,
+}: {
+  params: Promise<{ teamId: string }>;
+}) {
+  const { teamId } = await params;
+
+  return (
+    <div className="container mx-auto py-8">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">メンバー管理</h1>
+        <p className="text-muted-foreground mt-2">チームメンバーの一覧と管理</p>
+      </div>
+
+      <Suspense fallback={<TeamMembersSkeleton />}>
+        <TeamMembersContent teamId={teamId} />
+      </Suspense>
     </div>
   );
 }

@@ -5,9 +5,10 @@ import { context } from "@/context";
 import { searchOkrs } from "@/core/application/okr/searchOkrs";
 import { getTeamsByUserId } from "@/core/application/team/getTeamsByUserId";
 import { listUsersInUserTeams } from "@/core/application/user/listUsersInUserTeams";
-import { teamIdSchema } from "@/core/domain/team/types";
-import { userIdSchema } from "@/core/domain/user/types";
+import { type TeamId, teamIdSchema } from "@/core/domain/team/types";
+import { type UserId, userIdSchema } from "@/core/domain/user/types";
 import { getUserIdFromSession } from "@/lib/session";
+import { validate } from "@/lib/validation";
 import { requireAuth } from "./session";
 
 const searchOkrsInputSchema = z.object({
@@ -16,6 +17,8 @@ const searchOkrsInputSchema = z.object({
   userId: z.string().optional(),
   quarter: z.string().optional(),
   year: z.number().optional(),
+  type: z.enum(["team", "personal"]).optional(),
+  status: z.enum(["active", "completed", "overdue", "due_soon"]).optional(),
   page: z.number().min(1).default(1),
   limit: z.number().min(1).max(50).default(10),
 });
@@ -25,19 +28,32 @@ export type SearchOkrsInput = z.infer<typeof searchOkrsInputSchema>;
 export async function searchOkrsAction(input: SearchOkrsInput) {
   try {
     const session = await requireAuth();
-    const validInput = searchOkrsInputSchema.parse(input);
+    const validationResult = validate(searchOkrsInputSchema, input);
+    if (validationResult.isErr()) {
+      return {
+        success: false,
+        error: "Invalid input data",
+      };
+    }
+    const validInput = validationResult.value;
 
     const result = await searchOkrs(context, {
       searcherId: getUserIdFromSession(session),
       query: validInput.query,
       teamId: validInput.teamId
-        ? teamIdSchema.parse(validInput.teamId)
+        ? (validate(teamIdSchema, validInput.teamId).unwrapOr(undefined) as
+            | TeamId
+            | undefined)
         : undefined,
       userId: validInput.userId
-        ? userIdSchema.parse(validInput.userId)
+        ? (validate(userIdSchema, validInput.userId).unwrapOr(undefined) as
+            | UserId
+            | undefined)
         : undefined,
       quarter: validInput.quarter,
       year: validInput.year,
+      type: validInput.type,
+      status: validInput.status,
       pagination: {
         page: validInput.page,
         limit: validInput.limit,

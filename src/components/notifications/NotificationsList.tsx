@@ -82,24 +82,24 @@ export function NotificationsList({
   const getNotificationTypeLabel = (type: string) => {
     switch (type) {
       case "invitation":
-        return "Team Invitation";
+        return "チーム招待";
       case "review_reminder":
-        return "Review Reminder";
+        return "レビューリマインダー";
       case "progress_update":
-        return "Progress Update";
+        return "進捗更新";
       case "team_update":
-        return "Team Update";
+        return "チーム更新";
       case "deadline_alert":
-        return "Deadline Alert";
+        return "期限アラート";
       default:
-        return "Notification";
+        return "通知";
     }
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Notifications</CardTitle>
+        <CardTitle>最近の通知</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue={tab} className="space-y-4">
@@ -108,13 +108,13 @@ export function NotificationsList({
               value="all"
               onClick={() => router.push("/notifications?tab=all")}
             >
-              All Notifications
+              すべての通知
             </TabsTrigger>
             <TabsTrigger
               value="unread"
               onClick={() => router.push("/notifications?tab=unread")}
             >
-              Unread
+              未読
             </TabsTrigger>
           </TabsList>
 
@@ -124,13 +124,13 @@ export function NotificationsList({
                 <Bell className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   {tab === "unread"
-                    ? "No unread notifications"
-                    : "No notifications"}
+                    ? "未読の通知はありません"
+                    : "通知はありません"}
                 </h3>
                 <p className="text-gray-500">
                   {tab === "unread"
-                    ? "You're all caught up!"
-                    : "New notifications will appear here."}
+                    ? "すべて確認済みです！"
+                    : "新しい通知がここに表示されます。"}
                 </p>
               </div>
             ) : (
@@ -163,7 +163,7 @@ export function NotificationsList({
                                 variant="default"
                                 className="bg-blue-500 text-xs"
                               >
-                                New
+                                新着
                               </Badge>
                             )}
                           </div>
@@ -183,7 +183,7 @@ export function NotificationsList({
                             {notification.isRead && (
                               <span className="flex items-center gap-1">
                                 <CheckCircle className="h-3 w-3" />
-                                Read
+                                既読
                               </span>
                             )}
                           </div>
@@ -198,8 +198,8 @@ export function NotificationsList({
                               disabled={loadingIds.has(notification.id)}
                             >
                               {loadingIds.has(notification.id)
-                                ? "Marking..."
-                                : "Mark as read"}
+                                ? "処理中..."
+                                : "既読にする"}
                             </Button>
                           )}
                         </div>

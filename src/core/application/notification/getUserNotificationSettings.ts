@@ -1,16 +1,10 @@
-import { err, ok, type Result } from "neverthrow";
+import { err, type Result } from "neverthrow";
 import { z } from "zod/v4";
+import type { NotificationSettings } from "@/core/domain/notification/types";
 import { userIdSchema } from "@/core/domain/user/types";
 import { ApplicationError } from "@/lib/error";
 import { validate } from "@/lib/validation";
 import type { Context } from "../context";
-
-export interface NotificationSettings {
-  invitations: boolean;
-  reviewReminders: boolean;
-  progressUpdates: boolean;
-  teamUpdates: boolean;
-}
 
 export const getUserNotificationSettingsInputSchema = z.object({
   userId: userIdSchema,
@@ -21,7 +15,7 @@ export type GetUserNotificationSettingsInput = z.infer<
 >;
 
 export async function getUserNotificationSettings(
-  _context: Context<unknown>,
+  context: Context<unknown>,
   input: GetUserNotificationSettingsInput,
 ): Promise<Result<NotificationSettings, ApplicationError>> {
   const parseResult = validate(getUserNotificationSettingsInputSchema, input);
@@ -32,13 +26,10 @@ export async function getUserNotificationSettings(
 
   const { userId } = parseResult.value;
 
-  // Mock implementation - in a real app you'd fetch from the database
-  const mockSettings: NotificationSettings = {
-    invitations: true,
-    reviewReminders: true,
-    progressUpdates: false,
-    teamUpdates: true,
-  };
+  const result = await context.notificationRepository.getUserSettings(userId);
 
-  return ok(mockSettings);
+  return result.mapErr(
+    (error) =>
+      new ApplicationError("Failed to get notification settings", error),
+  );
 }

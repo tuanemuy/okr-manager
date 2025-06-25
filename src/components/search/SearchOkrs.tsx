@@ -18,6 +18,19 @@ export async function SearchOkrs({ searchParams }: SearchOkrsProps) {
   const year = searchParams.year
     ? Number.parseInt(searchParams.year as string)
     : undefined;
+  const type = Array.isArray(searchParams.type)
+    ? undefined
+    : searchParams.type === "team" || searchParams.type === "personal"
+      ? searchParams.type
+      : undefined;
+  const status = Array.isArray(searchParams.status)
+    ? undefined
+    : searchParams.status === "active" ||
+        searchParams.status === "completed" ||
+        searchParams.status === "overdue" ||
+        searchParams.status === "due_soon"
+      ? searchParams.status
+      : undefined;
   const page = Number.parseInt(searchParams.page as string) || 1;
 
   const result = await searchOkrsAction({
@@ -26,6 +39,8 @@ export async function SearchOkrs({ searchParams }: SearchOkrsProps) {
     userId,
     quarter,
     year,
+    type,
+    status,
     page,
     limit: 10,
   });
@@ -51,10 +66,8 @@ export async function SearchOkrs({ searchParams }: SearchOkrsProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Search Results</span>
-          <Badge variant="secondary">
-            {totalCount} {totalCount === 1 ? "result" : "results"}
-          </Badge>
+          <span>検索結果</span>
+          <Badge variant="secondary">{totalCount} 件</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -62,10 +75,10 @@ export async function SearchOkrs({ searchParams }: SearchOkrsProps) {
           <div className="text-center py-8">
             <Target className="h-12 w-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No OKRs found
+              OKRが見つかりません
             </h3>
             <p className="text-gray-500">
-              Try adjusting your search terms or filters.
+              検索キーワードやフィルターを調整してみてください。
             </p>
           </div>
         ) : (
@@ -76,7 +89,7 @@ export async function SearchOkrs({ searchParams }: SearchOkrsProps) {
                 href={`/teams/${okr.teamId}/okrs/${okr.id}`}
                 className="block"
               >
-                <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                <div className="border rounded-lg p-4 hover:bg-background transition-colors">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg mb-1">
@@ -88,7 +101,7 @@ export async function SearchOkrs({ searchParams }: SearchOkrsProps) {
                       <Badge
                         variant={okr.type === "team" ? "default" : "secondary"}
                       >
-                        {okr.type === "team" ? "Team" : "Personal"}
+                        {okr.type === "team" ? "チーム" : "個人"}
                       </Badge>
                     </div>
                   </div>
@@ -118,7 +131,7 @@ export async function SearchOkrs({ searchParams }: SearchOkrsProps) {
                   {/* Progress */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Overall Progress</span>
+                      <span className="text-gray-600">全体進捗</span>
                       <span className="font-medium">
                         {Math.round(okr.progress)}%
                       </span>
@@ -130,7 +143,7 @@ export async function SearchOkrs({ searchParams }: SearchOkrsProps) {
                   {okr.keyResults && okr.keyResults.length > 0 && (
                     <div className="mt-3 pt-3 border-t">
                       <h4 className="text-sm font-medium text-gray-700 mb-2">
-                        Key Results ({okr.keyResults.length})
+                        キーリザルト ({okr.keyResults.length})
                       </h4>
                       <div className="space-y-1">
                         {okr.keyResults.slice(0, 2).map((kr) => (
@@ -148,7 +161,7 @@ export async function SearchOkrs({ searchParams }: SearchOkrsProps) {
                         ))}
                         {okr.keyResults.length > 2 && (
                           <div className="text-xs text-gray-500">
-                            +{okr.keyResults.length - 2} more key results
+                            +{okr.keyResults.length - 2} 件のキーリザルト
                           </div>
                         )}
                       </div>

@@ -28,19 +28,28 @@ export async function removeMemberFromTeam(
 
   const { teamId, userId, targetUserId } = parseResult.value;
 
-  // Check if user is admin of the team
+  // Check if user is a member of the team
   const memberResult = await context.teamMemberRepository.getByTeamAndUser(
     teamId,
     userId,
   );
 
-  if (
-    memberResult.isErr() ||
-    !memberResult.value ||
-    memberResult.value.role !== "admin"
-  ) {
+  if (memberResult.isErr() || !memberResult.value) {
+    return err(new ApplicationError("User is not a member of this team"));
+  }
+
+  // Check if user is admin
+  if (memberResult.value.role !== "admin") {
+    return err(new ApplicationError("Only admins can remove team members"));
+  }
+
+  // Check if target user is a member of the team
+  const targetMemberResult =
+    await context.teamMemberRepository.getByTeamAndUser(teamId, targetUserId);
+
+  if (targetMemberResult.isErr() || !targetMemberResult.value) {
     return err(
-      new ApplicationError("User is not authorized to remove team members"),
+      new ApplicationError("Target user is not a member of this team"),
     );
   }
 

@@ -19,7 +19,7 @@ describe("createReview", () => {
   let regularMember: TeamMember;
   let viewer: TeamMember;
   let teamOkr: Okr;
-  let individualOkr: Okr;
+  let personalOkr: Okr;
   let okrWithoutOwner: Okr;
   let validProgressReviewInput: CreateReviewInput;
   let validFinalReviewInput: CreateReviewInput;
@@ -88,11 +88,11 @@ describe("createReview", () => {
       updatedAt: new Date("2024-01-01T00:00:00Z"),
     };
 
-    individualOkr = {
+    personalOkr = {
       id: okrIdSchema.parse("550e8400-e29b-41d4-a716-446655440201"),
       title: "Personal Development OKR",
       description: "Personal skill enhancement",
-      type: "individual",
+      type: "personal",
       teamId,
       ownerId: ownerUserId,
       quarterYear: 2024,
@@ -121,7 +121,7 @@ describe("createReview", () => {
       regularMember,
       viewer,
     ]);
-    mockOkrRepository.seed([teamOkr, individualOkr, okrWithoutOwner]);
+    mockOkrRepository.seed([teamOkr, personalOkr, okrWithoutOwner]);
 
     validProgressReviewInput = {
       okrId: teamOkr.id,
@@ -132,7 +132,7 @@ describe("createReview", () => {
     };
 
     validFinalReviewInput = {
-      okrId: individualOkr.id,
+      okrId: personalOkr.id,
       type: "final",
       content:
         "Successfully completed all training objectives. Learned React, TypeScript, and GraphQL. Ready to apply these skills in upcoming projects.",
@@ -586,7 +586,7 @@ describe("createReview", () => {
       const review1Input = { ...validProgressReviewInput, okrId: teamOkr.id };
       const review2Input = {
         ...validProgressReviewInput,
-        okrId: individualOkr.id,
+        okrId: personalOkr.id,
       };
 
       // Act

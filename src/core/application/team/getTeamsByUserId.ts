@@ -13,7 +13,7 @@ export const getTeamsByUserIdInputSchema = z.object({
 export type GetTeamsByUserIdInput = z.infer<typeof getTeamsByUserIdInputSchema>;
 
 export async function getTeamsByUserId(
-  context: Context<unknown>,
+  context: Context,
   input: GetTeamsByUserIdInput,
 ): Promise<Result<{ teams: Team[] }, ApplicationError>> {
   const parseResult = validate(getTeamsByUserIdInputSchema, input);

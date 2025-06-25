@@ -62,9 +62,8 @@ export function NotificationsPagination({
   return (
     <div className="flex items-center justify-between">
       <div className="text-sm text-gray-700">
-        Showing {(currentPage - 1) * pageSize + 1} to{" "}
-        {Math.min(currentPage * pageSize, totalCount)} of {totalCount}{" "}
-        notifications
+        {totalCount}件中 {(currentPage - 1) * pageSize + 1}件から{" "}
+        {Math.min(currentPage * pageSize, totalCount)}件を表示
       </div>
 
       <div className="flex items-center space-x-2">
@@ -75,7 +74,7 @@ export function NotificationsPagination({
           disabled={currentPage <= 1}
         >
           <ChevronLeft className="h-4 w-4" />
-          Previous
+          前へ
         </Button>
 
         <div className="flex items-center space-x-1">
@@ -107,7 +106,7 @@ export function NotificationsPagination({
           onClick={() => navigateToPage(currentPage + 1)}
           disabled={currentPage >= totalPages}
         >
-          Next
+          次へ
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>

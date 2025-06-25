@@ -21,4 +21,8 @@ export interface TeamRepository {
     query: ListTeamQuery,
   ): Promise<Result<{ items: Team[]; count: number }, RepositoryError>>;
   listByUserId(userId: UserId): Promise<Result<Team[], RepositoryError>>;
+  getTeamMembers(teamId: TeamId): Promise<Result<UserId[], RepositoryError>>;
+  getBatchTeamMemberCounts(
+    teamIds: TeamId[],
+  ): Promise<Result<Record<string, number>, RepositoryError>>;
 }

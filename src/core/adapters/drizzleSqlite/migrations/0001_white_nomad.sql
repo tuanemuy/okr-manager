@@ -1,0 +1,1 @@
+ALTER TABLE `teams` ADD `review_frequency` text DEFAULT 'monthly' NOT NULL;

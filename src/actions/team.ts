@@ -15,14 +15,24 @@ import { removeMemberFromTeam } from "@/core/application/team/removeMemberFromTe
 import { updateMemberRole } from "@/core/application/team/updateMemberRole";
 import { updateTeam } from "@/core/application/team/updateTeam";
 import { updateTeamReviewFrequency } from "@/core/application/team/updateTeamReviewFrequency";
-import { invitationIdSchema, teamIdSchema } from "@/core/domain/team/types";
-import { userIdSchema } from "@/core/domain/user/types";
+import {
+  type InvitationId,
+  invitationIdSchema,
+  reviewFrequencySchema,
+  type TeamId,
+  teamIdSchema,
+} from "@/core/domain/team/types";
+import { type UserId, userIdSchema } from "@/core/domain/user/types";
+import { ApplicationError } from "@/lib/error";
+import type { FormState } from "@/lib/formState";
 import { getUserIdFromSession } from "@/lib/session";
+import { validate } from "@/lib/validation";
 import { requireAuth } from "./session";
 
 const createTeamInputSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().optional(),
+  reviewFrequency: reviewFrequencySchema.default("monthly"),
 });
 
 export type CreateTeamInput = z.infer<typeof createTeamInputSchema>;
@@ -30,11 +40,19 @@ export type CreateTeamInput = z.infer<typeof createTeamInputSchema>;
 export async function createTeamAction(input: CreateTeamInput) {
   try {
     const session = await requireAuth();
-    const validInput = createTeamInputSchema.parse(input);
+    const validationResult = validate(createTeamInputSchema, input);
+    if (validationResult.isErr()) {
+      return {
+        success: false,
+        error: validationResult.error.message,
+      };
+    }
+    const validInput = validationResult.value;
 
     const result = await createTeam(context, {
       name: validInput.name,
       description: validInput.description,
+      reviewFrequency: validInput.reviewFrequency,
       ownerId: getUserIdFromSession(session),
     });
 
@@ -59,28 +77,74 @@ export async function createTeamAction(input: CreateTeamInput) {
   }
 }
 
-export async function inviteToTeamAction(teamId: string, formData: FormData) {
-  const email = formData.get("email") as string;
+const inviteToTeamFormSchema = z.object({
+  email: z.string().email(),
+});
+
+type InviteToTeamFormData = {
+  email: FormDataEntryValue | null;
+  teamId: string;
+};
+
+export async function inviteToTeamAction(
+  _prevState: FormState<InviteToTeamFormData, { success: boolean }>,
+  formData: FormData,
+): Promise<FormState<InviteToTeamFormData, { success: boolean }>> {
+  const teamId = formData.get("teamId") as string;
+  const rawData = {
+    email: formData.get("email"),
+    teamId,
+  };
+
+  const validation = validate(inviteToTeamFormSchema, {
+    email: rawData.email,
+  });
+  if (validation.isErr()) {
+    return {
+      input: rawData,
+      error: validation.error,
+    };
+  }
 
   const sessionResult = await context.sessionManager.get();
   if (sessionResult.isErr() || !sessionResult.value) {
-    throw new Error("Not authenticated");
+    return {
+      input: rawData,
+      error: new ApplicationError("Not authenticated"),
+    };
   }
 
   const session = sessionResult.value;
 
+  const teamIdResult = validate(teamIdSchema, teamId);
+  if (teamIdResult.isErr()) {
+    return {
+      input: rawData,
+      error: teamIdResult.error,
+    };
+  }
+
   const result = await inviteToTeam(context, {
-    teamId: teamIdSchema.parse(teamId),
-    invitedEmail: email,
+    teamId: teamIdResult.value as TeamId,
+    invitedEmail: validation.value.email,
     invitedById: getUserIdFromSession(session),
     role: "member", // Default role for invited users
   });
 
   if (result.isErr()) {
-    throw new Error(result.error.message);
+    return {
+      input: rawData,
+      error: result.error,
+    };
   }
 
   revalidatePath(`/teams/${teamId}/members`);
+
+  return {
+    input: rawData,
+    result: { success: true },
+    error: null,
+  };
 }
 
 export async function acceptInvitationAction(invitationId: string) {
@@ -91,8 +155,13 @@ export async function acceptInvitationAction(invitationId: string) {
 
   const session = sessionResult.value;
 
+  const invitationIdResult = validate(invitationIdSchema, invitationId);
+  if (invitationIdResult.isErr()) {
+    throw new Error(invitationIdResult.error.message);
+  }
+
   const result = await acceptInvitation(context, {
-    invitationId: invitationIdSchema.parse(invitationId),
+    invitationId: invitationIdResult.value as InvitationId,
     userId: getUserIdFromSession(session),
   });
 
@@ -136,8 +205,16 @@ export async function getTeamAction(teamId: string) {
   try {
     const session = await requireAuth();
 
+    const teamIdResult = validate(teamIdSchema, teamId);
+    if (teamIdResult.isErr()) {
+      return {
+        success: false,
+        error: teamIdResult.error.message,
+      };
+    }
+
     const result = await getTeamById(context, {
-      teamId: teamIdSchema.parse(teamId),
+      teamId: teamIdResult.value as TeamId,
       userId: getUserIdFromSession(session),
     });
 
@@ -165,8 +242,16 @@ export async function getTeamMembersAction(teamId: string) {
   try {
     const session = await requireAuth();
 
+    const teamIdResult = validate(teamIdSchema, teamId);
+    if (teamIdResult.isErr()) {
+      return {
+        success: false,
+        error: teamIdResult.error.message,
+      };
+    }
+
     const result = await getTeamMembers(context, {
-      teamId: teamIdSchema.parse(teamId),
+      teamId: teamIdResult.value as TeamId,
       userId: getUserIdFromSession(session),
     });
 
@@ -197,10 +282,26 @@ export async function removeTeamMemberAction(
   try {
     const session = await requireAuth();
 
+    const teamIdResult = validate(teamIdSchema, teamId);
+    if (teamIdResult.isErr()) {
+      return {
+        success: false,
+        error: teamIdResult.error.message,
+      };
+    }
+
+    const targetUserIdResult = validate(userIdSchema, targetUserId);
+    if (targetUserIdResult.isErr()) {
+      return {
+        success: false,
+        error: targetUserIdResult.error.message,
+      };
+    }
+
     const result = await removeMemberFromTeam(context, {
-      teamId: teamIdSchema.parse(teamId),
+      teamId: teamIdResult.value as TeamId,
       userId: getUserIdFromSession(session),
-      targetUserId: userIdSchema.parse(targetUserId),
+      targetUserId: targetUserIdResult.value as UserId,
     });
 
     if (result.isErr()) {
@@ -232,10 +333,26 @@ export async function updateTeamMemberRoleAction(
   try {
     const session = await requireAuth();
 
+    const teamIdResult = validate(teamIdSchema, teamId);
+    if (teamIdResult.isErr()) {
+      return {
+        success: false,
+        error: teamIdResult.error.message,
+      };
+    }
+
+    const targetUserIdResult = validate(userIdSchema, targetUserId);
+    if (targetUserIdResult.isErr()) {
+      return {
+        success: false,
+        error: targetUserIdResult.error.message,
+      };
+    }
+
     const result = await updateMemberRole(context, {
-      teamId: teamIdSchema.parse(teamId),
+      teamId: teamIdResult.value as TeamId,
       userId: getUserIdFromSession(session),
-      targetUserId: userIdSchema.parse(targetUserId),
+      targetUserId: targetUserIdResult.value as UserId,
       role,
     });
 
@@ -270,10 +387,25 @@ export type UpdateTeamInput = z.infer<typeof updateTeamInputSchema>;
 export async function updateTeamAction(teamId: string, input: UpdateTeamInput) {
   try {
     const session = await requireAuth();
-    const validInput = updateTeamInputSchema.parse(input);
+    const inputValidationResult = validate(updateTeamInputSchema, input);
+    if (inputValidationResult.isErr()) {
+      return {
+        success: false,
+        error: inputValidationResult.error.message,
+      };
+    }
+    const validInput = inputValidationResult.value;
+
+    const teamIdResult = validate(teamIdSchema, teamId);
+    if (teamIdResult.isErr()) {
+      return {
+        success: false,
+        error: teamIdResult.error.message,
+      };
+    }
 
     const result = await updateTeam(context, {
-      teamId: teamIdSchema.parse(teamId),
+      teamId: teamIdResult.value as TeamId,
       userId: getUserIdFromSession(session),
       name: validInput.name,
       description: validInput.description,
@@ -308,8 +440,16 @@ export async function updateTeamReviewFrequencyAction(
   try {
     const session = await requireAuth();
 
+    const teamIdResult = validate(teamIdSchema, teamId);
+    if (teamIdResult.isErr()) {
+      return {
+        success: false,
+        error: teamIdResult.error.message,
+      };
+    }
+
     const result = await updateTeamReviewFrequency(context, {
-      teamId: teamIdSchema.parse(teamId),
+      teamId: teamIdResult.value as TeamId,
       userId: getUserIdFromSession(session),
       reviewFrequency: frequency,
     });
@@ -335,12 +475,104 @@ export async function updateTeamReviewFrequencyAction(
   }
 }
 
+export async function getUserTeamRoleAction(teamId: string) {
+  try {
+    const session = await requireAuth();
+
+    const teamIdResult = validate(teamIdSchema, teamId);
+    if (teamIdResult.isErr()) {
+      return {
+        success: false,
+        error: teamIdResult.error.message,
+      };
+    }
+
+    const result = await context.teamMemberRepository.getUserRole(
+      teamIdResult.value as TeamId,
+      getUserIdFromSession(session),
+    );
+
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    return {
+      success: true,
+      data: result.value,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+export async function getTeamMemberCountAction(teamId: string) {
+  try {
+    const session = await requireAuth();
+
+    const teamIdResult = validate(teamIdSchema, teamId);
+    if (teamIdResult.isErr()) {
+      return {
+        success: false,
+        error: teamIdResult.error.message,
+      };
+    }
+
+    // First check if user is a member of the team
+    const memberResult = await context.teamMemberRepository.getByTeamAndUser(
+      teamIdResult.value as TeamId,
+      getUserIdFromSession(session),
+    );
+
+    if (memberResult.isErr() || !memberResult.value) {
+      return {
+        success: false,
+        error: "User is not a member of this team",
+      };
+    }
+
+    const result = await context.teamMemberRepository.countByTeam(
+      teamIdResult.value as TeamId,
+    );
+
+    if (result.isErr()) {
+      return {
+        success: false,
+        error: result.error.message,
+      };
+    }
+
+    return {
+      success: true,
+      data: result.value,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
 export async function deleteTeamAction(teamId: string) {
   try {
     const session = await requireAuth();
 
+    const teamIdResult = validate(teamIdSchema, teamId);
+    if (teamIdResult.isErr()) {
+      return {
+        success: false,
+        error: teamIdResult.error.message,
+      };
+    }
+
     const result = await deleteTeam(context, {
-      teamId: teamIdSchema.parse(teamId),
+      teamId: teamIdResult.value as TeamId,
       userId: getUserIdFromSession(session),
     });
 

@@ -89,7 +89,7 @@ describe("createOkr", () => {
     validIndividualOkrInput = {
       title: "Personal Skill Development",
       description: "Enhance technical skills and knowledge",
-      type: "individual",
+      type: "personal",
       teamId,
       ownerId: memberUserId,
       quarter: {
@@ -124,7 +124,7 @@ describe("createOkr", () => {
       }
     });
 
-    it("should successfully create individual OKR when member creates it", async () => {
+    it("should successfully create personal OKR when member creates it", async () => {
       // Act
       const result = await createOkr(context, validIndividualOkrInput);
 
@@ -132,12 +132,12 @@ describe("createOkr", () => {
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
         expect(result.value.title).toBe(validIndividualOkrInput.title);
-        expect(result.value.type).toBe("individual");
+        expect(result.value.type).toBe("personal");
         expect(result.value.ownerId).toBe(validIndividualOkrInput.ownerId);
       }
     });
 
-    it("should successfully create individual OKR when admin creates it", async () => {
+    it("should successfully create personal OKR when admin creates it", async () => {
       // Arrange
       const input = {
         ...validIndividualOkrInput,
@@ -150,7 +150,7 @@ describe("createOkr", () => {
       // Assert
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.type).toBe("individual");
+        expect(result.value.type).toBe("personal");
         expect(result.value.ownerId).toBe(adminMember.userId);
       }
     });
@@ -214,7 +214,7 @@ describe("createOkr", () => {
       }
     });
 
-    it("should reject individual OKR creation by viewer", async () => {
+    it("should reject personal OKR creation by viewer", async () => {
       // Arrange
       const input = {
         ...validIndividualOkrInput,
@@ -228,7 +228,7 @@ describe("createOkr", () => {
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
         expect(result.error.message).toBe(
-          "Only team admins and members can create individual OKRs",
+          "Only team admins and members can create personal OKRs",
         );
       }
     });
@@ -312,7 +312,7 @@ describe("createOkr", () => {
       // Arrange
       const invalidInput = {
         ...validTeamOkrInput,
-        type: "invalid" as "team" | "individual",
+        type: "invalid" as "team" | "personal",
       };
 
       // Act
@@ -586,20 +586,17 @@ describe("createOkr", () => {
       }
     });
 
-    it("should allow both team and individual OKRs for same team", async () => {
+    it("should allow both team and personal OKRs for same team", async () => {
       // Act
       const teamResult = await createOkr(context, validTeamOkrInput);
-      const individualResult = await createOkr(
-        context,
-        validIndividualOkrInput,
-      );
+      const personalResult = await createOkr(context, validIndividualOkrInput);
 
       // Assert
       expect(teamResult.isOk()).toBe(true);
-      expect(individualResult.isOk()).toBe(true);
-      if (teamResult.isOk() && individualResult.isOk()) {
+      expect(personalResult.isOk()).toBe(true);
+      if (teamResult.isOk() && personalResult.isOk()) {
         expect(teamResult.value.type).toBe("team");
-        expect(individualResult.value.type).toBe("individual");
+        expect(personalResult.value.type).toBe("personal");
       }
     });
   });

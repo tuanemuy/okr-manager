@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -19,9 +19,6 @@ export default function NotFound() {
           </p>
           <div className="flex gap-2">
             <Button asChild className="flex-1">
-              <Link href="/">ホームに戻る</Link>
-            </Button>
-            <Button variant="outline" asChild className="flex-1">
               <Link href="/dashboard">ダッシュボード</Link>
             </Button>
           </div>

@@ -1,6 +1,9 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { err, ok, type Result } from "neverthrow";
-import type { OkrRepository } from "@/core/domain/okr/ports/okrRepository";
+import type {
+  OkrRepository,
+  SearchOkrResult,
+} from "@/core/domain/okr/ports/okrRepository";
 import type {
   CreateOkrParams,
   ListOkrQuery,
@@ -16,10 +19,57 @@ import type { UserId } from "@/core/domain/user/types";
 import { RepositoryError } from "@/lib/error";
 import { validate } from "@/lib/validation";
 import type { Database } from "./client";
-import { keyResults, okrs, users } from "./schema";
+import { keyResults, okrs, teams, users } from "./schema";
 
 export class DrizzleSqliteOkrRepository implements OkrRepository {
   constructor(private readonly db: Database) {}
+
+  private calculateProgress(
+    keyResults: { currentValue: number; targetValue: number }[],
+  ): number {
+    if (keyResults.length === 0) return 0;
+
+    const totalProgress = keyResults.reduce((sum, kr) => {
+      const krProgress =
+        kr.targetValue > 0 ? (kr.currentValue / kr.targetValue) * 100 : 0;
+      return sum + Math.min(krProgress, 100);
+    }, 0);
+
+    return Math.round(totalProgress / keyResults.length);
+  }
+
+  private determineOkrStatus(
+    okr: { quarterYear: number; quarterQuarter: number; progress: number },
+    currentYear: number,
+    currentQuarter: number,
+  ): "active" | "completed" | "overdue" | "due_soon" {
+    const { quarterYear, quarterQuarter, progress } = okr;
+
+    // Completed if progress is 100%
+    if (progress >= 100) return "completed";
+
+    // Compare quarters
+    if (
+      quarterYear < currentYear ||
+      (quarterYear === currentYear && quarterQuarter < currentQuarter)
+    ) {
+      return "overdue";
+    }
+
+    if (quarterYear === currentYear && quarterQuarter === currentQuarter) {
+      // Due soon if in current quarter and less than 30 days left
+      const now = new Date();
+      const quarterEndMonth = quarterQuarter * 3;
+      const quarterEndDate = new Date(quarterYear, quarterEndMonth - 1, 0); // Last day of quarter
+      const daysLeft = Math.ceil(
+        (quarterEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      if (daysLeft <= 30) return "due_soon";
+    }
+
+    return "active";
+  }
 
   async create(params: CreateOkrParams): Promise<Result<Okr, RepositoryError>> {
     try {
@@ -132,9 +182,13 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
 
       const okrsWithKeyResults = items.map((okr) => {
         const owner = allOwners.find((owner) => owner.okrId === okr.id);
+        const keyResultsForOkr = allKeyResults.filter(
+          (kr) => kr.okrId === okr.id,
+        );
         return {
           ...okr,
-          keyResults: allKeyResults.filter((kr) => kr.okrId === okr.id),
+          keyResults: keyResultsForOkr,
+          progress: this.calculateProgress(keyResultsForOkr),
           owner: owner
             ? {
                 displayName: owner.displayName,
@@ -236,9 +290,13 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
 
       const okrsWithKeyResults = items.map((okr) => {
         const owner = allOwners.find((owner) => owner.okrId === okr.id);
+        const keyResultsForOkr = allKeyResults.filter(
+          (kr) => kr.okrId === okr.id,
+        );
         return {
           ...okr,
-          keyResults: allKeyResults.filter((kr) => kr.okrId === okr.id),
+          keyResults: keyResultsForOkr,
+          progress: this.calculateProgress(keyResultsForOkr),
           owner: owner
             ? {
                 displayName: owner.displayName,
@@ -298,9 +356,13 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
 
       const okrsWithKeyResults = items.map((okr) => {
         const owner = allOwners.find((owner) => owner.okrId === okr.id);
+        const keyResultsForOkr = allKeyResults.filter(
+          (kr) => kr.okrId === okr.id,
+        );
         return {
           ...okr,
-          keyResults: allKeyResults.filter((kr) => kr.okrId === okr.id),
+          keyResults: keyResultsForOkr,
+          progress: this.calculateProgress(keyResultsForOkr),
           owner: owner
             ? {
                 displayName: owner.displayName,
@@ -330,6 +392,212 @@ export class DrizzleSqliteOkrRepository implements OkrRepository {
       return ok(Number(result[0]?.count || 0));
     } catch (error) {
       return err(new RepositoryError("Failed to count OKRs by team", error));
+    }
+  }
+
+  async listByUserId(
+    userId: UserId,
+  ): Promise<Result<OkrWithKeyResults[], RepositoryError>> {
+    return this.listByUser(userId);
+  }
+
+  async listByTeams(
+    teamIds: TeamId[],
+  ): Promise<Result<OkrWithKeyResults[], RepositoryError>> {
+    try {
+      if (teamIds.length === 0) {
+        return ok([]);
+      }
+
+      const okrResults = await this.db
+        .select()
+        .from(okrs)
+        .where(sql`${okrs.teamId} IN (${teamIds.map(() => "?").join(",")})`)
+        .orderBy(okrs.createdAt);
+
+      if (okrResults.length === 0) {
+        return ok([]);
+      }
+
+      const okrIds = okrResults.map((okr) => okr.id);
+      const [allKeyResults, allOwners] = await Promise.all([
+        this.db
+          .select()
+          .from(keyResults)
+          .where(
+            sql`${keyResults.okrId} IN (${okrIds.map(() => "?").join(",")})`,
+          ),
+        this.db
+          .select({
+            okrId: okrs.id,
+            displayName: users.displayName,
+            email: users.email,
+          })
+          .from(okrs)
+          .leftJoin(users, eq(okrs.ownerId, users.id))
+          .where(sql`${okrs.id} IN (${okrIds.map(() => "?").join(",")})`),
+      ]);
+
+      const okrsWithKeyResults = okrResults.map((okr) => {
+        const owner = allOwners.find((owner) => owner.okrId === okr.id);
+        const keyResultsForOkr = allKeyResults.filter(
+          (kr) => kr.okrId === okr.id,
+        );
+        return {
+          ...okr,
+          keyResults: keyResultsForOkr,
+          progress: this.calculateProgress(keyResultsForOkr),
+          owner: owner
+            ? {
+                displayName: owner.displayName,
+                email: owner.email,
+              }
+            : undefined,
+        };
+      });
+
+      return ok(
+        okrsWithKeyResults
+          .map((item) => validate(okrWithKeyResultsSchema, item).unwrapOr(null))
+          .filter((item) => item !== null),
+      );
+    } catch (error) {
+      return err(new RepositoryError("Failed to list OKRs by teams", error));
+    }
+  }
+
+  async search(params: {
+    query: string;
+    teamId?: TeamId;
+    userId?: UserId;
+    quarter?: string;
+    year?: number;
+    type?: "team" | "personal";
+    status?: "active" | "completed" | "overdue" | "due_soon";
+    pagination: { page: number; limit: number };
+  }): Promise<
+    Result<{ items: SearchOkrResult[]; totalCount: number }, RepositoryError>
+  > {
+    try {
+      const { query, teamId, userId, quarter, year, type, status, pagination } =
+        params;
+      const limit = pagination.limit;
+      const offset = (pagination.page - 1) * pagination.limit;
+
+      // Calculate current quarter for status filtering
+      const now = new Date();
+      const currentQuarter = Math.ceil((now.getMonth() + 1) / 3);
+      const currentYear = now.getFullYear();
+
+      const filters = [
+        query
+          ? or(
+              ilike(okrs.title, `%${query}%`),
+              ilike(okrs.description, `%${query}%`),
+            )
+          : undefined,
+        teamId ? eq(okrs.teamId, teamId) : undefined,
+        userId ? eq(okrs.ownerId, userId) : undefined,
+        quarter
+          ? eq(okrs.quarterQuarter, Number.parseInt(quarter.replace("Q", "")))
+          : undefined,
+        year ? eq(okrs.quarterYear, year) : undefined,
+        type ? eq(okrs.type, type) : undefined,
+      ].filter((filter) => filter !== undefined);
+
+      // Status filtering is handled after the query since it depends on progress calculation
+
+      const [items, _countResult] = await Promise.all([
+        this.db
+          .select({
+            id: okrs.id,
+            title: okrs.title,
+            description: okrs.description,
+            type: okrs.type,
+            teamId: okrs.teamId,
+            ownerId: okrs.ownerId,
+            quarterYear: okrs.quarterYear,
+            quarterQuarter: okrs.quarterQuarter,
+            createdAt: okrs.createdAt,
+            updatedAt: okrs.updatedAt,
+            teamName: teams.name,
+            ownerName: users.displayName,
+          })
+          .from(okrs)
+          .leftJoin(teams, eq(okrs.teamId, teams.id))
+          .leftJoin(users, eq(okrs.ownerId, users.id))
+          .where(and(...filters))
+          .limit(limit)
+          .offset(offset),
+        this.db
+          .select({ count: sql`count(*)` })
+          .from(okrs)
+          .leftJoin(teams, eq(okrs.teamId, teams.id))
+          .leftJoin(users, eq(okrs.ownerId, users.id))
+          .where(and(...filters)),
+      ]);
+
+      // Get key results for progress calculation
+      const okrIds = items.map((item) => item.id);
+      const keyResultsForSearch =
+        okrIds.length > 0
+          ? await this.db
+              .select()
+              .from(keyResults)
+              .where(inArray(keyResults.okrId, okrIds))
+          : [];
+
+      const searchResults: SearchOkrResult[] = items.map((item) => {
+        const keyResultsForOkr = keyResultsForSearch.filter(
+          (kr) => kr.okrId === item.id,
+        );
+        const progress = this.calculateProgress(keyResultsForOkr);
+        return {
+          id: item.id as OkrId,
+          title: item.title,
+          description: item.description || undefined,
+          type: item.type as "team" | "personal",
+          teamId: item.teamId as TeamId,
+          ownerId: item.ownerId ? (item.ownerId as UserId) : undefined,
+          quarterYear: item.quarterYear,
+          quarterQuarter: item.quarterQuarter,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+          teamName: item.teamName || "Unknown Team",
+          ownerName: item.ownerName || "Unknown Owner",
+          progress,
+          keyResults: keyResultsForOkr.map((kr) => ({
+            id: kr.id,
+            title: kr.title,
+            currentValue: kr.currentValue,
+            targetValue: kr.targetValue,
+            unit: kr.unit || "",
+          })),
+        };
+      });
+
+      // Apply status filtering if specified
+      const filteredResults = status
+        ? searchResults.filter((result) => {
+            const resultStatus = this.determineOkrStatus(
+              {
+                quarterYear: result.quarterYear,
+                quarterQuarter: result.quarterQuarter,
+                progress: result.progress,
+              },
+              currentYear,
+              currentQuarter,
+            );
+            return resultStatus === status;
+          })
+        : searchResults;
+
+      return ok({
+        items: filteredResults,
+        totalCount: filteredResults.length,
+      });
+    } catch (error) {
+      return err(new RepositoryError("Failed to search OKRs", error));
     }
   }
 }

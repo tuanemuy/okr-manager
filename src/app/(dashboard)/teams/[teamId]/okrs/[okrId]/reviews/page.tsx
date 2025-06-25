@@ -1,4 +1,4 @@
-import { Calendar, MessageSquare, Plus, } from "lucide-react";
+import { Calendar, MessageSquare, Plus } from "lucide-react";
 import Link from "next/link";
 import { getOkrReviewsAction } from "@/actions/okr";
 import { Badge } from "@/components/ui/badge";
@@ -16,9 +16,10 @@ import {
 export default async function OkrReviewsPage({
   params,
 }: {
-  params: { teamId: string; okrId: string };
+  params: Promise<{ teamId: string; okrId: string }>;
 }) {
-  const reviews = await getOkrReviewsAction(params.okrId);
+  const { teamId, okrId } = await params;
+  const reviews = await getOkrReviewsAction(okrId);
 
   const getTypeBadge = (type: string) => {
     switch (type) {
@@ -42,9 +43,7 @@ export default async function OkrReviewsPage({
             </p>
           </div>
           <Button asChild>
-            <Link
-              href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}
-            >
+            <Link href={`/teams/${teamId}/okrs/${okrId}/reviews/new`}>
               <Plus className="h-4 w-4 mr-2" />
               新しいレビュー
             </Link>
@@ -92,7 +91,7 @@ export default async function OkrReviewsPage({
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" asChild>
                     <Link
-                      href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/${review.id}`}
+                      href={`/teams/${teamId}/okrs/${okrId}/reviews/${review.id}`}
                     >
                       詳細
                     </Link>
@@ -116,9 +115,7 @@ export default async function OkrReviewsPage({
               最初のレビューを作成してOKRの進捗を記録しましょう
             </p>
             <Button asChild>
-              <Link
-                href={`/teams/${params.teamId}/okrs/${params.okrId}/reviews/new`}
-              >
+              <Link href={`/teams/${teamId}/okrs/${okrId}/reviews/new`}>
                 <Plus className="h-4 w-4 mr-2" />
                 新しいレビュー
               </Link>

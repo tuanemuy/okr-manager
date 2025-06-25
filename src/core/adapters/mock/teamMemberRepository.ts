@@ -10,11 +10,6 @@ import type {
 import type { UserId } from "@/core/domain/user/types";
 import { RepositoryError } from "@/lib/error";
 
-interface TeamMemberKey {
-  teamId: TeamId;
-  userId: UserId;
-}
-
 export class MockTeamMemberRepository implements TeamMemberRepository {
   private members: Map<string, TeamMember> = new Map();
   private userProfiles: Map<UserId, { displayName: string; email: string }> =
@@ -217,6 +212,17 @@ export class MockTeamMemberRepository implements TeamMemberRepository {
     this.shouldFailCountByTeam = false;
     this.shouldFailIsUserInTeam = false;
     this.shouldFailGetUserRole = false;
+  }
+
+  // Test utility methods
+  addMember(member: TeamMember): void {
+    const key = this.getKey(member.teamId, member.userId);
+    this.members.set(key, member);
+  }
+
+  removeMember(teamId: TeamId, userId: UserId): void {
+    const key = this.getKey(teamId, userId);
+    this.members.delete(key);
   }
 
   seed(members: TeamMember[]): void {

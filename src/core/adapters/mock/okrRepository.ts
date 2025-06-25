@@ -1,6 +1,9 @@
 import { err, ok, type Result } from "neverthrow";
 import { v7 as uuidv7 } from "uuid";
-import type { OkrRepository } from "@/core/domain/okr/ports/okrRepository";
+import type {
+  OkrRepository,
+  SearchOkrResult,
+} from "@/core/domain/okr/ports/okrRepository";
 import type {
   CreateOkrParams,
   KeyResult,
@@ -79,9 +82,23 @@ export class MockOkrRepository implements OkrRepository {
       ? this.userProfiles.get(okr.ownerId)
       : undefined;
 
+    const progress =
+      keyResults.length > 0
+        ? Math.round(
+            keyResults.reduce((sum, kr) => {
+              const krProgress =
+                kr.targetValue > 0
+                  ? (kr.currentValue / kr.targetValue) * 100
+                  : 0;
+              return sum + Math.min(krProgress, 100);
+            }, 0) / keyResults.length,
+          )
+        : 0;
+
     const okrWithKeyResults: OkrWithKeyResults = {
       ...okr,
       keyResults,
+      progress,
       owner: ownerProfile,
     };
 
@@ -179,9 +196,23 @@ export class MockOkrRepository implements OkrRepository {
         ? this.userProfiles.get(okr.ownerId)
         : undefined;
 
+      const progress =
+        keyResults.length > 0
+          ? Math.round(
+              keyResults.reduce((sum, kr) => {
+                const krProgress =
+                  kr.targetValue > 0
+                    ? (kr.currentValue / kr.targetValue) * 100
+                    : 0;
+                return sum + Math.min(krProgress, 100);
+              }, 0) / keyResults.length,
+            )
+          : 0;
+
       return {
         ...okr,
         keyResults,
+        progress,
         owner: ownerProfile,
       };
     });
@@ -224,9 +255,23 @@ export class MockOkrRepository implements OkrRepository {
         ? this.userProfiles.get(okr.ownerId)
         : undefined;
 
+      const progress =
+        keyResults.length > 0
+          ? Math.round(
+              keyResults.reduce((sum, kr) => {
+                const krProgress =
+                  kr.targetValue > 0
+                    ? (kr.currentValue / kr.targetValue) * 100
+                    : 0;
+                return sum + Math.min(krProgress, 100);
+              }, 0) / keyResults.length,
+            )
+          : 0;
+
       return {
         ...okr,
         keyResults,
+        progress,
         owner: ownerProfile,
       };
     });
@@ -259,9 +304,23 @@ export class MockOkrRepository implements OkrRepository {
         ? this.userProfiles.get(okr.ownerId)
         : undefined;
 
+      const progress =
+        keyResults.length > 0
+          ? Math.round(
+              keyResults.reduce((sum, kr) => {
+                const krProgress =
+                  kr.targetValue > 0
+                    ? (kr.currentValue / kr.targetValue) * 100
+                    : 0;
+                return sum + Math.min(krProgress, 100);
+              }, 0) / keyResults.length,
+            )
+          : 0;
+
       return {
         ...okr,
         keyResults,
+        progress,
         owner: ownerProfile,
       };
     });
@@ -279,6 +338,186 @@ export class MockOkrRepository implements OkrRepository {
     ).length;
 
     return ok(count);
+  }
+
+  async listByUserId(
+    userId: UserId,
+  ): Promise<Result<OkrWithKeyResults[], RepositoryError>> {
+    return this.listByUser(userId);
+  }
+
+  async listByTeams(
+    teamIds: TeamId[],
+  ): Promise<Result<OkrWithKeyResults[], RepositoryError>> {
+    const okrs = Array.from(this.okrs.values()).filter((okr) =>
+      teamIds.includes(okr.teamId),
+    );
+
+    const okrsWithKeyResults: OkrWithKeyResults[] = okrs.map((okr) => {
+      const keyResults = this.keyResults.get(okr.id) || [];
+      const ownerProfile = okr.ownerId
+        ? this.userProfiles.get(okr.ownerId)
+        : undefined;
+
+      const progress =
+        keyResults.length > 0
+          ? Math.round(
+              keyResults.reduce((sum, kr) => {
+                const krProgress =
+                  kr.targetValue > 0
+                    ? (kr.currentValue / kr.targetValue) * 100
+                    : 0;
+                return sum + Math.min(krProgress, 100);
+              }, 0) / keyResults.length,
+            )
+          : 0;
+
+      return {
+        ...okr,
+        keyResults,
+        progress,
+        owner: ownerProfile,
+      };
+    });
+
+    return ok(okrsWithKeyResults);
+  }
+
+  async search(params: {
+    query: string;
+    teamId?: TeamId;
+    userId?: UserId;
+    quarter?: string;
+    year?: number;
+    type?: "team" | "personal";
+    status?: "active" | "completed" | "overdue" | "due_soon";
+    pagination: { page: number; limit: number };
+  }): Promise<
+    Result<{ items: SearchOkrResult[]; totalCount: number }, RepositoryError>
+  > {
+    const { query, teamId, userId, quarter, year, type, status, pagination } =
+      params;
+
+    let filteredOkrs = Array.from(this.okrs.values());
+
+    if (query) {
+      filteredOkrs = filteredOkrs.filter(
+        (okr) =>
+          okr.title.toLowerCase().includes(query.toLowerCase()) ||
+          okr.description?.toLowerCase().includes(query.toLowerCase()),
+      );
+    }
+
+    if (teamId) {
+      filteredOkrs = filteredOkrs.filter((okr) => okr.teamId === teamId);
+    }
+
+    if (userId) {
+      filteredOkrs = filteredOkrs.filter((okr) => okr.ownerId === userId);
+    }
+
+    if (quarter) {
+      filteredOkrs = filteredOkrs.filter(
+        (okr) => okr.quarterQuarter === Number(quarter),
+      );
+    }
+
+    if (year) {
+      filteredOkrs = filteredOkrs.filter((okr) => okr.quarterYear === year);
+    }
+
+    if (type) {
+      filteredOkrs = filteredOkrs.filter((okr) => okr.type === type);
+    }
+
+    if (status) {
+      const now = new Date();
+      const currentQuarter = Math.ceil((now.getMonth() + 1) / 3);
+      const currentYear = now.getFullYear();
+
+      filteredOkrs = filteredOkrs.filter((okr) => {
+        const keyResults = this.keyResults.get(okr.id) || [];
+        const progress =
+          keyResults.length > 0
+            ? Math.round(
+                keyResults.reduce((sum, kr) => {
+                  const krProgress =
+                    kr.targetValue > 0
+                      ? (kr.currentValue / kr.targetValue) * 100
+                      : 0;
+                  return sum + Math.min(krProgress, 100);
+                }, 0) / keyResults.length,
+              )
+            : 0;
+
+        switch (status) {
+          case "overdue":
+            return (
+              (okr.quarterYear < currentYear ||
+                (okr.quarterYear === currentYear &&
+                  okr.quarterQuarter < currentQuarter)) &&
+              progress < 100
+            );
+          case "completed":
+            return progress >= 100;
+          case "active":
+            return (
+              okr.quarterYear === currentYear &&
+              okr.quarterQuarter === currentQuarter &&
+              progress < 100
+            );
+          case "due_soon":
+            return (
+              okr.quarterYear === currentYear &&
+              okr.quarterQuarter === currentQuarter
+            );
+          default:
+            return true;
+        }
+      });
+    }
+
+    const offset = (pagination.page - 1) * pagination.limit;
+    const paginatedOkrs = filteredOkrs.slice(offset, offset + pagination.limit);
+
+    const searchResults: SearchOkrResult[] = paginatedOkrs.map((okr) => {
+      const keyResults = this.keyResults.get(okr.id) || [];
+      const ownerProfile = okr.ownerId
+        ? this.userProfiles.get(okr.ownerId)
+        : undefined;
+
+      const progress =
+        keyResults.length > 0
+          ? Math.round(
+              keyResults.reduce((sum, kr) => {
+                const krProgress =
+                  kr.targetValue > 0
+                    ? (kr.currentValue / kr.targetValue) * 100
+                    : 0;
+                return sum + Math.min(krProgress, 100);
+              }, 0) / keyResults.length,
+            )
+          : 0;
+
+      return {
+        ...okr,
+        teamName: "Mock Team",
+        ownerName: ownerProfile?.displayName || "Unknown Owner",
+        progress,
+        keyResults: keyResults.map((kr) => ({
+          id: kr.id as string,
+          title: kr.title,
+          currentValue: kr.currentValue,
+          targetValue: kr.targetValue,
+          unit: kr.unit || "",
+        })),
+      };
+    });
+
+    return ok({
+      items: searchResults,
+      totalCount: filteredOkrs.length,
+    });
   }
 
   // Helper methods for testing
@@ -313,6 +552,13 @@ export class MockOkrRepository implements OkrRepository {
     profile: { displayName: string; email: string },
   ): void {
     this.userProfiles.set(userId, profile);
+  }
+
+  addOkr(okr: Okr): void {
+    this.okrs.set(okr.id, okr);
+    if (!this.keyResults.has(okr.id)) {
+      this.keyResults.set(okr.id, []);
+    }
   }
 
   setShouldFailCreate(shouldFail: boolean, errorMessage?: string): void {

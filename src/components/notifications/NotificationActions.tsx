@@ -2,9 +2,9 @@
 
 import { CheckCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { markAllNotificationsAsReadAction } from "@/actions/notification";
 import { Button } from "@/components/ui/button";
+import { useToastAction } from "@/lib/use-toast-action";
 
 interface NotificationActionsProps {
   unreadCount: number;
@@ -12,20 +12,28 @@ interface NotificationActionsProps {
 
 export function NotificationActions({ unreadCount }: NotificationActionsProps) {
   const router = useRouter();
-  const [isMarkingAll, setIsMarkingAll] = useState(false);
+  const { isLoading, executeAction } = useToastAction({
+    successMessage: "すべての通知を既読にしました",
+    errorMessage: "通知の既読処理に失敗しました",
+  });
 
   const handleMarkAllAsRead = async () => {
     if (unreadCount === 0) return;
 
-    setIsMarkingAll(true);
-
-    const result = await markAllNotificationsAsReadAction();
-
-    setIsMarkingAll(false);
-
-    if (result.success) {
-      router.refresh();
-    }
+    await executeAction(
+      async () => {
+        const result = await markAllNotificationsAsReadAction();
+        if (!result.success) {
+          throw new Error(result.error || "通知の既読処理に失敗しました");
+        }
+        return result;
+      },
+      {
+        onSuccess: () => {
+          router.refresh();
+        },
+      },
+    );
   };
 
   if (unreadCount === 0) {
@@ -36,11 +44,11 @@ export function NotificationActions({ unreadCount }: NotificationActionsProps) {
     <Button
       variant="outline"
       onClick={handleMarkAllAsRead}
-      disabled={isMarkingAll}
+      disabled={isLoading}
       className="flex items-center gap-2"
     >
       <CheckCheck className="h-4 w-4" />
-      {isMarkingAll ? "Marking all as read..." : "Mark all as read"}
+      {isLoading ? "すべて既読にしています..." : "すべて既読にする"}
     </Button>
   );
 }

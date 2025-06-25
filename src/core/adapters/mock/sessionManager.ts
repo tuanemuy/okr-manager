@@ -31,6 +31,11 @@ export class MockSessionManager implements SessionManager {
     return ok(undefined);
   }
 
+  async update(): Promise<Result<void, SessionError>> {
+    // Mock implementation - in real scenario this would trigger session refresh
+    return ok(undefined);
+  }
+
   // Helper methods for testing
   setCurrentSession(session: SessionData | null): void {
     this.currentSession = session;

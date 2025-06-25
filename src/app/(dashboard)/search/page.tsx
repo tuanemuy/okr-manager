@@ -1,54 +1,24 @@
 import { Suspense } from "react";
-import { getSearchFiltersAction } from "@/actions/search";
-import { SearchFilters } from "@/components/search/SearchFilters";
+import SearchFiltersContainer from "@/components/search/SearchFiltersContainer";
 import { SearchOkrs } from "@/components/search/SearchOkrs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default async function SearchPage({
+export default function SearchPage({
   searchParams,
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  const filtersResult = await getSearchFiltersAction();
-
-  if (!filtersResult.success) {
-    return (
-      <div className="container mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6">Search OKRs</h1>
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-red-600">
-              Error loading search filters: {filtersResult.error}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const filters = filtersResult.data || {
-    teams: [],
-    users: [],
-    years: [],
-    quarters: [],
-  };
-
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Search OKRs</h1>
+      <h1 className="text-3xl font-bold mb-6">OKR検索</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Search Filters */}
         <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Filters</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SearchFilters filters={filters} />
-            </CardContent>
-          </Card>
+          <Suspense fallback={<SearchFiltersSkeleton />}>
+            <SearchFiltersContainer />
+          </Suspense>
         </div>
 
         {/* Search Results */}
@@ -62,11 +32,28 @@ export default async function SearchPage({
   );
 }
 
+function SearchFiltersSkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>フィルター</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function SearchResultsSkeleton() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Search Results</CardTitle>
+        <CardTitle>検索結果</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

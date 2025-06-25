@@ -1,5 +1,7 @@
+import type { ActivityRepository } from "@/core/domain/activity/ports/activityRepository";
 import type { AuthService } from "@/core/domain/auth/ports/authService";
 import type { SessionManager } from "@/core/domain/auth/ports/sessionManager";
+import type { NotificationRepository } from "@/core/domain/notification/ports/notificationRepository";
 import type { KeyResultRepository } from "@/core/domain/okr/ports/keyResultRepository";
 import type { OkrRepository } from "@/core/domain/okr/ports/okrRepository";
 import type { ReviewRepository } from "@/core/domain/okr/ports/reviewRepository";
@@ -21,4 +23,6 @@ export interface Context<TAuthHandlers = unknown> {
   okrRepository: OkrRepository;
   keyResultRepository: KeyResultRepository;
   reviewRepository: ReviewRepository;
+  activityRepository: ActivityRepository;
+  notificationRepository: NotificationRepository;
 }

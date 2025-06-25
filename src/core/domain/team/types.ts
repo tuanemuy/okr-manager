@@ -8,10 +8,14 @@ export type TeamId = z.infer<typeof teamIdSchema>;
 export const teamRoleSchema = z.enum(["admin", "member", "viewer"]);
 export type TeamRole = z.infer<typeof teamRoleSchema>;
 
+export const reviewFrequencySchema = z.enum(["weekly", "biweekly", "monthly"]);
+export type ReviewFrequency = z.infer<typeof reviewFrequencySchema>;
+
 export const teamSchema = z.object({
   id: teamIdSchema,
   name: z.string().min(1).max(100),
   description: z.string().optional(),
+  reviewFrequency: reviewFrequencySchema,
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -20,6 +24,7 @@ export type Team = z.infer<typeof teamSchema>;
 export const createTeamParamsSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().optional(),
+  reviewFrequency: reviewFrequencySchema.default("monthly"),
   creatorId: userIdSchema,
 });
 export type CreateTeamParams = z.infer<typeof createTeamParamsSchema>;
@@ -27,6 +32,7 @@ export type CreateTeamParams = z.infer<typeof createTeamParamsSchema>;
 export const updateTeamParamsSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().optional(),
+  reviewFrequency: reviewFrequencySchema.optional(),
 });
 export type UpdateTeamParams = z.infer<typeof updateTeamParamsSchema>;
 

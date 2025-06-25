@@ -1,14 +1,25 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Plus, X } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { startTransition, useActionState } from "react";
+import { useFieldArray, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod/v4";
 import { createOkrAction } from "@/actions/okr";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -19,61 +30,142 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 
-interface KeyResult {
-  id: string;
-  title: string;
-  description: string;
-  targetValue: number;
-  unit: string;
-}
+const keyResultSchema = z.object({
+  title: z
+    .string()
+    .min(1, "タイトルは必須です")
+    .max(100, "タイトルは100文字以内で入力してください"),
+  description: z
+    .string()
+    .max(500, "説明は500文字以内で入力してください")
+    .optional(),
+  targetValue: z
+    .number()
+    .min(0.01, "目標値は0より大きい値を入力してください")
+    .max(999999, "目標値が大きすぎます"),
+  unit: z.string().max(20, "単位は20文字以内で入力してください").optional(),
+});
+
+const createOkrFormSchema = z.object({
+  title: z
+    .string()
+    .min(1, "タイトルは必須です")
+    .max(100, "タイトルは100文字以内で入力してください"),
+  description: z
+    .string()
+    .max(1000, "説明は1000文字以内で入力してください")
+    .optional(),
+  type: z.enum(["team", "personal"], {
+    message: "タイプを選択してください",
+  }),
+  year: z
+    .number()
+    .min(2020, "年は2020年以降を入力してください")
+    .max(2050, "年は2050年以前を入力してください"),
+  quarter: z.enum(["1", "2", "3", "4"], {
+    message: "四半期を選択してください",
+  }),
+  keyResults: z
+    .array(keyResultSchema)
+    .min(1, "キーリザルトは最低1つ必要です")
+    .max(5, "キーリザルトは最大5つまでです"),
+});
+
+type CreateOkrFormValues = z.infer<typeof createOkrFormSchema>;
 
 interface CreateOkrFormProps {
   teamId: string;
 }
 
 export function CreateOkrForm({ teamId }: CreateOkrFormProps) {
-  const [keyResults, setKeyResults] = useState<KeyResult[]>([
-    { id: "1", title: "", description: "", targetValue: 0, unit: "" },
-  ]);
-  const [isPending, startTransition] = useTransition();
-  const _router = useRouter();
+  const [formState, formAction, isPending] = useActionState(createOkrAction, {
+    input: {
+      teamId: teamId,
+      title: null,
+      description: null,
+      type: null,
+      quarter: null,
+      year: 0,
+      keyResults: [],
+    },
+    error: null,
+  } as const);
+
+  const form = useForm<CreateOkrFormValues>({
+    resolver: zodResolver(createOkrFormSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      type: "personal",
+      year: new Date().getFullYear(),
+      quarter: String(Math.ceil((new Date().getMonth() + 1) / 3)) as
+        | "1"
+        | "2"
+        | "3"
+        | "4",
+      keyResults: [
+        {
+          title: "",
+          description: "",
+          targetValue: 1,
+          unit: "",
+        },
+      ],
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "keyResults",
+  });
 
   const addKeyResult = () => {
-    const newId = String(keyResults.length + 1);
-    setKeyResults([
-      ...keyResults,
-      { id: newId, title: "", description: "", targetValue: 0, unit: "" },
-    ]);
-  };
-
-  const removeKeyResult = (id: string) => {
-    if (keyResults.length > 1) {
-      setKeyResults(keyResults.filter((kr) => kr.id !== id));
+    if (fields.length < 5) {
+      append({
+        title: "",
+        description: "",
+        targetValue: 1,
+        unit: "",
+      });
+    } else {
+      toast.error("キーリザルトは最大5つまでです");
     }
   };
 
-  const updateKeyResult = (
-    id: string,
-    field: keyof KeyResult,
-    value: string | number,
-  ) => {
-    setKeyResults(
-      keyResults.map((kr) => (kr.id === id ? { ...kr, [field]: value } : kr)),
-    );
+  const removeKeyResult = (index: number) => {
+    if (fields.length > 1) {
+      remove(index);
+    } else {
+      toast.error("キーリザルトは最低1つ必要です");
+    }
   };
 
-  const handleSubmit = async (formData: FormData) => {
-    startTransition(async () => {
-      try {
-        // First create the OKR
-        await createOkrAction(teamId, formData);
+  const onSubmit = (values: CreateOkrFormValues) => {
+    startTransition(() => {
+      const formData = new FormData();
+      formData.append("teamId", teamId);
+      formData.append("title", values.title);
+      formData.append("description", values.description || "");
+      formData.append("type", values.type);
+      formData.append("year", values.year.toString());
+      formData.append("quarter", values.quarter);
 
-        // The createOkrAction will redirect to the OKR detail page
-        // where we can add key results
-      } catch (error) {
-        console.error("Failed to create OKR:", error);
-        alert("OKRの作成に失敗しました");
-      }
+      // Add key results
+      values.keyResults.forEach((kr, index) => {
+        const keyResultIndex = index + 1;
+        formData.append(`keyResult-${keyResultIndex}-title`, kr.title);
+        formData.append(
+          `keyResult-${keyResultIndex}-description`,
+          kr.description || "",
+        );
+        formData.append(
+          `keyResult-${keyResultIndex}-targetValue`,
+          kr.targetValue.toString(),
+        );
+        formData.append(`keyResult-${keyResultIndex}-unit`, kr.unit || "");
+      });
+
+      formAction(formData);
     });
   };
 
@@ -96,212 +188,275 @@ export function CreateOkrForm({ teamId }: CreateOkrFormProps) {
         </div>
       </div>
 
-      <form action={handleSubmit} className="space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>基本情報</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">タイトル *</Label>
-                <Input
-                  id="title"
+      <Form {...form}>
+        <form
+          action={formAction}
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-8"
+        >
+          {formState.error && (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="pt-6">
+                <p className="text-sm text-red-600">
+                  {formState.error.message || "エラーが発生しました"}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>基本情報</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
                   name="title"
-                  placeholder="例: Q1 プロダクト開発目標"
-                  required
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>タイトル *</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="例: Q1 プロダクト開発目標"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>タイプ *</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="タイプを選択" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="team">チームOKR</SelectItem>
+                          <SelectItem value="personal">個人OKR</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="type">タイプ *</Label>
-                <Select name="type" defaultValue="personal">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="team">チームOKR</SelectItem>
-                    <SelectItem value="personal">個人OKR</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">説明</Label>
-              <Textarea
-                id="description"
+              <FormField
+                control={form.control}
                 name="description"
-                placeholder="このOKRの目的や背景を説明してください"
-                rows={3}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>説明</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="このOKRの目的や背景を説明してください"
+                        rows={3}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      このOKRの目的や背景について詳しく説明してください（任意）
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="year">年 *</Label>
-                <Input
-                  id="year"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
                   name="year"
-                  type="number"
-                  defaultValue={new Date().getFullYear()}
-                  required
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>年 *</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="quarter"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>四半期 *</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="四半期を選択" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="1">Q1 (1-3月)</SelectItem>
+                          <SelectItem value="2">Q2 (4-6月)</SelectItem>
+                          <SelectItem value="3">Q3 (7-9月)</SelectItem>
+                          <SelectItem value="4">Q4 (10-12月)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
+            </CardContent>
+          </Card>
 
-              <div className="space-y-2">
-                <Label htmlFor="quarter">四半期 *</Label>
-                <Select
-                  name="quarter"
-                  defaultValue={String(
-                    Math.ceil((new Date().getMonth() + 1) / 3),
-                  )}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                キーリザルト
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={addKeyResult}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Q1 (1-3月)</SelectItem>
-                    <SelectItem value="2">Q2 (4-6月)</SelectItem>
-                    <SelectItem value="3">Q3 (7-9月)</SelectItem>
-                    <SelectItem value="4">Q4 (10-12月)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              Key Results
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={addKeyResult}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                追加
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {keyResults.map((keyResult, index) => (
-              <div key={keyResult.id} className="border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-medium">Key Result {index + 1}</h4>
-                  {keyResults.length > 1 && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => removeKeyResult(keyResult.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor={`kr${keyResult.id}-title`}>
-                      タイトル *
-                    </Label>
-                    <Input
-                      id={`kr${keyResult.id}-title`}
-                      name={`keyResult-${keyResult.id}-title`}
-                      placeholder="例: 新機能を3つリリースする"
-                      value={keyResult.title}
-                      onChange={(e) =>
-                        updateKeyResult(keyResult.id, "title", e.target.value)
-                      }
-                      required
-                    />
+                  <Plus className="h-4 w-4 mr-2" />
+                  追加
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {fields.map((field, index) => (
+                <div key={field.id} className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-medium">キーリザルト {index + 1}</h4>
+                    {fields.length > 1 && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeKeyResult(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor={`kr${keyResult.id}-description`}>
-                      説明
-                    </Label>
-                    <Textarea
-                      id={`kr${keyResult.id}-description`}
-                      name={`keyResult-${keyResult.id}-description`}
-                      placeholder="この成果指標の詳細を説明してください"
-                      value={keyResult.description}
-                      onChange={(e) =>
-                        updateKeyResult(
-                          keyResult.id,
-                          "description",
-                          e.target.value,
-                        )
-                      }
-                      rows={2}
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name={`keyResults.${index}.title`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>タイトル *</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="例: 新機能を3つリリースする"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={`kr${keyResult.id}-target`}>
-                        目標値 *
-                      </Label>
-                      <Input
-                        id={`kr${keyResult.id}-target`}
-                        name={`keyResult-${keyResult.id}-targetValue`}
-                        type="number"
-                        placeholder="100"
-                        value={keyResult.targetValue || ""}
-                        onChange={(e) =>
-                          updateKeyResult(
-                            keyResult.id,
-                            "targetValue",
-                            Number(e.target.value),
-                          )
-                        }
-                        required
+                    <FormField
+                      control={form.control}
+                      name={`keyResults.${index}.description`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>説明</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="この成果指標の詳細を説明してください"
+                              rows={2}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name={`keyResults.${index}.targetValue`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>目標値 *</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                placeholder="100"
+                                {...field}
+                                onChange={(e) =>
+                                  field.onChange(Number(e.target.value))
+                                }
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor={`kr${keyResult.id}-unit`}>単位</Label>
-                      <Input
-                        id={`kr${keyResult.id}-unit`}
-                        name={`keyResult-${keyResult.id}-unit`}
-                        placeholder="例: 個, %, 人"
-                        value={keyResult.unit}
-                        onChange={(e) =>
-                          updateKeyResult(keyResult.id, "unit", e.target.value)
-                        }
+                      <FormField
+                        control={form.control}
+                        name={`keyResults.${index}.unit`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>単位</FormLabel>
+                            <FormControl>
+                              <Input placeholder="例: 個, %, 人" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
                     </div>
                   </div>
                 </div>
+              ))}
+
+              <div className="text-center">
+                <Button type="button" variant="outline" onClick={addKeyResult}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  キーリザルトを追加
+                </Button>
               </div>
-            ))}
+            </CardContent>
+          </Card>
 
-            <div className="text-center">
-              <Button type="button" variant="outline" onClick={addKeyResult}>
-                <Plus className="h-4 w-4 mr-2" />
-                Key Result を追加
+          <Separator />
+
+          <div className="flex justify-end gap-4">
+            <Link href={`/teams/${teamId}/okrs`}>
+              <Button type="button" variant="outline">
+                キャンセル
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Separator />
-
-        <div className="flex justify-end gap-4">
-          <Link href={`/teams/${teamId}/okrs`}>
-            <Button type="button" variant="outline">
-              キャンセル
+            </Link>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "作成中..." : "OKRを作成"}
             </Button>
-          </Link>
-          <Button type="submit" disabled={isPending}>
-            {isPending ? "作成中..." : "OKRを作成"}
-          </Button>
-        </div>
-      </form>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 }
